@@ -1,0 +1,120 @@
+<html>
+    <head>
+        <title>PotatOS - Development</title>
+        <link rel="stylesheet" type="text/css" href="./style/style.css">
+    </head>
+    <body>
+        <div id="wrapper">
+            <h1>PotatOS - Development</h1>
+            <a href="../doc.html">Hauptseite</a>
+            <br>
+            <a href="./develop.html">F&uuml;r Entwickler</a>
+            <br>
+            <p>
+                Programme f&uuml;r PotatOS sind im Grund nur Bin&auml;rdateien. Dabei gibt es eigentlich
+                keine Vorgabe wie das Programm aufgebaut ist. <br>
+                Es gibt nur drei kleine Regeln:
+            </p>
+            <ul>
+                <li>Programme m&uuml;ssen 16-Bit sein (NASM: <tt>[BITS 16]</tt>)</li>
+                <li>Programme m&uuml;ssen an Adresse 0000:9000 laufen (NASM: <tt>[ORG 0x9000]</tt>)</li>
+                <li>Am Ende sollte das mit int21-0 beendet werden.</li>
+            </ul>
+            <p>
+                Um ein Programm in den Buildprozess zu integrieren muss die Datei einfach
+                im Verzeichnis Software/ platziert werden. Das Buildskript wird das
+                Programm dann automatisch bauen und ins Image einbauen.<br>
+                Mit einem Aufruf von <tt>sudo ./build.sh</tt> kann der Prozess kann
+                der Buildprozess gestartet werden.
+            </p>
+            <p>
+                Das Buildskript definiert in allen Prorammen die aktuelle Sprache. 
+                (Im Format: german, english, etc) <br>
+                Programme k&ouml;nnen so sehr einfach verschiedene Sprachen implementieren.
+            </p>
+            <p>
+                Damit das Programm sp&auml;ter vom Benutzer gestartet werden kann, muss es 
+                die Endung bin haben. Andere Dateien k&ouml;nnen nur vom System gestartet werden.
+            </p>
+            <p>
+                Die Dateien welche in include/ enthalten sind k&ouml;nnen von Programmen verwendet werden.
+                Es gen&uuml;gt den Dateinamen anzugeben, das Buildskript sorgt daf&uuml;r dass die Pfade
+                am Ende stimmen.
+            </p>
+            <p>
+                M&ouml;chte man aus irgendeinem Grund Teile seines Programmes auslagern, so sollten diese
+                ausgelagerten Teile im Ordner Software/include/ platziert werden, da das Buildskript sonst
+                versuchen k&ouml;nnte diese als Programm zu assemblieren.
+            </p>
+            <br>
+            <p>
+                PotatOS stellt einige Betriebssystemfunktionen &uuml;ber den 
+                Interrupt 33 (21hex) zur Verf&uuml;gung.
+                Diese k&ouml;nnen alle verwendet werden.<br>
+                Die Funktion wird dabei &uuml;ber das AH-Register gew&auml;hlt, 
+                Strings meistens in DX und Zahlen meist in CX.
+            </p>
+            <ul>
+                <li>
+                    AH = 00h: Programm beenden<br>
+                    <div class="int21_fkt">
+                        BX &lt;= Fehlercode (0=kein Fehler)<br>
+                        <br>
+                        Beendet das aktuelle Programm und springt zur&uuml;ck in die Kommandozeile.
+                        Das Programm verbleibt dann so lange im Speicher bis ein neues Programm
+                        den Speicherbereich &uuml;berschreibt.
+                    </div>
+                </li>
+                <li>
+                    AH = 01h: String ausgeben<br>
+                    <div class="int21_fkt">
+                        DX &lt;= String<br>
+                        BL &lt;= Farbcode<br>
+                        <br>
+                        Gibt einen \0-terminierten String an der aktuellen Cursorposition
+                        aus und aktualisiert die Cursorposition. Der Farbcode kann mit 
+                        dem Macro createColor(fg,bg) aus defines.asm definiert werden,
+                        oder man benutzt die aktuelle Systemfarbe, welche an Adresse 0000:1FFF steht
+                        (1 Byte).
+                    </div>
+                </li>
+                <li>
+                    AH = 02h: Strings vergleichen<br>
+                    <div class="int21_fkt">
+                        DI &lt;= String 1<br>
+                        SI &lt;= String 2<br>
+                        AL =&gt; 0 gleich, 1 ungleich<br>
+                        <br>
+                        Vergleicht den \0-terminierten String in DI mit dem \0-terminierten String
+                        in SI. Sie die beiden Zeichenketten identisch, wird das AL-Register auf 0
+                        gesetzt, ansonsten auf 1.
+                    </div>
+                </li>
+                <li>
+                    AH = 03h: IntToString<br>
+                    <div class="int21_fkt">
+                        DX &gt;= Zielstring<br>
+                        CX &gt;= Zahl
+                        <br>
+                        Wandelt die Zahl in CX in einen String um und speichert diesen in DX.
+                        Der String wird dabei vom System \0-terminiert. Die Zahl kann dabei maximal
+                        16-Bit groß sein (-32768 - 32767).
+                    </div>
+                </li>
+                <li>
+                    AH = 04h: Tastatureingabe<br>
+                    <div class="int21_fkt">
+                        DX &gt;= Zielstring<br>
+                        CX &gt;= maximal Anzahl an Zeichen<br>
+                        CX =&lt; Anzahl Zeichen
+                        <br>
+                        Liest einen String von der Tastatur ein und speichert diesen in DX. Der String
+                        wird dabei vom System \0-terminiert. Zus&auml;tzlich wird die maximal m&uuml;gliche
+                        Anzahl an Zeichen durch den Wert in CX begrenzt, wobei am Ende die tats&auml;chliche
+                        Anzahl an eingegebenen Zeichen in CX abgelegt wird.
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </body>
+</html>

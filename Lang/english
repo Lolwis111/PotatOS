@@ -1,0 +1,11 @@
+HELP="\n  ls [ext]           - Shows all files with details\n  ll                 - Lists all files\n  help               - Views the help\n  date               - Shows the date\n  time               - Shows the time\n  info               - View systeminformation\n  color <color>      - Change color (0=help)\n  cls                - Clears the screen\n  rename <org> <new> - Rename a file\n  del <datei>        - Delete a file\n"
+SHUTDOWN="\nThe computer can be powered off savely now.\n"
+NO_PROGRAM="\nThis file can not be executed!\n"
+LOAD_ERROR="\nFile could not be loaded!\n"
+LS_LABEL_1="Filename     Size (bytes)   \n"
+LS_LABEL_2="\noverall size (bytes): "
+WRITE_PROTECTION_ERROR="\nThis file is write protected!\n"i
+FILE_NOT_FOUND_ERROR="\nFile could not be found!\n"
+FILE_ALREADY_EXISTS_ERROR="\nA file with the same name already exists!!\n"
+OUT_OF_SPACE_ERROR="\nThere is not enough disk space!\n"
+SOFTWARE_ERROR="\nThe program failed an was terminated!\n"

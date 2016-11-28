@@ -1,0 +1,48 @@
+; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; % Stellt Strings für das System zur Verfügung  %
+; % wie Hilfe, Labels, Fehlermeldungen           %
+; %                                              %
+; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%ifndef _DATA_INC_
+%define _DATA_INC_
+
+newLine				db 0Dh, 0Ah, 00h ; Zeilenumbruch
+ready				db "CMD> ", 00h ; Konsolenstart
+
+msgHelp				db 0Dh, 0Ah ; Der Text der Hilfe
+					db "  ls [ext]           - Zeigt Dateien an", 0Dh, 0Ah
+					db "  help               - Zeigt die Hilfe an", 0Dh, 0Ah
+					db "  date               - Zeigt das aktuelle Datum an", 0Dh, 0Ah
+					db "  time               - Zeigt die aktuelle Zeit an", 0Dh, 0Ah
+					db "  info               - Zeigt Systeminformationen an", 0Dh, 0Ah
+					db "  color <color>      - Farbe der Konsole wechseln (0=Hilfe)", 0Dh, 0Ah
+					db "  cls                - Leert den Bildschirm", 0Dh, 0Ah
+					db "  rename <org> <new> - Benennt eine Datei um", 0Dh, 0Ah
+					db "  del <file>         - Loescht eine Datei", 0Dh, 0Ah, 00h
+				
+                    ; die Nachricht zum Herunterfahren
+msgShutdown			db 0Dh, 0Ah, "Der Computer kann jetzt ausgeschaltet werden!", 0Dh, 0Ah, 00h
+
+msgNoSoftware		db 0Dh, 0Ah ; Fehler für nicht-ausführbare Dateien
+					db "Diese Datei kann nicht ausgefuehrt werden!", 0Dh, 0Ah, 00h
+
+                    ; Fehler für nicht ladbare Dateien
+msgInvalid			db 0Dh, 0Ah, "Datei konnte nicht geladen werden!", 0Dh, 0Ah, 00h
+
+msgDIR				db "Dateiname    Groesse (Bytes)", 0Dh, 0Ah, 00h ; Label für ls
+msgDIR2				db 0Dh, 0Ah, "Gesamtgroesse (Bytes): ", 00h ; Label2 für ls
+
+                    ; NoAccess Error
+msgInvalidRename	db 0Dh, 0Ah, "Diese Datei ist schreibgeschuetzt!", 0Dh, 0Ah, 00h
+
+                    ; FileNotFound Error
+msgNotFound			db 0Dh, 0Ah, "Die Datei wurde nicht gefunden!", 0Dh, 0Ah, 00h
+                    
+                    ; FileAlreadyExists Error
+msgAlreadyExists	db 0Dh, 0Ah, "Eine Datei mit diesem Namen exisitiert bereits!", 0Dh, 0Ah, 00h
+
+                    ; OutOfSpace Error
+msgNoSpace			db 0Dh, 0Ah, "Es ist kein Speicherplatz verfügbar!", 0Dh, 0Ah, 00h
+
+%endif

@@ -1,0 +1,34 @@
+; IRQ0-15 Remapping
+
+;Initalisieren (ICW1)
+;mov al, 11h
+;out 0x20, al
+;out 0xA0, al
+
+;mov al, 0x22	; Chip 1 -> INT 22-29
+;out 0x21, al
+;mov al, 0x2A	; Chip 2 -> INT 2A-32
+;out 0xA1, al
+
+;mov al, 0x04	; IRQ 2 -> Verbindung zum zweiten Chip
+;out 0x21, al
+;mov al, 0x02
+;out 0xA1, al
+
+;mov al, 0x01	; (ICW4)
+;out 0x21, al
+;out 0xA1, al
+
+;xor al, al		; Alle IRQs aktivieren
+;out 0x21, al
+;out 0xA1, al
+
+; Startsound
+;mov cx, 0x1000
+;mov ah, 0Ah
+;int 21h
+;mov cx, 0xFFFF
+;loop1:
+;loop loop1
+;mov ah, 0Bh
+;int 21h	

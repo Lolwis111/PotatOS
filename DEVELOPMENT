@@ -1,0 +1,224 @@
+Programme für PotatOS sind im Grunde nur Binärdateien.
+Dabei gibt es eigentlich keine Vorgabe wie das Programm im Detail
+aufgebaut ist.
+Wichtig ist nur dass es:
+    1. 16 Bit ist (Nasm: [BITS 16]),
+    2. so ausgelegt ist dass es an Adresse 0000:9000 läuft (Nasm: [ORG 0x9000]) und
+    3. es mit der Funktion int21-0 beendet wird.
+
+Um ein Programm automatisch in den Buildprozess zu integrieren muss einfach
+die NASM-Kompatible *.asm Datei in das Verzeichnis 'Software' kopiert werden.
+ein Aufruf von
+    sudo ./build.sh
+wird es dann automatisch assemblieren und in das Image einfügen.
+Außerdem hat dies den Vorteil das dass Build-Skript für alle Programme im
+'Software'-Verzeichnis die aktuelle Sprache als %define zur verfügung stellt.
+Als Entwickler hat man so eine einfache möglichkeit verschiedene Sprachen
+zu unterstützen. (Wird in Zukunft eventuell verändert)
+
+Damit ein Programm später vom Benutzer gestartet werden kann, muss die Binärdatei
+die Endung .bin besitzen.
+
+Die Systemschnittstelle von PotatOS ist über den Interrupt 0x21 
+(im weiteren Verlauf auch einfach Int 21) Der Interrupt 21 stellt 
+verschiedene Funktion, darunter Text ein-/ausgabe und Dateioperationen zur Verfügung.
+
+Die Funktion wird über das ah-Register gewählt.
+Strings werden meist mit dem Register DX, Zahlen meist mit CX gehandhabt.
+
+Im folgenden sind Funktionen beschrieben:
+
+AH = 00h: Programm beenden
+    BX <= Fehlercode (0=kein Fehler)
+
+    Beendet den aktuellen Prozess und springt in die Kommandozeile.
+    Das Programm verbleibt dabei im Speicher, bis ein neues Programm
+    geladen wird.
+
+AH = 01h: String ausgeben
+    DX <= String
+    BL <= Farbcode
+
+    Gibt einen \0-terminierten String an der aktuellen Cusorposition
+    aus und aktuallisiert die Cursorposition.
+    Der Farbcode in bl wird über die BIOS-Farbcode definiert.
+    Um die aktuelle Systemfarbe zu benutzen, wird bl mit dem Wert
+    der Speicheradresse 0000:1FFF geladen (1 Byte).
+
+AH = 02h: Strings vergleichen
+    DI <= String 1
+    SI <= String 2
+    AL => 0 gleich, 1 ungleich
+
+    Vergleicht den \0-terminierten String in DI mit dem \0-terminierten String
+    in SI. Sind die beiden Zeicheketten identisch, wird das AL-Registeer auf 0
+    gesetzt, ansonsten auf 1.
+
+AH = 03h: IntToString
+    DX <= Zielstring
+    CX <= zu wandelnde Zahl
+
+    Wandelt die Zahl in CX in einen String aus und speichert diesen in DX.
+    Der String wird dabei vom System \0-terminiert. 
+    Die Zahl kann dabei maximal 16-Bit groß sein (-32678 - 32677).
+
+AH = 04h: Tastatureingabe
+    DX <= Zielstring
+    CX <= maximal Anzahl an Zeichen
+    CX => Anzahl Zeichen
+
+    Liest einen String von der Tastatur ein und speichert diesen in DX. 
+    Der String wird dabei vom System \0-terminiert.
+    Zusätzlich wird die maximal mögliche Anzahl von Zeichen durch den Wert
+    in CX begrenzt, wobei am Ende die tatsächliche Anzahl an eingegebenen
+    Zeichen in CX abgelegt wird.
+
+AH = 05h: Datei laden
+    BX <= Segmentadresse vom Zielpuffer
+    BP <= Offsetadresse vom Zielpuffer
+    DX <= Dateiname
+    AX => Status (0 Ok, -1 Fehler)
+    CX => Dateigröße in Byte
+
+    Liest die Datei mit dem Dateinamen aus DX in den Speicherbereich BX:BP.
+    War der Vorgang erfolgreich, wird AX auf 0 gesetzt. Bei einem Fehler auf 
+    -1. 
+    Die Dateigröße in Byte liegt am Ende in CX. (Die Dateigröße ist hierbei
+    die vom Dateisystem gemeldete Größe, abweichung sind unwahrscheinlich aber
+    theoretisch möglich).
+
+AH = 06h: Systemzeit
+    DX => Zeitstring
+
+    Wandelt die aktuelle Systemzeit in einen String um und stellt diesen in
+    DX bereit. Der String ist dabei im Format 'h:m Uhr' und \0-terminiert.
+
+AH = 07h: Systemdatum
+    DX => Datumsstring
+
+    Wandelt das aktuelle Systemdatum in einen String um und stellt diesen in
+    DX bereit. Der String ist dabei im Format 'd:m:Y' und \0-terminiert.
+
+AH = 08h: Systemversion [UNGENAU]
+    AH => Majorversion
+    AL => Minorversion
+
+    Gibt die Systemversion über das Register AX zurück. Die Funktion sollte
+    mit Vorsicht genutzt werden. Die hier hinterlegte Version ist derzeit
+    noch ungenau.
+
+AH = 09h: StringToInt
+    DX <= String
+    CX => Zahl
+    AX => Status (0 Ok, -1 Fehler)
+
+    Versucht den in DX gegebenen String in eine Zahl umzuwandeln. Der Vorgang
+    wird dabei bei \n, \r oder \0 abgebrochen.
+    Ist der Vorgang erfolgreich enthält CX die Zahl und AX ist 0.
+    Sollte bei der Umwandlung ein Fehler auftreten, so wird CX auf 0 gesetzt
+    und AX auf -1. 
+    Die Zahl muss in den 16-Bit bereich passen, kann aber negativ sein
+    (-32678 - 32677).
+
+AH = 0Ah: Datei löschen
+    DX <= Dateiname
+    AX => Status (0 Ok, 1 Datei nicht gefunden, -1 Fehler)
+
+    Sucht die Datei mit dem Dateinamen aus DX und versucht diese zu löschen.
+    Sollte die Datei nicht existieren, so wird AX auf 1 gesetzt. 
+    Tritt ein sonstiger Fehler auf wird AX auf 1 gesetzt.
+    War der Vorgang erfolgreich, so wird AX auf 0 gesetzt.
+    Das System löscht hierbei nur die Clusterkette, der eigentliche Inhalt
+    verbleibt solange im Speicher bis er von einer neuen Datei überschrieben
+    wird.
+
+AH = 0Bh: Zufallszahl [PREALPHA DEV]
+    CX <= Zufallszahl
+
+    TODO: 
+    Gibt eine Zufallszahl in CX zurück, welche 16-Bit groß ist und auch durch
+    von Zeit und Dateum abhängt.
+    
+    [Zur Zeit funktioniert dies nicht wirklich. Nach wenigen Zahlen verharrt 
+    die Funktion bei der selben Zahl]
+
+AH = 0Ch: CPU Informationen
+    AX => CPU Hersteller
+    BX => CPU Modell
+
+    Ruft die CPUID Information auf und gibt CPU Modell und Hersteller zurück.
+
+AH = ODh: HexToDez
+    DX <= Hexstring
+    CX => Zahl
+    AX => Status
+
+    Veruscht die ersten beiden Zeichen aus dem String in DX hexadezimal zu
+    interpretieren und in eine Zahl zu wandeln. 
+    Zulässige Zeichen sind: 0-9, a-f, A-F
+    Wenn der Vorgang erfolgreich ist, enhält CX die Zahl und AX ist 0.
+    Sollte die Umwandlung nicht möglich sein, ist CX 0 und AX -1.
+
+AH = 0Eh: Mauspositon schreiben
+    DH <= Zeile
+    DL <= Spalte
+
+    Setzt den Cursor an die Position DL, DH (X, Y) [0-79, 0-24].
+    TODO: 
+    Überprüfen ob die angegebenen Koordinaten im Bildbereich liegen.
+
+AH = 0Fh: Mausposition lesen
+    DH => Zeile
+    DL => Spalte
+
+    Gibt die Cusorposition in DL, DH (X, Y) [0-79, 0-24] zurück.
+
+AH = 10h: einzelnes Zeichen schreiben
+    DL <= Farbcode
+    DH <= Zeichen
+
+    Gibt das Zeichen aus DH mit der Farbe aus DL an der aktuellen Cursorposition
+    aus und bewegt den Cursor aktualisiert die Position entsprechend.
+
+AH = 11h: Rootverzeichnis laden
+    BP <= Offsetadresse
+    CX <= maximale Anzahl Einträge (normalerweise 224)
+
+    Lädt das Rootverzeichnes des aktuellen Laufwerks in den Speicher und gibt
+    die Speicheradresse in BP zurück. 
+    Die tatsächliche Adresse ist 0000:BP.
+
+AH = 12h: Rootverzeichnis schreiben
+    Schreibt das Rootverzeichnis zurück auf die Festplatte.
+
+    TODO:
+    Kann das komplette Dateisystem zerstören.
+    Eventuell dem Userspace vorenthalten.
+
+AH = 13h: Datei suchen
+    DX <= Dateiname
+
+    Überprüft ob die Datei mit dem Dateinamen aus DX existiert. Wenn die Datei
+    gefunden wurde, wird AX auf den Index im Rootverzeichnis gesetzt.
+    Wenn die Datei nicht gefunden werden kann ist AX -1.
+
+AH = 14h: Datei schreiben
+    DX <= Dateiname
+    CX <= Größe in Bytes
+    BX <= Segmentadresse der Daten
+    BP <= Offsetadresse der Daten
+    AX => Status (0 Ok, -1 Error)
+
+    Schreibt in eine Datei mit dem Dateinamen DX eine Anzahl von CX Bytes ab der
+    Adresse BX:BP auf das Laufwerk.
+    Die Datei darf nicht exisitern. Wenn eine Datei überschrieben werden soll muss
+    sie vorher gelöscht werden!
+
+AH = 15h: DezToHex
+    CX <= Die zu wandelnde Zahl (1 Byte, nur CL wird ausgewertet)
+    DX <= Zielstring
+
+    Wandelt das Byte aus dem CL-Register in einen zwei-Zeichen Hexstring
+    um. Der erzeugte String besteht aus den Ziffer 0-9 und den großen 
+    lateinischen Buchstaben A-F. Nach dem zweiten hexzeichen wird ein \0
+    eingfügt A-F. Nach dem zweiten hexzeichen wird ein \0 eingefügt. 

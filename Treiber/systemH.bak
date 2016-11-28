@@ -1,0 +1,238 @@
+;%include "E:\OS\PotatOS16\include\defines.asm"
+[ORG 0x100000]
+[BITS 16]
+
+main:
+	cmp ah, 00h
+	je intToStr32
+	
+	
+	
+	cmp ah, 01h
+	je strToInt32
+	
+	cmp ah, 02h
+	je printString
+	
+	cmp ah, 0xFF
+	je exit
+	
+	iret
+
+row db 00h
+col db 00h
+	
+;======================================
+; ebx Errorcode
+;======================================
+exit:
+	add sp, 6			; Stack wiederherstellen
+	
+	jmp 0x0000:0x2009	; In die Kommandozeile springen
+	
+;======================================
+
+	
+;======================================
+; ECX -> Zahl
+; ESI <- String
+;======================================
+intToStr32:
+	pusha
+	mov eax, ecx
+	mov ebp, 1_000_000_000
+	mov ecx, 10					
+.loop1:
+	xor edx, edx				; 0
+	div ebp
+	; eax Result
+	; edx Remainder
+	add al, 48d					; ASCII bilden
+	mov byte [ds:si], al			; ASCII speichern
+	inc si						; nächstes Zeichen wählen
+	push edx					; Rest speichern
+	xor edx, edx				; 0
+	mov eax, ebp
+	div ecx						; Divisior durch 10 teilen (nächste Stelle)
+	mov ebp, eax				; neuen Divisior speichern
+	pop eax						; Rest holen
+	cmp ebp, 0					; Prüfen ob das Ende erreich wurde
+	jg .loop1
+	popa
+	iret
+.result dd 0
+;======================================
+
+
+;======================================
+; ECX <- Zahl
+; ESI -> String
+;======================================
+strToInt32:
+	pusha
+	xor ebp, ebp
+	cld
+.loop1:
+	cmp byte [ds:si], 00h
+	je .done
+	cmp byte [ds:si], 0Dh
+	je .done
+	cmp byte [ds:si], 0Ah
+	je .done
+	cmp byte [ds:si], '0'
+	jb .error
+	cmp byte [ds:si], '9'
+	ja .error
+	shl ebp, 1
+	mov eax, ebp
+	shl ebp, 2
+	add ebp, eax
+	movzx eax, byte [ds:si]
+	inc si
+	sub al, 48d
+	add ebp, eax
+	jmp .loop1
+.done:
+	mov dword [.result], ebp
+	popa
+	mov ecx, dword [.result]
+	clc
+	ret
+.error:
+	popa
+	stc
+	iret
+.result		dd 0
+;======================================
+
+
+;=====================================================
+; DX -> String
+; BL -> Color
+;=====================================================
+printString:
+	mov si, dx
+	mov dl, bl
+	push bx
+.charLoop:
+	mov al, byte [ds:si]
+	inc si
+	test al, al
+	jz .end
+	mov dh, al
+	call printChar
+	
+	jmp .charLoop
+.end:
+	pop bx
+	
+	mov dh, byte [row]
+	mov dl, byte [col]
+	call setCursorPosition
+	
+	iret
+
+printChar:
+	push dx
+	mov ax, 0xB800
+	mov gs, ax
+	movzx bx, byte [col]
+	movzx ax, byte [row]
+	shl bx, 1
+	mov cx, 160d
+	mul cx
+	add bx, ax
+	pop dx
+	
+	cmp dh, 0Dh
+	je .cr
+	cmp dh, 0Ah
+	je .lf
+	
+	mov byte [gs:bx], dh
+	mov byte [gs:bx+1], dl
+	add bx, 2
+	
+	inc byte [col]
+	
+	cmp byte [col], 160d
+	je .newLine	
+	ret
+.newLine:
+	mov byte [col], 00h
+	inc byte [row]
+	
+	cmp byte [row], 23
+	jae .moveBuffer
+	
+	ret
+.cr:
+	mov byte [col], 00h
+	ret
+.lf:
+	inc byte [row]
+	cmp byte [row], 23
+	jae .moveBuffer
+	ret
+	
+.moveBuffer:
+	push si
+	mov byte [row], 22
+	mov ax, es
+	push ax
+	
+	mov ax, 0xB800
+	mov es, ax
+	mov ds, ax
+	mov si, 160d
+	mov di, 00h
+	mov cx, 1920d
+	rep movsw
+	
+	pop ax
+	mov es, ax
+	pop si
+	xor ax, ax
+	mov ds, ax
+	
+	ret
+;=====================================================	
+
+
+;=====================================================
+; DH -> Row
+; DL -> Col
+;=====================================================
+setCursorPosition:
+	pusha
+	
+	movzx ax, dh
+	movzx bx, dl
+	mov byte [row], dh
+	mov byte [col], dl
+	shl ax, 4
+	add bx, ax
+	shl ax, 2
+	add bx, ax
+
+	mov al, 0Fh
+	mov dx, 3D4h
+	out dx, al
+	
+	mov ax, bx
+	mov dx, 3D5h
+	out dx, al
+	
+	mov al, 0Eh
+	mov dx, 3D4h
+	out dx, al
+	
+	mov ax, bx
+	shr ax, 8
+	mov dx, 3D5h
+	out dx, al
+	
+	popa
+	
+	ret
+;=====================================================

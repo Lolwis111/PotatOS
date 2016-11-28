@@ -1,0 +1,59 @@
+             @@@@@@@@@@@@@@                   
+           @@@@@        @@@@@                 
+          @@@               @@                
+          @@                 @@@              
+         @@                    @@             
+         @                      @@            
+        @@                       @@           
+        @                         @@          
+        @        PotatOS           @@         
+       @@                           @         
+       @                            @@        
+      @@                             @@       
+      @                              @@       
+      @                               @       
+     @@      @@@@@         @@@@@      @@      
+     @@     @@@@@@@       @@@@@@@      @      
+     @     @@@@@@@@      @@@@@@@@      @      
+    @@     @@@@ @@@      @@@@ @@@      @@     
+    @@     @@@@@@@@      @@@@@@@@      @@     
+    @@     @@@@@@@@      @@@@@@@@       @     
+    @       @@@@@@        @@@@@@        @     
+    @        @@@@          @@@@         @@    
+    @                                   @@    
+    @                                   @@    
+    @  444  4444 4444 444  4    4 4444   @    
+    @  4  4 4    4  4 4  4 44  44 4      @    
+    @  444  4444 4444 4  4 4 44 4 4444   @    
+    @  4 4  4    4  4 4  4 4    4 4      @    
+    @  4  4 4444 4  4 444  4    4 4444   @    
+    @       @@@@@@@@@@@@@@@@@@@@@        @    
+    @                                    @    
+    @                                    @    
+    @  PotatOS ist 16 Bit.               @    
+    @  PotatOS wurde von Levin Palm      @    
+    @  geschrieben.                      @    
+    @ 'sudo ./build.sh Kompiliert alles  @    
+    @ 'sudo ./build.sh clean' löscht     @    
+   @@  alte bin, sys und lst Dateien.    @@   
+   @@  ./run.sh führt PotatOS in QEMU    @    
+   @@  aus.                              @@   
+   @@  Alle Rechte vorbehalten.          @@   
+   @@  Benutzung geschieht auf eigene    @@   
+   @@  Gefahr. Testen in VM empfohlen.   @@   
+   @@                                    @@   
+   @@ PotatOS ist love - PotatOS is life @@ 
+    @@                                   @@   
+    @@                                   @@   
+    @@      Tools:                       @@   
+    @@@       - Netwide Assembler        @@   
+     @@       - GNU C++ Compiler         @@   
+      @@      - dosfstools               @    
+      @@@     - qemu                     @    
+       @@@                               @    
+        @@@@                             @    
+          @@@        (C) 2016           @@     
+           @@@@                      @@@      
+             @@@@@                @@@@        
+               @@@@@@@@         @@@@          
+                  @@@@@@@@@@@@@@@             
