@@ -9,9 +9,10 @@
 [BITS 16]
 
 %include "defines.asm"
+%include "language.asm"
 
 start:
-	mov si, msgWelcome ; Willkommensnachricht
+	mov si, CLI_WELCOME ; Willkommensnachricht
 	call Puts ; Ausgaben
 	
 	jmp SOFTWARE_BASE
@@ -120,7 +121,7 @@ main:
 %include "commands.asm"
 %include "strings.asm"
 %include "common.asm"
-%include "language.asm"
+; %include "language.asm"
 
 %include "main_util.asm" ; enthält allgemeine Befehle
 %include "main_file.asm" ; enthält die Dateioperationsbefehle
@@ -430,7 +431,7 @@ programExt	db ".BIN"						; Dateierweiterung eines Programms
 fileName 	db "             ", 00h			; Dateiname, Eingabeformat	(z.B. TEST.BIN)
 rFileName	db "           ", 0Dh, 0Ah, 00h	; Dateiname, FAT12-Format	(z.B. TEST    BIN)
 rArgument	db "           ", 0Dh, 0Ah, 00h ; Argument, FAT12-Format	(z.B. TEST    TXT)
-spacer 		db "          ", 00h
+; spacer 		db "          ", 00h
 spacer2     db " | ", 00h
 ldir		db "   <DIR>", 00h
 msgWelcome	db "BOOT OK.", 0Dh, 0Ah, 00h

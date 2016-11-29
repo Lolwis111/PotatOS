@@ -221,4 +221,11 @@ AH = 15h: DezToHex
     Wandelt das Byte aus dem CL-Register in einen zwei-Zeichen Hexstring
     um. Der erzeugte String besteht aus den Ziffer 0-9 und den großen 
     lateinischen Buchstaben A-F. Nach dem zweiten hexzeichen wird ein \0
-    eingfügt A-F. Nach dem zweiten hexzeichen wird ein \0 eingefügt. 
+    eingfügt A-F. Nach dem zweiten hexzeichen wird ein \0 eingefügt.
+
+AH = 16h: BCDtoInt
+    AL <= BCD-Byte
+    CX => Integer
+
+    Wandelt das BCD-kodierte Byte in AL in einen Integer um und speichert
+    das Ergebnis im CX-Register.

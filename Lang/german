@@ -1,3 +1,4 @@
+CLI_WELCOME="Willkommen bei PotatOS!\nGeben sie 'help' ein um Hilfe zu erhalten!"
 HELP="\n  ls [ext]           - Zeigt Dateien detailliert an\n  ll                 - Listet alle Dateien auf\n  help               - Zeigt die Hilfe an\n  date               - Zeigt das Datum an\n  time               - Zeigt die aktuelle Zeit an\n  info               - Zeigt Systeminformationen an\n  color <color>      - Farbe der Konsole wechseln (0=Hilfe)\n  cls                - Leert den Bildschirm\n  rename <org> <new> - Benennt eine Datei um\n  del <datei>        - Loescht eine Datei\n"
 SHUTDOWN="\nDer Computer kann jetzt ausgeschaltet werden.\n"
 NO_PROGRAM="\nDiese Datei kann nicht ausgefuehrt werden!\n"

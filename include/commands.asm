@@ -6,18 +6,18 @@
 %ifndef _COMMANDS_INC_
 %define _COMMANDS_INC_
 
-cmdLS		db "LS", 00h
-cmdLL       db "LL", 00h
+cmdLS		db "LS", 0x00       ; alle Dateien und ihre Größe auflisten
+cmdLL       db "LL", 0x00       ; alle Dateien aufzählen
 
-cmdHELP		db "HELP", 00h
-cmdDATE		db "DATE", 00h
-cmdTIME		db "TIME", 00h
-cmdINFO		db "INFO", 00h
+cmdHELP		db "HELP", 0x00     ; die Hilfe anzeigen
+cmdDATE		db "DATE", 0x00     ; das Datum anzeigen
+cmdTIME		db "TIME", 0x00     ; die Zeit anzeigen
+cmdINFO		db "INFO", 0x00     ; Informationen anzeigen
 
-cmdCOLOR	db "COLOR", 00h
-cmdCLEAR	db "CLS", 00h
+cmdCOLOR	db "COLOR", 0x00    ; die Farbe wechseln
+cmdCLEAR	db "CLS", 0x00      ; den Bildschirm leeren
 
-cmdRENAME	db "RENAME", 00h
-cmdDEL		db "DEL", 00h
+cmdRENAME	db "RENAME", 0x00   ; zum umbenennen von Dateien
+cmdDEL		db "DEL", 0x00      ; zum löschen von Dateien
 
 %endif

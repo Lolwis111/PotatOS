@@ -16,15 +16,18 @@
                 Es gibt nur drei kleine Regeln:
             </p>
             <ul>
-                <li>Programme m&uuml;ssen 16-Bit sein (NASM: <tt>[BITS 16]</tt>)</li>
-                <li>Programme m&uuml;ssen an Adresse 0000:9000 laufen (NASM: <tt>[ORG 0x9000]</tt>)</li>
+                <li>Programme m&uuml;ssen 16-Bit sein (NASM: <span class="tt">[BITS 16]</span>)</li>
+                <li>
+                    Programme m&uuml;ssen an Adresse 0000:9000 laufen 
+                    (NASM: <span class="tt">[ORG 0x9000]</span>)
+                </li>
                 <li>Am Ende sollte das mit int21-0 beendet werden.</li>
             </ul>
             <p>
                 Um ein Programm in den Buildprozess zu integrieren muss die Datei einfach
                 im Verzeichnis Software/ platziert werden. Das Buildskript wird das
                 Programm dann automatisch bauen und ins Image einbauen.<br>
-                Mit einem Aufruf von <tt>sudo ./build.sh</tt> kann der Prozess kann
+                Mit einem Aufruf von <span class="tt">sudo ./build.sh</span> kann der Prozess kann
                 der Buildprozess gestartet werden.
             </p>
             <p>
@@ -93,25 +96,84 @@
                 <li>
                     AH = 03h: IntToString<br>
                     <div class="int21_fkt">
-                        DX &gt;= Zielstring<br>
-                        CX &gt;= Zahl
+                        DX &lt;= Zielstring<br>
+                        CX &lt;= Zahl
                         <br>
                         Wandelt die Zahl in CX in einen String um und speichert diesen in DX.
                         Der String wird dabei vom System \0-terminiert. Die Zahl kann dabei maximal
-                        16-Bit groß sein (-32768 - 32767).
+                        16-Bit gro&szlig; sein (-32768 - 32767).
                     </div>
                 </li>
                 <li>
                     AH = 04h: Tastatureingabe<br>
                     <div class="int21_fkt">
-                        DX &gt;= Zielstring<br>
-                        CX &gt;= maximal Anzahl an Zeichen<br>
-                        CX =&lt; Anzahl Zeichen
+                        DX &lt;= Zielstring<br>
+                        CX &lt;= maximal Anzahl an Zeichen<br>
+                        CX =&gt; Anzahl Zeichen
                         <br>
                         Liest einen String von der Tastatur ein und speichert diesen in DX. Der String
                         wird dabei vom System \0-terminiert. Zus&auml;tzlich wird die maximal m&uuml;gliche
                         Anzahl an Zeichen durch den Wert in CX begrenzt, wobei am Ende die tats&auml;chliche
                         Anzahl an eingegebenen Zeichen in CX abgelegt wird.
+                    </div>
+                </li>
+                <li>
+                    AH = 05h: Datei laden<br>
+                    <div class="int21_fkt">
+                        BX &lt;= Segmentadresse<br>
+                        BP &lt;= Offsetadresse<br>
+                        DX &lt;= Dateiname<br>
+                        AX =&gt; Status<br>
+                        CX =&gt; Dateigr&ouml;&szlig;e in Byte
+                        <br>
+                        Liest die Datei mit dem Dateinamen aus DX in den Speicherbereich BX:BP. Wenn der
+                        Vorgang erfolgreich war, wird der Wert 0 in AX gespeichert, bei einem Fehler die
+                        -1.<br>
+                        Die vom Dateisystem gemeldete Dateigr&ouml;&szlig;e wird in CX zur&uuml;ck gegeben.
+                    </div>
+                </li>
+                <li>
+                    AH = 06h: Systemzeit
+                    <br>
+                    <div class="int21_fkt">
+                        DX =&gt; Zeitstring
+                        <br>
+                        Wandelt die aktuelle Systemzeit in einen String und speichert diesen in DX.
+                        Der String ist dabei im Format 'h:m Uhr' und wird \0-terminiert.
+                    </div>
+                </li>
+                <li>
+                    AH = 07h: Systemdatum<br>
+                    <div class="int21_fkt">
+                        DX =&gt; Datumstring
+                        <br>
+                        Wandelt das aktuelle Systemdatum in einen String um stellt diesen in DX bereit.
+                        Der String ist dabei im Format 'd:m:Y' und wird \0-terminiert.
+                    </div>
+                </li>
+                <li>
+                    AH = 08h: Systemversion<br>
+                    <div class="int21_fkt">
+                        AH =&gt; Majorversion<br>
+                        AL =&gt; Minorversion
+                        <br>
+                        Gibt die Systemversion &uuml;ber das AX-Register zur&uuml;ck.
+                    </div>
+                </li>
+                <li>
+                    AH = 09h: StringToInt<br>
+                    <div class="int21_fkt">
+                        DX &lt;= String<br>
+                        CX =&gt; Zahl<br>
+                        AX =&gt; Status
+                        <br>
+                        Versucht den in DX gegebenen String in einen Integer zu konvertieren. 
+                        Der Vorgang wird dabei bei \n, \r oder \0 abgebrochen.
+                        Wenn der Vorgang erfolgreich abgeschlossen wurde liegt die konvertierte
+                        Zahl in CX, und AX wird auf 0 gesetzt.<br>
+                        Bei einem Fehler wird CX auf 0 gesetzt und AX auf -1.<br>
+                        Die Zahl muss dabei in den 16-Bit Bereich passen, d&uuml;rfen aber
+                        negativ sein (-32678 - 32677).
                     </div>
                 </li>
             </ul>

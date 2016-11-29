@@ -1,3 +1,4 @@
+CLI_WELCOME="Welcome to PotatOS!\nType 'help' to get help!"
 HELP="\n  ls [ext]           - Shows all files with details\n  ll                 - Lists all files\n  help               - Views the help\n  date               - Shows the date\n  time               - Shows the time\n  info               - View systeminformation\n  color <color>      - Change color (0=help)\n  cls                - Clears the screen\n  rename <org> <new> - Rename a file\n  del <datei>        - Delete a file\n"
 SHUTDOWN="\nThe computer can be powered off savely now.\n"
 NO_PROGRAM="\nThis file can not be executed!\n"

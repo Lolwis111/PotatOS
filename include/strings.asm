@@ -7,11 +7,11 @@
 %ifndef _STRINGS_INC_
 %define _STRINGS_INC_
 
-;==============================
-;Dateiname von TEST.BIN nach TEST    BIN wandeln.
-;si => Dateiname
-;di <= FAT12 Dateiname
-;==============================
+; ==============================
+; Dateiname von TEST.BIN nach TEST    BIN wandeln.
+; si => Dateiname
+; di <= FAT12 Dateiname
+; ==============================
 AdjustFileName:
 	xor cx, cx
 .copy:
@@ -43,13 +43,14 @@ AdjustFileName:
 .error:
 	mov ax, -1
 	ret
-;==============================
+; ==============================
 
-;==============================
-;Dateiname von "TEST" nach "TEST       " wandeln.
-;si => Dateiname
-;di <= FAT12 Dateiname
-;==============================
+
+; ==============================
+; Dateiname von "TEST" nach "TEST       " wandeln.
+; si => Dateiname
+; di <= FAT12 Dateiname
+; ==============================
 AdjustDirName:
 	xor cx, cx
 .copy:
@@ -76,12 +77,13 @@ AdjustDirName:
 .error:
 	mov ax, -1
 	ret
-;==============================
+; ==============================
 
-;==============================
-;String in Großbuchstaben wandeln
-;SI => String
-;==============================
+
+; ==============================
+; String in Großbuchstaben wandeln
+; SI => String
+; ==============================
 UpperCase:
 .loop1:
 	cmp byte [si], 00h
@@ -101,14 +103,14 @@ UpperCase:
 .noatoz:
 	inc si
 	jmp .loop1
-;==============================
+; ==============================
 
 
-;==============================
+; ==============================
 ; SI -> String
 ; AL -> Splitter
 ; CX <- Länge
-;==============================
+; ==============================
 StringLength:
 	push bx
 	push dx
@@ -133,14 +135,14 @@ StringLength:
 	pop bx
 	xor cx, cx
 	ret
-;==============================
+; ==============================
 
 
-;==============================
-;Index des ersten Leerzeichens abrufen (Parameter parsen)
-;SI => String
-;CX <= Index
-;==============================
+; ==============================
+; Index des ersten Leerzeichens abrufen (Parameter parsen)
+; SI => String
+; CX <= Index
+; ==============================
 fileNameLength:
 	push bx
 	push dx
@@ -167,7 +169,36 @@ fileNameLength:
 	ret
 	
 .noArgs		db "NO ARGUMENT", 0Dh, 0Ah, 00h
-;==============================
+; ==============================
+
+
+; =============================
+; Dateiname von 'TEST    BIN' nach
+; TEST.BIN wandeln.
+; SI <= FAT-Dateiname
+; DI => normaler Dateiname
+; =============================
+ReadjustFileName:
+    mov di, .newFileName
+    pusha
+    mov cx, 8
+.scan: ; alles bis zum Leerzeichen, aber maximal 8 Zeichen kopieren
+    cmp byte [si], 20h
+    je .return
+    movsb
+    loop .scan
+.return:
+    mov al, '.' ; den Punkt nach dem Dateinamen einfügen
+    stosb
+    add si, cx  ; die Leerzeichen überspringen
+    movsw       ; die letzten drei Zeichen (Erweiterung
+    movsb       ; ebenfalls kopieren.
+    xor al, al  ; \0-terminieren
+    stosb
+    popa
+    ret
+.newFileName db "            ", 00h
+; =============================
 
 ;==============================
 ;Index des ersten Leerzeichens abrufen (Parameter parsen)

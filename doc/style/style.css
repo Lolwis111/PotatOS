@@ -4,6 +4,11 @@
     margin: 0;
 }
 
+html
+{
+    font-family: "Verdana", "Sans-Serif";
+}
+
 p
 {
     padding: 5px;
@@ -19,6 +24,11 @@ li
 {
     margin-right: 10px;
     margin-left: 10px;
+}
+
+.tt
+{
+    font-family: "Lucida Console", monospace;
 }
 
 .int21_fkt
