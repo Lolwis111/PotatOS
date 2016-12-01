@@ -18,21 +18,26 @@ jmp start
 msgFile		db 0Dh, 0Ah, "Datei:", 00h
 input		times 12 db 0
 fileName	times 12 db 0
+hack        db 00h
 reg_es		dw 0000h
 
 ; =====================================================================
 start:
-	mov bx, ax
-	cmp byte [bx], 00h	;Prüfen ob Argument vorhanden ist
+	mov si, ax
+	cmp byte [si], 00h	;Prüfen ob Argument vorhanden ist
 	je .noArgument		;Nein?
 
-	mov si, ax			;Wenn ja dann Datei aus dem Argument laden
+    cmp byte [si], '-'
+    jne .load
+    mov byte [hack], 01h
+    inc si
+.load:
 	mov di, fileName
 	call AdjustFileName
 	
 	mov dx, fileName
 	xor bx, bx
-	mov ebp, 0x9200 
+	mov ebp, 0x9300 
 	mov ah, 05h
 	int 21h				;Datei laden
 	cmp ax, -1
@@ -64,7 +69,7 @@ start:
 	
 	mov dx, fileName
 	xor bx, bx
-	mov ebp, 0x9200
+	mov ebp, 0x9300
 	mov ah, 05h
 	int 21h				;Datei laden
 	cmp ax, -1
@@ -91,7 +96,7 @@ exitV:
 	mov ax, 0003h
 	int 10h
 	
-	mov ax, word [reg_es]
+	mov ax, word [reg_es] ; Ursprüngliches Segement wiederherstellen
 	mov es, ax
 	
 .clear_screen:
@@ -112,18 +117,49 @@ exitV:
 ;======================================================================
 
 
+; =====================================================================
+exitInvalid:
+    mov ax, word [reg_es] ; Ursprüngliches Segment wiederherstellen
+    mov es, ax
+
+    mov ah, 01h
+    mov bl, byte [SYSTEM_COLOR]
+    mov dx, INVALID_FILE_ERROR
+    int 21h
+
+    xor bx, bx
+    xor ax, ax
+    int 21h
+; =====================================================================
+
+
 ; =====================================================================	
 init:
 	mov ax, es
-	mov word [reg_es], ax
+	mov word [reg_es], ax ; Segment sichern
 	
-	; Grafikmodus aktivieren, 320x200, 256 Farben
+	mov ax, 0x930
+	mov es, ax
+
+    mov esi, 03h
+    cmp byte [hack], 01h
+    je .setup
+
+    xor esi, esi
+    cmp byte [es:esi], 'L'
+    jne exitInvalid
+    inc esi
+    cmp byte [es:esi], 'L'
+    jne exitInvalid
+    inc esi
+    cmp byte [es:esi], 'P'
+    jne exitInvalid
+    inc esi
+
+.setup:
+    ; Grafikmodus aktivieren, 320x200, 256 Farben
 	mov ax, 0013h
 	int 10h
-	
-	mov ax, 0x920
-	mov es, ax
-	mov esi, 03h
 
 	mov ah, 0Ch
 	mov bh, 00h

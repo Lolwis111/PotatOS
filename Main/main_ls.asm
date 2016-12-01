@@ -1,18 +1,19 @@
 ; ====================================================
 ; Listet alle Dateien auf der Diskette auf
+; (inkl. Dateigröße)
 ; ====================================================
 view_dir:
 	mov word [.fileSize], 00h   ; Gesamtgröße auf 0 initalisieren
 	mov ah, 01h                 ; zwei NewLines ausgeben
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov dx, newLine
 	int 21h
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, newLine
 	int 21h
 	
-	mov bl, byte [0x1FFF]       ; Label1 ausgeben (siehe language.asm)
+	mov bl, byte [SYSTEM_COLOR] ; Label1 ausgeben (siehe language.asm)
 	mov ah, 01h
 	mov dx, LS_LABEL_1
 	int 21h
@@ -69,7 +70,7 @@ view_dir:
     mov si, fileName        ; Dateiname in NAME.EXT wandeln
     call ReadjustFileName
 
-	mov bl, byte [0x1FFF]   ; neuen Dateiname ausgeben
+	mov bl, byte [SYSTEM_COLOR]   ; neuen Dateiname ausgeben
 	mov ah, 01h
 	mov dx, di
 	int 21h
@@ -83,20 +84,20 @@ view_dir:
     mov ah, 0Eh
     int 21h
 
-	mov bl, byte [0x1FFF] ; und die Dateigröße ausgeben
+	mov bl, byte [SYSTEM_COLOR] ; und die Dateigröße ausgeben
 	mov ah, 01h
 	mov dx, .number
 	int 21h
 	jmp .ok
 	
 .dir:
-	mov bl, byte [0x1FFF] ; Verzeichnisse werden mit <DIR> kenntlich gemacht
+	mov bl, byte [SYSTEM_COLOR] ; Verzeichnisse werden mit <DIR> kenntlich gemacht
 	mov ah, 01h
 	mov dx, ldir
 	int 21h
 	
 .ok:
-	mov bl, byte [0x1FFF] ; OK: NewLine ausgeben
+	mov bl, byte [SYSTEM_COLOR] ; OK: NewLine ausgeben
 	mov ah, 01h
 	mov dx, newLine       
 	int 21h
@@ -120,7 +121,7 @@ view_dir:
 	pop si
 	pop cx
 .end:
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, LS_LABEL_2
 	int 21h
@@ -130,12 +131,12 @@ view_dir:
 	mov dx, .number
 	int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, .number
 	int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, newLine
 	int 21h
@@ -148,12 +149,12 @@ view_dir:
 
 
 ; ====================================================
-; Gibt alle Dateinamen einfach aus
+; Gibt alle Dateinamen hintereinander einfach aus
 ; ====================================================
 view_dir_2:
 	mov word [.fileSize], 00h
 	mov ah, 01h
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov dx, newLine
 	int 21h
 	
@@ -187,23 +188,23 @@ view_dir_2:
     mov si, fileName
     call ReadjustFileName
 
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, di
 	int 21h
 	
-    mov bl, byte [0x1FFF]
+    mov bl, byte [SYSTEM_COLOR]
     mov ah, 01h
-    mov dx, spacer2
+    mov dx, .spacer2
     int 21h
 
-	test byte [.attributes], 00010000b
+	test byte [.attributes], 00010000b ; Prüfen ob das Attribut "Verzeichnis" gesetzt?
 	jnz .dir
 
 	jmp .ok
 	
 .dir:
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, ldir
 	int 21h
@@ -230,12 +231,12 @@ view_dir_2:
 	pop cx
 .end:
 
-    mov bl, byte [0x1FFF]
+    mov bl, byte [SYSTEM_COLOR]
     mov ah, 01h
     mov dx, newLine
     int 21h
 
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, LS_LABEL_2
 	int 21h
@@ -245,18 +246,19 @@ view_dir_2:
 	mov dx, .number
 	int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, .number
 	int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, newLine
 	int 21h
 	
 	jmp main
 .number db "00000", 00h
+.spacer2 db " | ", 00h
 .fileSize dw 0000h
 .attributes db 00h
 ; ====================================================

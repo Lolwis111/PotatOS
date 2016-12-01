@@ -5,7 +5,7 @@ include_system="$build_home/include/" # Pfad zu den systemweiten Include-Dateien
 include_software="$build_home/Software/include/" # softwarespezifische Include-Dateien
 include_driver="$build_home/Treiber/include/" # systemspezifische Include-Dateien
 output_image_name="potatos.img" # Name des Ausgabeimages
-language="german" # zu erzeugende Sprache. Alle verfügbaren sind im Verzeichnis Lang/
+language="english" # zu erzeugende Sprache. Alle verfügbaren sind im Verzeichnis Lang/
 
 LIST_FILE=false
 NASM_FLAGS=" -Ox -w+oprhan-labels -f bin " # Mit Vorsicht verändern! -f bin ist wichtig! 
@@ -52,6 +52,7 @@ do
     rm -f "$i"
 done
 cd ..
+
 cd Tools/MkLocale/bin # Tool: MkLocale bereinigen
 rm -f mklocale
 cd ..
@@ -61,6 +62,17 @@ do
     rm -f "$i"
 done
 cd ../../../
+
+cd Tools/LLP/bin # Tool: MkLocale bereinigen
+rm -f llp
+cd ..
+cd obj
+for i in *.o
+do
+    rm -f "$i"
+done
+cd ../../../
+
 cd include
 if [ -e "language.asm" ] ; then # language.asm löschen 
     rm -f language.asm 
@@ -74,6 +86,7 @@ fi
 
 echo "Erzeuge Tools..."
 make -C Tools/MkLocale
+make -C Tools/LLP
 
 echo "Erzeuge language.asm..."
 if [ ! -e "./Lang/$language" ] ; then

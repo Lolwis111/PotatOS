@@ -47,18 +47,18 @@ delete_file:
 	
 .return:
 	mov ah, 01h
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov dx, newLine
 	int 21h
 	jmp main
 .invalid:
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov dx, WRITE_PROTECTION_ERROR
 	mov ah, 01h
 	int 21h
 	jmp .return
 .notFound:
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov dx, FILE_NOT_FOUND_ERROR
 	mov ah, 01h
 	int 21h
@@ -70,6 +70,11 @@ delete_file:
 ; Benennt eine Datei um	
 ; ====================================================
 rename_file:
+    mov di, .rArgument
+    xor ax, ax
+    mov cx, 12
+    rep stosw
+
 	mov si, cmdargument
 	call fileNameLength
 	push cx
@@ -123,13 +128,13 @@ rename_file:
 	
 .done:
 	mov si, fileName
-	mov di, rArgument
+	mov di, .rArgument
 	call AdjustFileName
 	cmp ax, -1
 	je .notFound
 	
 	mov ah, 13h
-	mov dx, rArgument
+	mov dx, .rArgument
 	int 21h
 	cmp ax, -1
 	jne .badFileName
@@ -149,35 +154,36 @@ rename_file:
 	add di, 20h
 	loop .fileLoop
 .notFound:
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov dx, FILE_NOT_FOUND_ERROR
 	mov ah, 01h
 	int 21h
 	jmp .return
 .badFileName:
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov dx, FILE_ALREADY_EXISTS_ERROR
 	mov ah, 01h
 	int 21h
 	jmp .return
 .invalid:
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov dx, WRITE_PROTECTION_ERROR
 	mov ah, 01h
 	int 21h
 	jmp .return
 .Found:
 	pop cx
-	mov si, rArgument
+	mov si, .rArgument
 	mov cx, 11
 	rep movsb
 	mov ah, 12h
 	int 21h
 .return:
 	mov dx, newLine
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	int 21h
 	jmp main
-invalidFiles db "MAIN    SYSIRQ     SYSSYSTEM  SYSLOADER  SYS"
+.rArgument db "            ", 00h, 00h
+invalidFiles db "MAIN    SYSIRQ     SYSSYSTEM  SYSLOADER  SYS" ; Systemdateien
 ; ====================================================

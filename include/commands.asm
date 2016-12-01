@@ -20,4 +20,8 @@ cmdCLEAR	db "CLS", 0x00      ; den Bildschirm leeren
 cmdRENAME	db "RENAME", 0x00   ; zum umbenennen von Dateien
 cmdDEL		db "DEL", 0x00      ; zum löschen von Dateien
 
+%ifdef _DEBUG
+cmdDUMP     db "DUMP", 0x00     ; Gibt die Puffer aus
+%endif
+
 %endif

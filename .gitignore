@@ -1,6 +1,8 @@
 # Language.asm is generated
 include/language.asm
 
+Bochs/
+
 # strings.sys is also generated
 Misc/strings.sys
 

@@ -20,11 +20,13 @@ start:
 ; ====================================================
 ; Main-Funtkion des Kernels (Kommandozeile)
 ; ====================================================
-main:	
+main:
 	nop
+    nop
+    nop
 	call clearBuffer
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov dx, ready
 	mov ah, 01h
 	int 21h
@@ -38,7 +40,16 @@ main:
 	call UpperCase
 	
 	call parseCommands
-	
+
+%ifdef _DEBUG
+    mov di, command
+    mov si, cmdDUMP
+    mov ah, 02h
+    int 21h
+    test al, al
+    je dump_all
+%endif
+
 	mov di, command
 	mov si, cmdLS
 	mov ah, 02h
@@ -121,11 +132,10 @@ main:
 %include "commands.asm"
 %include "strings.asm"
 %include "common.asm"
-; %include "language.asm"
 
 %include "main_util.asm" ; enthält allgemeine Befehle
 %include "main_file.asm" ; enthält die Dateioperationsbefehle
-%include "main_ls.asm"
+%include "main_ls.asm"   ; enthält die Implementierung von 'ls' und 'll'
 
 newLine db 0Dh, 0Ah, 00h
 ready db "CMD> ", 00h
@@ -143,20 +153,19 @@ parseCommands:
 .skipLoop:
 	lodsb
 	inc cx
-	cmp al, 20h	; Leerzeichen
+	cmp al, 0x20	; Leerzeichen
 	je .copy
-	cmp al, 00h
+	cmp al, 0x00
 	je .return
 	mov byte [di], al
 	inc di
 	jmp .skipLoop
 .copy:
-	mov di, cmdargument
-	mov ax, 64
+	mov di, cmdargument ; alles ab dem ersten Leerzeichen (aber maximal 64 Bytes)
+	mov ax, 64          ; in das Argument kopieren
 	sub ax, cx
 	mov cx, ax
-	rep movsb
-	ret	
+	rep movsb	
 .return:
 	ret
 ; ====================================================
@@ -166,7 +175,7 @@ parseCommands:
 ; Zeigt die Hilfe an	
 ; ====================================================
 view_help:
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h					; Hilfe ausgeben
 	mov dx, HELP
 	int 21h
@@ -177,22 +186,22 @@ view_help:
 
 ; ====================================================	
 show_version:
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, newLine
 	int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, newLine
 	int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, .lblName
 	int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, .lblVersion
 	int 21h
@@ -206,12 +215,12 @@ show_version:
 	
 	mov dh, ah
 	add dh, 48
-	mov dl, byte [0x1FFF]
+	mov dl, byte [SYSTEM_COLOR]
 	mov ah, 10h
 	int 21h
 	
 	mov dh, '.'
-	mov dl, byte [0x1FFF]
+	mov dl, byte [SYSTEM_COLOR]
 	mov ah, 10h
 	int 21h
 	
@@ -219,11 +228,11 @@ show_version:
 	
 	mov dh, al
 	add dh, 48
-	mov dl, byte [0x1FFF]
+	mov dl, byte [SYSTEM_COLOR]
 	mov ah, 10h
 	int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, newLine
 	int 21h
@@ -233,22 +242,22 @@ show_version:
     push bx
     mov dx, ax
     mov ah, 01h
-    mov bl, byte [0x1FFF]
+    mov bl, byte [SYSTEM_COLOR]
     int 21h
 
     mov ah, 01h
     mov dx, newLine
-    mov bl, byte [0x1FFF]
+    mov bl, byte [SYSTEM_COLOR]
     int 21h
 
     pop bx
 
     mov dx, bx
     mov ah, 01h
-    mov bl, byte [0x1FFF]
+    mov bl, byte [SYSTEM_COLOR]
     int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, newLine
 	int 21h
@@ -275,7 +284,7 @@ look_extern:
 	mov si, command
 	add si, cx
 	mov di, programExt
-	mov cx, 3
+	mov cx, 4
 	rep cmpsb
 	jne .eError
 	jmp .extOk
@@ -285,9 +294,9 @@ look_extern:
 	mov si, command
 	call StringLength
 	
-	mov si, command
-	add si, cx
-	mov byte [si], '.'
+	mov si, command         ; Manuell die Dateiendung anfügen
+	add si, cx              ; um zu prüfen ob das Programm einfach nur ohne
+	mov byte [si], '.'      ; Erweiterung aufgerufen wurde
 	mov byte [si+1], 'B'
 	mov byte [si+2], 'I'
 	mov byte [si+3], 'N'
@@ -302,24 +311,24 @@ look_extern:
 .load:
 	mov dx, rFileName		; Datei in den Speicher laden
 	xor bx, bx
-	mov bp, SOFTWARE_BASE
+	mov bp, SOFTWARE_BASE   ; Basisadresse (in der Regel 0x0000:0x9000)
 	mov ah, 05h
 	int 21h
 	cmp ax, -1
 	je .error
 		
 	mov ax, cmdargument
-	jmp SOFTWARE_BASE		; und Programm ausführen
+	jmp SOFTWARE_BASE		; und in das Programm springen
 	
 .error:						; Allgemeiner Fehler
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, LOAD_ERROR
 	int 21h
 	ret
 	
 .eError:					; Keine-BIN-Datei-Fehler
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, NO_PROGRAM
 	int 21h
@@ -329,7 +338,7 @@ look_extern:
 	
 ; ====================================================
 show_time:				; Zeigt die Zeit an (z.B. 12:04 Uhr)
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, newLine
 	int 21h
@@ -338,12 +347,12 @@ show_time:				; Zeigt die Zeit an (z.B. 12:04 Uhr)
 	int 21h
 
 	mov ah, 01h
-    mov bl, byte [0x1FFF]
+    mov bl, byte [SYSTEM_COLOR]
 	int 21h
 
     mov ah, 01h
     mov dx, newLine
-    mov bl, byte [0x1FFF]
+    mov bl, byte [SYSTEM_COLOR]
     int 21h
 
 	jmp main
@@ -352,7 +361,7 @@ show_time:				; Zeigt die Zeit an (z.B. 12:04 Uhr)
 
 ; ====================================================
 show_date:				;Zeigt das Datum an	(z.B. 12.03.2014)
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	mov dx, newLine
 	int 21h
@@ -360,11 +369,11 @@ show_date:				;Zeigt das Datum an	(z.B. 12.03.2014)
 	mov ah, 07h
 	int 21h
 	
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	int 21h
 
-    mov bl, byte [0x1FFF]
+    mov bl, byte [SYSTEM_COLOR]
     mov dx, newLine
     mov ah, 01h
     int 21h
@@ -395,34 +404,36 @@ clearBuffer:
 	push si
 	push di
 	push bp
+
 	mov cx, 64
 	mov di, command
 	mov si, cmdargument
 	mov bp, inputBuffer
-.loop:
+.L1:
 	mov byte [di], 00h
 	mov byte [bp], 00h
 	mov byte [si], 00h
 	inc di
 	inc si
 	inc bp
-	dec cx
-	jnz .loop
+
+    dec cx
+    cmp cx, 00h
+    ja .L1
 
 	mov cx, 11
 	mov di, rFileName
-	mov bp, rArgument
-.loop1:
+.L2 :
 	mov byte [di], 00h
-	mov byte [bp], 00h
 	inc di
-	inc bp
 	dec cx
-	jnz .loop1
+    cmp cx, 00h
+	ja .L2
 
-	pop bp
+    pop bp
 	pop di
 	pop si
+
 	ret
 ; ====================================================
 
@@ -430,9 +441,6 @@ clearBuffer:
 programExt	db ".BIN"						; Dateierweiterung eines Programms
 fileName 	db "             ", 00h			; Dateiname, Eingabeformat	(z.B. TEST.BIN)
 rFileName	db "           ", 0Dh, 0Ah, 00h	; Dateiname, FAT12-Format	(z.B. TEST    BIN)
-rArgument	db "           ", 0Dh, 0Ah, 00h ; Argument, FAT12-Format	(z.B. TEST    TXT)
-; spacer 		db "          ", 00h
-spacer2     db " | ", 00h
 ldir		db "   <DIR>", 00h
 msgWelcome	db "BOOT OK.", 0Dh, 0Ah, 00h
 inputBuffer 	times 64 db 00h

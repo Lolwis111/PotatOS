@@ -21,7 +21,7 @@ main:
 	je intToStr
     
 	cmp ah, 04h			; Eine Zeichenkette von der Tastatur einlesen
-	je readLine
+	je readLine 
 	
     cmp ah, 05h			; Eine Datei in einen Speicherbereich laden
 	je loadFile
@@ -376,8 +376,8 @@ readLine:
 	cmp al, 08h             ; Rücktaste?	
 	je .back                ; Ja letztes Zeichen löschen
 	
-	inc byte [.counter]     ; Zähler inkrementieren
-	cmp byte [.counter], cl ; und ggf. weitere Eingabe unterbinden
+	inc word [.counter]     ; Zähler inkrementieren
+	cmp word [.counter], cx ; und ggf. weitere Eingabe unterbinden
 	jg .kbLoop
 	
 	cmp byte [SYSTEM_KB_STATUS], 0 ; Prüfen ob Y und Z vertauscht werden müssen
@@ -423,9 +423,9 @@ readLine:
 	jmp .kbLoop			; nächstes Zeichen einlesen
 	
 .back:
-	cmp byte [.counter], 00h
+	cmp word [.counter], 00h
 	jbe .kbLoop
-	dec byte [.counter]
+	dec word [.counter]
 	
 	pusha
 	
@@ -454,10 +454,10 @@ readLine:
 .return:
 	xor al, al
 	stosb				; 0 Anhängen (Stringende)
-	movzx cx, byte [.counter]
+	mov cx, word [.counter]
 	iret				; Return
 	
-.counter db 00h
+.counter dw 00h
 
 
 ; =========================================
@@ -1025,3 +1025,5 @@ hardwareInfo:
 .vendorString times 13 db 00h
 .modelString times 49 db 00h
 ; ======================================================
+
+db "SYSTEM_END"

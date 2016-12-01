@@ -50,8 +50,8 @@
      @@       - GNU C++ Compiler         @@   
       @@      - dosfstools               @    
       @@@     - qemu                     @    
-       @@@                               @    
-        @@@@                             @    
+       @@@    - EasyBMP                  @    
+        @@@@  (see Tools/LLP/EasyBMP/)   @    
           @@@        (C) 2016           @@     
            @@@@                      @@@      
              @@@@@                @@@@        

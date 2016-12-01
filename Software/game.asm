@@ -15,7 +15,7 @@ clearScreen:
 	xor bx, bx
 	mov dl, 0x20
 	;mov dh, byte [0x1FFF]
-	mov cx, 2000d
+	mov cx, 2000
 .l1:
 	mov word [fs:bx], dx
 	add bx, 2
@@ -34,7 +34,7 @@ printChar:
 	movzx bx, cl
 	movzx ax, ch
 	shl bx, 1
-	mov cx, 160d
+	mov cx, 160
 	mul cx
 	add bx, ax
     pop dx
@@ -134,11 +134,11 @@ gameLoop:
     
     mov cx, 65535       ; Prozess verlangsammen
 .l2:
-    push cx
-    mov cx, 65535
-    .l3:
-        loop .l3
-    pop cx
+    ;push cx
+    ;mov cx, 65535
+    ;.l3:
+    ;    loop .l3
+    ;pop cx
     loop .l2
     
     mov ah, 01h         ; Wenn eine Taste gedrückt wird -> Abbrechen

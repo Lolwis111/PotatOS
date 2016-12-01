@@ -1,22 +1,66 @@
+%ifdef _DEBUG
+; ====================================================
+; gibt den Inhalt der Puffer aus
+; ====================================================
+dump_all:
+    mov ah, 01h
+    mov dx, newLine
+    mov bl, byte [SYSTEM_COLOR]
+    int 21h
+
+    mov ah, 01h
+    mov dx, inputBuffer
+    mov bl, byte [SYSTEM_COLOR]
+    int 21h
+
+    mov ah, 01h
+    mov dx, newLine
+    mov bl, byte [SYSTEM_COLOR]
+    int 21h
+
+    mov ah, 01h
+    mov dx, cmdargument
+    mov bl, byte [SYSTEM_COLOR]
+    int 21h
+
+    mov ah, 01h
+    mov dx, newLine
+    mov bl, byte [SYSTEM_COLOR]
+    int 21h
+
+    mov ah, 01h
+    mov dx, command
+    mov bl, byte [SYSTEM_COLOR]
+    int 21h
+
+    mov ah, 01h
+    mov dx, newLine
+    mov bl, byte [SYSTEM_COLOR]
+    int 21h
+
+    jmp main
+; ====================================================
+%endif
+
 ; ====================================================
 ; Löscht den kompletten Text aus der Konsole
 ; ====================================================
 clear_screen:
-	mov ax, 0xB800
+	mov ax, VIDEO_MEMORY_SEGMENT
 	mov gs, ax
 	xor bx, bx
 	
-	mov al, byte [0x1FFF]
-	mov cx, 2000
+	mov al, byte [SYSTEM_COLOR]
+	mov cx, SCREEN_BUFFER_SIZE
 .clearLoop:
-	mov byte [gs:bx], 20h
+	mov byte [gs:bx], 0x20 ; Bildbereich mit Leerzeichen überschreiben
 	inc bx
 	mov byte [gs:bx], al
 	inc bx
 	
 	loop .clearLoop
 	
-	xor dx, dx
+	xor dx, dx  ; Cursorposition auf 0;0 setzen
 	mov ah, 0Eh
 	int 21h
 	
@@ -44,10 +88,10 @@ change_color:
 	je .color_help
 	
 	mov dx, cx
-	mov ax, 0xB800
+	mov ax, VIDEO_MEMORY_SEGMENT
 	mov gs, ax
 	mov bx, 01h
-	mov byte [0x1FFF], dl
+	mov byte [SYSTEM_COLOR], dl
 	
 	mov cx, 2000
 .clearLoop:
@@ -57,36 +101,25 @@ change_color:
 	
 	mov ah, 01h
 	mov dx, newLine
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	int 21h
 	
 	jmp main
 	
 .error:
 	mov dx, .errorStr
-	mov bl, byte [0x1FFF]
+	mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	int 21h
 	jmp main
 	
 .color_help:
-	mov dx, .colorHelp
-	mov bl, byte [0x1FFF]
+	mov dx, COLOR_HELP	
+    mov bl, byte [SYSTEM_COLOR]
 	mov ah, 01h
 	int 21h
 	jmp main
-	
-.colorHelp	db 0Dh, 0Ah, "Farbe wird durch zwei Ziffern angegeben"
-			db 0Dh, 0Ah, "0 Schwarz   8 Grau"
-			db 0Dh, 0Ah, "1 Blau      9 Hellblau"
-			db 0Dh, 0Ah, "2 Gruen     A Hellgruen"
-			db 0Dh, 0Ah, "3 Cyan      B Hellcyan"
-			db 0Dh, 0Ah, "4 Rot       C Hellrot"
-			db 0Dh, 0Ah, "5 Magenta   D Hellmagenta"
-			db 0Dh, 0Ah, "6 Braun     E Hellgelb"
-			db 0Dh, 0Ah, "7 Weiss     F Hellweiss"
-			db 0Dh, 0Ah, 00h
-		   
+
 .errorStr db 0Dh, 0Ah, "Error", 0Dh, 0Ah, 00h
 .color db "00000", 00h
 ; ====================================================
