@@ -17,9 +17,9 @@ int main(int argc, char **argv)
     std::string outputFilename = argv[2];
     std::ofstream outfile(outputFilename.c_str());
 
-    outfile.put((unsigned char)0x4C);
-    outfile.put((unsigned char)0x4C);
-    outfile.put((unsigned char)0x50);
+    outfile.put((unsigned char)0x4C); // L
+    outfile.put((unsigned char)0x4C); // L 
+    outfile.put((unsigned char)0x50); // P
 
     BMP bitmap;
     bitmap.ReadFromFile(argv[1]);
@@ -45,8 +45,8 @@ int main(int argc, char **argv)
                 g2 = bitmap(x, y)->Green;
                 b2 = bitmap(x, y)->Blue;
             }
-
             x--;
+           
             outfile.put(counter);
             outfile.put((unsigned char)getColor(r1, g1, b1));
         }

@@ -37,7 +37,7 @@ start:
 	
 	mov dx, fileName
 	xor bx, bx
-	mov ebp, 0x9300 
+	mov ebp, 0x9400 
 	mov ah, 05h
 	int 21h				;Datei laden
 	cmp ax, -1
@@ -69,7 +69,7 @@ start:
 	
 	mov dx, fileName
 	xor bx, bx
-	mov ebp, 0x9300
+	mov ebp, 0x9400
 	mov ah, 05h
 	int 21h				;Datei laden
 	cmp ax, -1
@@ -138,7 +138,7 @@ init:
 	mov ax, es
 	mov word [reg_es], ax ; Segment sichern
 	
-	mov ax, 0x930
+	mov ax, 0x940
 	mov es, ax
 
     mov esi, 03h
@@ -171,17 +171,18 @@ init:
 ; ======================================================================
 loopX:
 	movzx bp, byte [es:esi]
-	inc esi
-	
+	inc esi	
 	mov al, byte [es:esi]
 	inc esi
-	
+    
 .drawLoop:
 	inc cx
+    pusha
 	int 10h
+    popa
 	sub bp, 1
 	jnz .drawLoop
-	
+
 	cmp cx, 320
 	je .newLine
 	jmp loopX
@@ -192,5 +193,5 @@ loopX:
 	cmp dx, 200
 	je exitV
 	
-	jmp loopX
+	jmp loopX 
 ; ======================================================================

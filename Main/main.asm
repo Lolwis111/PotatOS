@@ -316,7 +316,11 @@ look_extern:
 	int 21h
 	cmp ax, -1
 	je .error
-		
+
+    ; Größe des Programms direkt vor das Programm
+    ; schreiben (für Speicherverwaltung)
+    ; mov word [0x0000:SOFTWARE_BASE - 2], cx
+
 	mov ax, cmdargument
 	jmp SOFTWARE_BASE		; und in das Programm springen
 	

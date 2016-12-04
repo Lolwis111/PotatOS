@@ -53,26 +53,6 @@ do
 done
 cd ..
 
-cd Tools/MkLocale/bin # Tool: MkLocale bereinigen
-rm -f mklocale
-cd ..
-cd obj
-for i in *.o
-do
-    rm -f "$i"
-done
-cd ../../../
-
-cd Tools/LLP/bin # Tool: MkLocale bereinigen
-rm -f llp
-cd ..
-cd obj
-for i in *.o
-do
-    rm -f "$i"
-done
-cd ../../../
-
 cd include
 if [ -e "language.asm" ] ; then # language.asm löschen 
     rm -f language.asm 
@@ -84,9 +64,8 @@ if [ "$1" = "clean" ] ; then
     exit
 fi
 
-echo "Erzeuge Tools..."
-make -C Tools/MkLocale
-make -C Tools/LLP
+echo "Erzeuge experimentelle 32-Bit Komponenten..."
+make -C Experimental/
 
 echo "Erzeuge language.asm..."
 if [ ! -e "./Lang/$language" ] ; then
@@ -95,7 +74,7 @@ if [ ! -e "./Lang/$language" ] ; then
     exit
 fi
 
-./Tools/MkLocale/bin/mklocale $language $build_home
+./Tools/MkLocale/bin/mklocale $language $build_home || exit
 
 if [ ! -e $output_image_name ]
 then
