@@ -176,7 +176,7 @@ parseCommands:
 ; ====================================================
 view_help:
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h					; Hilfe ausgeben
+	mov ah, 0x01					; Hilfe ausgeben
 	mov dx, HELP
 	int 21h
 	
@@ -187,28 +187,28 @@ view_help:
 ; ====================================================	
 show_version:
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, newLine
-	int 21h
+	int 0x21
 	
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, newLine
-	int 21h
+	int 0x21
 	
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, .lblName
-	int 21h
+	int 0x21
 	
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, .lblVersion
-	int 21h
+	int 0x21
 
 	
-	mov ah, 08h
-	int 21h
+	mov ah, 0x08
+	int 0x21
 	; AH -> Majorversion
 	; AL -> Minorversion
 	push ax
@@ -216,57 +216,57 @@ show_version:
 	mov dh, ah
 	add dh, 48
 	mov dl, byte [SYSTEM_COLOR]
-	mov ah, 10h
-	int 21h
+	mov ah, 0x10
+	int 0x21
 	
 	mov dh, '.'
 	mov dl, byte [SYSTEM_COLOR]
-	mov ah, 10h
-	int 21h
+	mov ah, 0x10
+	int 0x21
 	
 	pop ax
 	
 	mov dh, al
 	add dh, 48
 	mov dl, byte [SYSTEM_COLOR]
-	mov ah, 10h
-	int 21h
+	mov ah, 0x10
+	int 0x21
 	
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, newLine
-	int 21h
+	int 0x21
 
-    mov ah, 0Ch
-    int 21h
+    mov ah, 0x0C
+    int 0x21
     push bx
     mov dx, ax
-    mov ah, 01h
+    mov ah, 0x01
     mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    int 0x21
 
-    mov ah, 01h
+    mov ah, 0x01
     mov dx, newLine
     mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    int 0x21
 
     pop bx
 
     mov dx, bx
-    mov ah, 01h
+    mov ah, 0x01
     mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    int 0x21
 	
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, newLine
-	int 21h
+	int 0x21
 	
 	jmp main
 
 .lblVersion db "Version: ", 00h
-.lblName    db "PotatOS (C)", DEV_YEAR_S, "-", DEV_YEAR_C, 0Dh, 0Ah, 00h
-.number 	db "00000", 00h, 00h, 00h
+.lblName    db "PotatOS (C)", DEV_YEAR_S, "-", DEV_YEAR_C, 0x0D, 0x0A, 0x00
+.number 	db "00000", 0x00, 0x00, 0x00
 ;====================================================
 
 
@@ -278,7 +278,7 @@ look_extern:
 	mov si, command
 	call StringLength
 
-	cmp cx, 00h
+	cmp cx, 0x00
 	je .noExt
 	
 	mov si, command
@@ -290,7 +290,7 @@ look_extern:
 	jmp .extOk
 	
 .noExt: ; Prüfen ob ein Programm ohne Dateiendung eingegeben wurde
-	mov al, 00h
+	mov al, 0x00
 	mov si, command
 	call StringLength
 	
@@ -312,8 +312,8 @@ look_extern:
 	mov dx, rFileName		; Datei in den Speicher laden
 	xor bx, bx
 	mov bp, SOFTWARE_BASE   ; Basisadresse (in der Regel 0x0000:0x9000)
-	mov ah, 05h
-	int 21h
+	mov ah, 0x05
+	int 0x21
 	cmp ax, -1
 	je .error
 
@@ -326,16 +326,16 @@ look_extern:
 	
 .error:						; Allgemeiner Fehler
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, LOAD_ERROR
-	int 21h
+	int 0x21
 	ret
 	
 .eError:					; Keine-BIN-Datei-Fehler
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, NO_PROGRAM
-	int 21h
+	int 0x21
 	ret
 ; ====================================================
 
@@ -343,21 +343,21 @@ look_extern:
 ; ====================================================
 show_time:				; Zeigt die Zeit an (z.B. 12:04 Uhr)
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, newLine
-	int 21h
+	int 0x21
 	
-	mov ah, 06h
-	int 21h
+	mov ah, 0x06
+	int 0x21
 
-	mov ah, 01h
+	mov ah, 0x01
     mov bl, byte [SYSTEM_COLOR]
-	int 21h
+	int 0x21
 
-    mov ah, 01h
+    mov ah, 0x01
     mov dx, newLine
     mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    int 0x21
 
 	jmp main
 ; ====================================================
@@ -366,21 +366,21 @@ show_time:				; Zeigt die Zeit an (z.B. 12:04 Uhr)
 ; ====================================================
 show_date:				;Zeigt das Datum an	(z.B. 12.03.2014)
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
+	mov ah, 0x01
 	mov dx, newLine
-	int 21h
+	int 0x21
 	
-	mov ah, 07h
-	int 21h
+	mov ah, 0x07
+	int 0x21
 	
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	int 21h
+	mov ah, 0x01
+	int 0x21
 
     mov bl, byte [SYSTEM_COLOR]
     mov dx, newLine
-    mov ah, 01h
-    int 21h
+    mov ah, 0x01
+    int 0x21
 
 	jmp main
 ; ====================================================
@@ -393,8 +393,8 @@ Puts:
 	lodsb
 	or al, al
 	jz .return
-	mov ah, 0Eh
-	int 10h
+	mov ah, 0x0E
+	int 0x10
 	jmp Puts
 .return:
 	ret

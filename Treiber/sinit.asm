@@ -118,12 +118,14 @@ start:
 	je .color
 	pop si
 
+%if _HIGH_MEM_ = TRUE
 	push si
 	mov di, cmdHigh
 	mov cx, 05h
 	rep cmpsb
 	je .high
 	pop si
+%endif
 	
 	push si
 	mov di, cmdKBXY

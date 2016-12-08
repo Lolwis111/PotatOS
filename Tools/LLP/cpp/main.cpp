@@ -40,7 +40,8 @@ int main(int argc, char **argv)
             {
                 counter++;
                 x++;
-                if(x == w || counter == 255) break;
+                //if(x == w || counter == 255) break;
+                if(counter == 255) break;
                 r2 = bitmap(x, y)->Red;
                 g2 = bitmap(x, y)->Green;
                 b2 = bitmap(x, y)->Blue;

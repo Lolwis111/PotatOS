@@ -10,6 +10,7 @@ start:
 	jmp boot
 
 %include "bpb.asm" ; BIOS Parameter Block
+%include "defines.asm"
 
 ; ==============================
 ; Gibt eine Zeichenkette aus
@@ -105,7 +106,7 @@ LBACHS:
 ; Der eigentlich Bootvorgang
 ; ============================================================
 boot: 
-	mov byte [0x7FFF], dl   ; Startlaufwerk sichern
+	mov byte [SYSTEM_BOOT_DRIVE], dl   ; Startlaufwerk sichern
 
     cli                     ; Segmente entsprechend setzen
 	mov ax, 07C0h
@@ -120,7 +121,7 @@ boot:
 	
     sti
 
-	mov byte [0x1FFF], 07h ; Standartfarbe (Weiß auf schwarz) setzen
+	mov byte [SYSTEM_COLOR], 07h ; Standartfarbe (Weiß auf schwarz) setzen
 	
 	mov si, msgLoading
 	call Print
