@@ -1,81 +1,90 @@
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Stellt den Hauptteil des Systems dar. Stellt %
-; % alle Betriebssystemfunktionen als Interrupt  %
-; % 33 zur Verfügung.                            %
+; % Contains basic os features that can be       %
+; % accessed using the int 0x21                  %
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 [ORG 0x1000]
 [BITS 16]
 
 main:
-	cmp ah, 00h			; Zum Kernel springen
+	cmp ah, 00h			; exit program, jump to cli
 	je exitProgram
 	
-	cmp ah, 01h			; Einen 0 terminierten String ausgeben
+	cmp ah, 01h			; print \0 terminated string
 	je printString
 	
-	cmp ah, 02h			; Zwei Zeichenketten miteinander vergleichen
+	cmp ah, 02h			; compare two strings
 	je compareString
 	
-    cmp ah, 03h			; Zahl in String wandeln
+    cmp ah, 03h			; convert int to string
 	je intToStr
     
-	cmp ah, 04h			; Eine Zeichenkette von der Tastatur einlesen
+	cmp ah, 04h			; read string from keyboard
 	je readLine 
 	
-    cmp ah, 05h			; Eine Datei in einen Speicherbereich laden
+    cmp ah, 05h			; load file
 	je loadFile
     
-	cmp ah, 06h			; Zeitstring abrufen
+	cmp ah, 06h			; get time as string
 	je getTimeString
 	
-	cmp ah, 07h			; Datumsstring abrufen
+	cmp ah, 07h			; get date as string
 	je getDateString
 	
-	cmp ah, 08h			; Systemversion abrufen
+	cmp ah, 08h			; system version
 	je getSystemVersion
 
-    cmp ah, 09h			; String in Zahl wandeln
+    cmp ah, 09h			; convert string to int
     je stringToInt
 
-    cmp ah, 0Ah         ; Löscht eine Datei
+    cmp ah, 0Ah         ; delete file
 	je deleteFile    
 
-    cmp ah, 0Bh         ; Zufallszahl erzeugen 
-    je random           ; TODO: so implementieren dass es auch funktioniert :)
+    cmp ah, 0Bh         ; random number generator
+    je random           
    
-    cmp ah, 0Ch         ; Gibt CPU Informationen
+    cmp ah, 0Ch         ; get cpu info
     je hardwareInfo
 
-   	cmp ah, 0Dh         ; Ein Hex-Byte in eine Zahl wandeln
+   	cmp ah, 0Dh         ; string hex-byte to decimal
 	je hexToDec
 
-   	cmp ah, 0Eh         ; Cursorposition setzen
+   	cmp ah, 0Eh         ; set cursor position
 	je setCursorPosition
    
-   	cmp ah, 0Fh         ; Cursorposition lesen
+   	cmp ah, 0Fh         ; get cursor positon
 	je getCursorPosition
    
-    cmp ah, 10h         ; ein einzelnes Zeichen ausgeben
+    cmp ah, 10h         ; print a single character
 	je printCharC
    
-    cmp ah, 11h         ; Root speichern
+    cmp ah, 11h         ; save root dir
 	je getRootDir
 	
-	cmp ah, 12h         ; Root laden
+	cmp ah, 12h         ; load root dir
 	je setRootDir
 	
-	cmp ah, 13h         ; Datei suchen
+	cmp ah, 13h         ; look for a file
 	je findFile
     
-	cmp ah, 14h         ; Datei speichern
+	cmp ah, 14h         ; write a file
 	je writeFile
     
-    cmp ah, 15h         ; ein Byte in einen Hex-String wandeln
+    cmp ah, 15h         ; convert byte to hex-string
 	je decToHex
 
-    cmp ah, 16h
+    cmp ah, 16h         ; convert bcd-byte to int-byte
     je bcdToInt
+    
+    
+    ; two all new 32-bit ready string-int operations
+    
+    cmp ah, 0xAA
+    je intToString32
+    
+    cmp ah, 0xBB
+    je stringToInt32
 
 	iret
 
@@ -88,29 +97,24 @@ col db 00h
 row db 09h
 	
 ; =====================================================
-; Beendet ein Programm und springt zurück zu PotatOS
+; exits the current program and jumps back to cli
 ; =====================================================
 exitProgram:	
-	test bx, bx     ; Überprüfen ob das Programm einen Fehlercode angegeben hat 
-	jnz .rError     ; Der Wert 0 entspricht "Kein Fehler".
+	test bx, bx         ; check for error code
+	jnz .rError         ; zero is good, everything else is errorcode
 .r:
-	mov dh, byte [row]  ; den Cursor in der aktuellen Zeile
-	mov dl, 00h         ; an den linken Bildschirmrand
-	call private_setCursorPosition ; setzen.
-	
-	jmp MAIN_SYS+9  ; Die Datei main.sys liegt an der Adressse MAIN_SYS, allerdings
-                    ; sind die ersten 9-Bytes nur für den Bootvorgang vorgesehen.
+	mov dh, byte [row]  ; move cursor to the left
+	mov dl, 00h         
+	call private_setCursorPosition
+
+	jmp MAIN_SYS+9      ; cli is at 0x2000, main loop is at 0x2009
 
 .rError:
-	mov bl, byte [ds:SYSTEM_COLOR] ; Bei einem Fehlercode != 0 wird eine Fehlermeldung 
-	mov dx, SOFTWARE_ERROR         ; ausgegeben.
+	mov bl, byte [ds:SYSTEM_COLOR] ; in case of error code a message is printed
+	mov dx, SOFTWARE_ERROR         
 	call private_printString
 	
 	jmp .r
-	
-;.msgReturnError db 0Dh, 0Ah
-;    db "Das Programm hat einen Fehlerverursacht und wurde beendet."
-;    db 0Dh, 0Ah, 00h
 ; =====================================================
 
 
@@ -118,27 +122,27 @@ exitProgram:
 ; DX -> String
 ; BL -> Color
 ; =====================================================
-printString: ; öffentlicher Wrapper
+printString: ; public wrapper
 	call private_printString
 	iret
 
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 private_printString:
-    mov si, dx  ; String in das Source-Register kopieren        
-	mov dl, bl  ; Farbwert kopieren
-	push bx     ; Originalstring sichern
+    mov si, dx  ; copy string to source register
+	mov dl, bl  ; copy color
+	push bx    
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-.charLoop:
-	lodsb       ; alle Zeichen durchgehen
-	test al, al ; und bei \0 abrechen.
+.charLoop: ; read the string char by char and only stop when \0 appears
+	lodsb       
+	test al, al 
 	jz .end
-	mov dh, al  ; für jedes Zeichen wird einfach die PrintChar Funktion aufgerufen.
-	call printChar
+	mov dh, al
+	call printChar ; each char is printed seperatly
 	
 	jmp .charLoop
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .end:
-	pop bx ; am Ende muss nur noch die Cursorposition angepasst werden
+	pop bx ; adjust cursor position at the end
 	mov dh, byte [row]
 	mov dl, byte [col]
 	call private_setCursorPosition
@@ -152,9 +156,9 @@ printCharC: ; öffentlicher Wrapper
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 printChar:
 	push dx
-	mov ax, VIDEO_MEMORY_SEGMENT ; die Adresse relativ zum Segment berechnen.
+	mov ax, VIDEO_MEMORY_SEGMENT ; calculate address in memory that belongs to cursor positon
 	mov gs, ax                
-	movzx bx, byte [col]   ; Grobe Formel: x * 2 + (y * SCREEN_WIDTH)
+	movzx bx, byte [col]   ; forumla: (x * 2) + (y * SCREEN_WIDTH)
 	movzx ax, byte [row]
 	shl bx, 1
 	mov cx, SCREEN_WIDTH*2
@@ -162,47 +166,47 @@ printChar:
 	add bx, ax
 	pop dx
 	
-	cmp dh, 0Dh ; Zeilenumbruche speziell behandeln
+	cmp dh, 0Dh ; \n and \r are handled differenz
 	je .cr
 	cmp dh, 0Ah
 	je .lf
 	
-	mov byte [gs:bx], dh    ; Farbwert und Zeichen in den Speicher kopieren
+	mov byte [gs:bx], dh    ; write the char and the color to vga memory
 	mov byte [gs:bx+1], dl
 	add bx, 2
 	
 	inc byte [col]
 	
-	cmp byte [col], 160 ; ist der Cursor am rechten Bildschirmrand angekommen wird 
-                        ; automatisch umgebrochen.
+	cmp byte [col], 160 ; when we reach the right end of the screen we goto to the next line
+                        ; 
 	je .newLine	
 	ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .newLine:
-	mov byte [col], 00h ; Cursor an den linken Rand setzen
-	inc byte [row]      ; Zeile um eins erhöhen
+	mov byte [col], 00h ; move cursor to the left border
+	inc byte [row]      ; increment linenumber
 	
 	cmp byte [row], 23
-	jae .moveBuffer     ; am unteren Rand angekommen, wird der gesamte Bildbereich nach oben gescrollt
+	jae .moveBuffer     ; when we are at the very bottom we move the whole buffer one row up
 	
 	ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .cr:
-	mov byte [col], 00h ; Wagenrücklauf: Cursor an den linken Rand setzen
+	mov byte [col], 00h ; \r just jumps to the left border
 	ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .lf:
-	inc byte [row]      ; Umbruch: Cursor eine Zeile nach unten bewegen
+	inc byte [row]      ; move cursor one row down
 	cmp byte [row], 23
-	jae .moveBuffer     ; ist der Cursor ganz unten wird der Bildbereich nach oben gescrollt
+	jae .moveBuffer     ; we reach the bottom -> we scroll
 	ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .moveBuffer:
 	push si
-	mov byte [row], 22  ; Den kompletten Videospeicher, beginnend ab Zeile 2 
-	mov ax, es          ; um eine Zeile nach oben verschieben, und die letzte Zeile mit 
-                        ; leerzeichen füllen.
-	push ax
+	mov byte [row], 22  ; copy the whole vga memory (beginning at line 2)
+	mov ax, es          ; one line up
+    
+	push ax             ; the very bottom row is filled with spaces
 	mov ax, ds
 	push ax
 	
@@ -231,9 +235,9 @@ private_setCursorPosition:
 	movzx ax, dh
 	movzx bx, dl
 
-	mov byte [row], dh ; Systeminterne Cursorposition speichern
+	mov byte [row], dh ; save the cursor for ourselfs
 	mov byte [col], dl
-	shl ax, 4          ; Hardwarecursor im VGA Cursor ebenfalls setzen
+	shl ax, 4          ; set the hardware cursor using vga registers
 	add bx, ax
 	shl ax, 2
 	add bx, ax
@@ -256,7 +260,7 @@ private_setCursorPosition:
 	out dx, al
 	
 	ret
-setCursorPosition: ; öffentlicher Wrapper
+setCursorPosition: ; public wrapper
 	call private_setCursorPosition
 	iret
 ; =====================================================	
@@ -264,21 +268,20 @@ setCursorPosition: ; öffentlicher Wrapper
 
 ; =====================================================	
 getCursorPosition:
-	mov dh, byte [row] ; Interne Cursorposition zurückgeben (entspricht immer
-	mov dl, byte [col] ; der Position des Hardwarecursors)
+	mov dh, byte [row] ; return the cursor positon
+	mov dl, byte [col] ; 
 	iret
 ; =====================================================	
 
 
 ; =========================================
-; Lädt eine Datei an eine beliebige Speicherposition
-; Buffer    => BX:BP
-; Dateiname => DX
-; Speicheradresse des Verzeichnisses => AX [VERALTET]
-; AX <= Ergebnis, 0 = OK, -1 = ERROR
+; loads a file into memory
+; buffer   => BX:BP
+; filename => DX
+; AX <= result, 0 = OK, -1 = ERROR
 ; CX <= Size 
 ; =========================================
-loadFile: ; stellt einen Wrapper für FAT12.ASM Methoden dar
+loadFile: ; basically a wrapper for fat12.asm
 	push bp
 	push bx
 	push dx
@@ -297,10 +300,9 @@ loadFile: ; stellt einen Wrapper für FAT12.ASM Methoden dar
 
 
 ; =========================================
-; DX -> Dateiname
-; CX -> Byteanzahl
-; AX -> Speicheradresse des Verzeichnisses
-; BX:BP -> Daten
+; DX -> file
+; CX -> size in byte
+; BX:BP -> buffer
 ; =========================================
 writeFile:
 	mov si, dx
@@ -316,7 +318,7 @@ writeFile:
 
 
 ; =========================================
-; AX -> Speicheradresse des Verzeichnisses
+; AX -> load root dir
 ; =========================================
 getRootDir:
 	call LoadRoot
@@ -327,7 +329,7 @@ getRootDir:
 
 
 ; =========================================
-; AX -> Speicheradresse des Verzeichnisses
+; AX -> save root dir
 ; =========================================
 setRootDir:
 	call WriteRoot
@@ -346,7 +348,8 @@ deleteFile:
 
 
 ; =========================================
-; DX -> Dateiname
+; DX -> filename
+; AX <= -1 not found, else: index in root dir
 ; =========================================
 findFile:
 	mov si, dx
@@ -356,34 +359,34 @@ findFile:
 
 
 ; =========================================
-; Liest eine Zeichenkette von der Tastatur
-; DX => Zielstring
-; CX => Max. Anzahl Zeichen
-; CX <= Anzahl Zeichen
+; reads a string from the keyboard
+; DX => dest string
+; CX => max chars
+; CX <= actual amount of chars read
 ; =========================================
 readLine:
-	mov di, dx ; String ins Destinations-Register kopieren
-	mov word [.counter], 00h ; Zähler auf 0 setzen
+	mov di, dx
+	mov word [.counter], 00h ; counts how many chars were read
 .kbLoop:
-	xor ax, ax            ; auf einen Tastendruck warten
+	xor ax, ax            ; wait for key press
 	int 16h
-	test al, al             ; ist AL = 0 handelt es sich um eine Sondertaste 
+	test al, al             ; al=0 => special key
 	jz .kbLoop
 
 	cmp al, 0Dh	        	; Enter?
-	je .return	    		; Ja beenden
+	je .return	    		; yes, return
 	
-	cmp al, 08h             ; Rücktaste?	
-	je .back                ; Ja letztes Zeichen löschen
+	cmp al, 08h             ; Backspace?	
+	je .back                ; yes, delete last char
 	
-	inc word [.counter]     ; Zähler inkrementieren
-	cmp word [.counter], cx ; und ggf. weitere Eingabe unterbinden
+	inc word [.counter]     ; increment counter
+	cmp word [.counter], cx ; if max_chars is reached, do not accept more chars
 	jg .kbLoop
 	
-	cmp byte [SYSTEM_KB_STATUS], 0 ; Prüfen ob Y und Z vertauscht werden müssen
+	cmp byte [SYSTEM_KB_STATUS], 0 ; check if y and z should be switched
 	je .store
 	
-	cmp al, 'z' ; wenn ja wird einfach umgemappt
+	cmp al, 'z' ; if yes => switch
 	je .y
 	cmp al, 'y'
 	je .z
@@ -392,7 +395,7 @@ readLine:
 	cmp al, 'Y'
 	je .Z
 	
-	jmp .store
+	jmp .store ; save the char in the dest string
 	
 .y:
 	mov al, 'y'
@@ -405,9 +408,9 @@ readLine:
 	jmp .store
 .Z:
 	mov al, 'Z'
-.store: ; speichert das Zeichen in al im Zielstring, gibt es auf dem Bildschirm aus und 
-        ; inkrementiert alle notwendigen Adressen
-	stosb				; Zeichen speichern
+.store: ; saves the char in dest string and prints it on the screen
+        ; also refreshes all relevant addresses
+	stosb				; save char
 	
 	pusha
 	
@@ -420,23 +423,22 @@ readLine:
 	
 	popa
 	
-	jmp .kbLoop			; nächstes Zeichen einlesen
+	jmp .kbLoop			; read the next char
 	
 .back:
-	cmp word [.counter], 00h
+	cmp word [.counter], 00h ; decrement counter, but only delete the chars that were entered
 	jbe .kbLoop
 	dec word [.counter]
 	
 	pusha
-	
-;	; Ausgabe
-	dec byte [col]
+    
+	dec byte [col]      ; move on char back
 	
 	mov dh, 00
-	mov dl, byte [ds:SYSTEM_COLOR]
+	mov dl, byte [ds:SYSTEM_COLOR] 
 	call printChar
 	
-	dec byte [col]
+	dec byte [col] ; move cursor back
 	mov dh, byte [row]
 	mov dl, byte [col]
 	call private_setCursorPosition
@@ -444,27 +446,27 @@ readLine:
 	popa
 	
 	; Variable
-	dec di				; ein Zeichen zurück springen
+	dec di				; move on char back
 	mov al, 00h			
-	stosb				; mit null überschreiben
-	dec di				; ein zeichen zurückspringen
+	stosb				; override with zero
+	dec di				
 	
 	jmp .kbLoop
 	
 .return:
 	xor al, al
-	stosb				; 0 Anhängen (Stringende)
+	stosb				; strings are \0 terminated
 	mov cx, word [.counter]
-	iret				; Return
+	iret				; return
 	
 .counter dw 00h
 
 
 ; =========================================
-; Vergleicht zwei Zeichenketten miteinander
-; DI => Zeichenkette 1
-; SI => Zeichenkette 2
-; AL <= 0 gleich, 1 verschieden
+; compares two strings
+; DI => string 1
+; SI => string 2
+; AL <= 0 equal, 1 not equal
 ; =========================================
 compareString:
 	xor al, al
@@ -499,7 +501,7 @@ intToStr:
 	xor cx, cx
     xor bp, bp
     
-    cmp ax, 00h
+    cmp ax, 0x00
     jns .digit1
     
     neg ax
@@ -593,15 +595,78 @@ intToStr:
 
 
 ; =========================================
-; Zeitstring erzeugen
+intToString32:
+    mov si, dx
+    mov eax, ecx
+
+    test eax, eax
+    jz .zero
+
+    cmp eax, 0x00
+    jns .start
+
+    not eax
+    inc eax
+    mov byte [si], '-'
+    inc si
+
+.start:
+    mov byte [.leadingZero], 0x01
+    mov dword [.divisor], 1000000000
+.loop1:
+    xor edx, edx
+    mov ebx, dword [.divisor]
+    div ebx
+
+    cmp al, 0x00
+    jne .else
+    cmp byte [.leadingZero], 0x01
+    jne .else
+
+    mov eax, edx
+    jmp .div10
+.else:
+    mov byte [si], al
+    add byte [si], 48
+    inc si
+    mov byte [.leadingZero], 0x00
+    mov eax, edx
+.div10:
+    push eax
+
+    xor edx, edx
+    mov eax, dword [.divisor]
+    mov ebx, 10
+    div ebx
+    mov dword [.divisor], eax
+    cmp eax, 0
+    je .return
+    pop eax
+    jmp .loop1
+.return:
+    mov byte [si], 0x00
+    pop eax
+    iret
+.zero:
+    mov byte [si], '0'
+    inc si
+    mov byte [si], 0x00
+    iret
+.leadingZero db 0x01
+.divisor dd 1000000000
+; =========================================
+
+
+; =========================================
+; get time as string
 ; DX <= String
 ; =========================================
 getTimeString:
 	mov ah, 02h
 	int 1Ah
 	mov di, .timeStr
-	;CH Stunden
-	;CL Minuten
+	;CH hours
+	;CL minutes
 	push cx
 	mov al, ch
 	call private_bcdToInt
@@ -637,17 +702,17 @@ getTimeString:
 
 
 ; =========================================
-; Datumsstrings erzeugen
+; get date as string
 ; DX <= Stringoffset
 ; =========================================
 getDateString:
 	mov ah, 04h
 	int 1Ah
 	mov di, .dateStr
-	; CH Jahrhundert
-	; CL Jahr
-	; DH Monat
-	; DL Tag
+	; CH century
+	; CL year
+	; DH month
+	; DL day
 	
 	push cx
 	push dx
@@ -708,13 +773,13 @@ getDateString:
 ; al => BCD Byte
 ; ax <= Integer
 private_bcdToInt:
-	mov bl, al			; Speichern
-	and ax, 0Fh			; die Oberen Bits löschen
-	mov cx, ax			; kopieren
-	shr bl, 4			; die Oberen Bits über die Unteren Bits schreiben
+	mov bl, al			
+	and ax, 0Fh			
+	mov cx, ax			
+	shr bl, 4			
 	mov al, 10
-	mul bl				; AX = 10 * bl		(Zehnerstelle)
-	add ax, cx			; Untere Stellen addieren
+	mul bl				
+	add ax, cx			
 	ret
 bcdToInt:
     call private_bcdToInt
@@ -730,31 +795,31 @@ getSystemVersion:
 
 
 ; ======================================================
-; String in Zahl umwandeln
+; convert string to in
 ; DX => String
 ; CX <= Number
 ; AX <= -1 Error
 ; ======================================================
 stringToInt:
-	mov word [.number], 00h
+	mov dword [.number], 0x00000000
 	mov si, dx
     
-    mov byte [.sign], 00h
+    mov byte [.sign], 0x00
     
     cmp byte [si], '-'
     jne .loop1
     
     inc si
-    mov byte [.sign], 01h
+    mov byte [.sign], 0x01
     
 .loop1:
-	cmp byte [ds:si], 00h
+	cmp byte [ds:si], 0x00
 	je .done
 
-	cmp byte [ds:si], 0Dh
+	cmp byte [ds:si], 0x0D
 	je .done
 	
-	cmp byte [ds:si], 0Ah
+	cmp byte [ds:si], 0x0A
 	je .done
 	
 	cmp byte [ds:si], '0'
@@ -779,29 +844,74 @@ stringToInt:
     
 .error:
 	mov ax, -1
-	xor cx, cx
+	xor ecx, ecx
     
 	iret
 	
 .done:
 	
-    mov cx, word [.number]
+    mov ecx, dword [.number]
     
     cmp byte [.sign], 01h
     jne .ret
     
-    neg cx
+    not ecx
+    inc ecx
     
 .ret:
     xor ax, ax
 	iret
-.number dw 0
+.number dd 0x00000000
 .sign db 00h
 ; ======================================================
 
 
 ; ======================================================
-; CL -> dings
+; convert string to int (experimental 32-bit ready)
+; ======================================================
+stringToInt32:
+    xor ecx, ecx
+    mov si, dx
+    xor di, di
+    cmp byte [si], '-'
+    jne .digitLoop
+    
+    inc si
+    mov di, 0x01
+    
+.digitLoop:
+    movzx eax, byte [si]
+    inc si
+    cmp eax, 0x0D
+    je .done
+    cmp eax, 0x0A
+    je .done
+    cmp eax, 0x00
+    je .done
+    cmp eax, '0'
+    jb .error
+    cmp eax, '9'
+    ja .error
+    sub eax, '0'
+    imul ecx, 10
+    add ecx, eax
+    jmp .digitLoop
+.error:
+    mov ax, -1
+    xor ecx, ecx
+    iret
+.done:
+    cmp di, 0x00
+    je .return
+    neg ecx
+.return:
+    xor eax, eax
+    iret
+; ======================================================
+
+
+; ======================================================
+; CL -> byte
 ; DX <- Hexstring
 ; ======================================================
 decToHex:
@@ -842,7 +952,7 @@ hexToDec:
 	mov al, byte [ds:si]
 	inc si
 	
-	cmp al, 48	; Ziffern 0-9
+	cmp al, 48	; digits 0-9
 	je .num16
 	cmp al, 49
 	je .num16
@@ -862,7 +972,7 @@ hexToDec:
 	je .num16
 	cmp al, 57
 	je .num16
-.chars:			; Ziffern A-F
+.chars:			; digits A-F
 	cmp al, 65
 	je .char16
 	cmp al, 66
@@ -976,9 +1086,9 @@ seed dw 623
 
 ; ======================================================
 ; Hardwareinfo
-; Zeigt Prozessorinformationen an
-; AX => CPU Hersteller
-; BX => CPU Modell
+; gives cpuid infos
+; AX => CPU vendor
+; BX => CPU model
 ; ======================================================
 hardwareInfo:
     call .getCpuInfo
@@ -1026,4 +1136,6 @@ hardwareInfo:
 .modelString times 49 db 00h
 ; ======================================================
 
-db "SYSTEM_END"
+%ifdef DEBUG
+    db "SYSTEM_END"
+%endif

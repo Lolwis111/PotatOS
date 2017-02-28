@@ -10,8 +10,7 @@ jmp start
 %endif
 
 %include "defines.asm"
-fileName    db "CONFIG  CFG", 0x00
-newFileName db "NCONFIG CFG", 0x00
+fileName db "CONFIG  CFG", 00h
 
 colorByte	db 00h
 highMem		db 00h
@@ -33,7 +32,7 @@ cmdFalse	db "FALSE", 00h
 ; DX > String
 ;================================================
 boolToString:
-    cmp cx, TRUE
+    cmp cx, 1
     je .true
     mov dx, cmdFalse
     ret
@@ -435,7 +434,6 @@ start:
     int 21h
 
     mov bx, -1
-    jmp exit.err
 ; ================================================
 
 
@@ -535,81 +533,14 @@ cursor_pos db 03h
 ; beendet das Programm
 ; ===============================================
 exit:
-    mov si, cmdColor
-    mov di, configFile
-    mov cx, 3
-    rep movsw
-
-    mov cl, byte [colorByte]
-    mov dx, strt
-    mov ah, 0x15
-    int 0x21
-
-    mov ax, word [strt]
-    mov word [configFile+6], ax
-    mov ax, 0x0D0A
-    mov word [configFile+8], ax
-
-    mov si, cmdKBXY
-    mov di, configFile+10
-    mov cx, 5
-    rep movsw
-
-    cmp byte [kb_switch], TRUE
-    je .kbTrue
-    mov si, cmdFalse
-    mov di, configFile+20
-    movsw
-    movsw
-    movsb
-    
-    jmp .kbOK
-.kbTrue:
-    mov si, cmdTrue
-    mov di, configFile+20
-    movsw
-    movsw
-.kbOK:
-    mov ax, 0x0D0A
-    mov word [configFile+25], ax
-    
-    cmp byte [highMem], TRUE
-    je .memOK
-    mov si, cmdFalse
-    mov di, configFile+27
-    movsw
-    movsw
-    movsb
-    jmp .memOK
-    mov si, cmdTrue
-    mov di, configFile+27
-    movsw
-    movsw
-.memOK:
-    mov ax, 0x0D0A
-    mov word [configFile+32], ax
-    mov si, cmdEND
-    mov di, configFile+34
-    movsw
-    movsb
-
-    mov ah, 0x14
-    mov dx, newFileName
-    mov cx, 47
-    xor bp, bp
-    mov bx, configFile
-    int 0x21
-
-    xor bx, bx
-.err:
     mov dh, byte [0x1FFF]
     mov dl, 0x20
     call clearScreen
     
     xor ax, ax
-    int 0x21
+    int 21h
     cli
     hlt
 ; ===============================================
-strt db 0x00, 0x00, 0x00
+
 configFile db 00h
