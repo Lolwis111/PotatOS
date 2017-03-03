@@ -3,247 +3,63 @@
 
 jmp start
 
-%ifdef german 
-    %define CURSOR_X 0x19
-%elif english
-    %define CURSOR_X (0x19 - 0x08)
+%include "defines.asm"
+%include "strings.asm"
+
+%define COLOR createColor(BLACK, MAGENTA)
+
+fileName db "CONFIG  CFG", 0x00
+
+systemColor db 0x00
+
+colorByte   db 0x00
+highMem     db 0x00
+kbSwitch    db 0x00
+cfgLength   dw 0x00
+fileLenght  dw 0x00
+
+configColor	db "COLOR=", 0x00
+configHigh  db "HIGH=", 0x00
+configKBXY  db "YZ_SWITCH=", 0x00
+configEND   db "END", 0x00
+
+cmdTrue   db "TRUE ", 0x00
+cmdFalse  db "FALSE", 0x00
+
+newLine db 0x0D, 0x0A, 0x00
+
+%ifdef german
+    lb_current_config db 0x0D, 0x0A, "aktuelle Konfiguration: ", 0x0D, 0x0A, 0x00
+%elifdef english
+    lb_current_config db 0x0D, 0x0A, "current configuration: ", 0x0D, 0x0A, 0x00
 %endif
 
-%include "defines.asm"
-fileName db "CONFIG  CFG", 00h
-
-colorByte	db 00h
-highMem		db 00h
-kb_switch	db 00h
-cfgLength	dw 00h
-fileLenght  dw 00h
-
-cmdColor	db "COLOR=", 00h
-cmdHigh		db "HIGH=", 00h
-cmdKBXY		db "YZ_SWITCH=", 00h
-cmdEND		db "END", 00h
-
-cmdTrue		db "TRUE ", 00h
-cmdFalse	db "FALSE", 00h
-
-
-;================================================
+; ================================================
 ; CX < Bool
 ; DX > String
-;================================================
+; ================================================
 boolToString:
-    cmp cx, 1
+    cmp cx, TRUE
     je .true
     mov dx, cmdFalse
     ret
 .true:
     mov dx, cmdTrue
     ret
-;================================================
-
-
-;================================================
-drawCursor:
-    push dx
-    mov ah, 0Fh
-    int 21h
-    
-    movzx bx, dl
-    mov cx, 160
-    movzx ax, dh
-    mul cx
-    shl bx, 1
-    add bx, ax
-    pop dx
-    inc bx
-    mov cx, 5
-.l1:
-    mov byte [gs:bx], dl
-    add bx, 2
-    loop .l1
-
-    ret
-;================================================
-
-
-;================================================
-printOptions:
-    mov dh, 03h
-    mov dl, CURSOR_X
-    mov ah, 0Eh
-    int 21h
-    
-    mov cl, byte [colorByte]
-    mov ah, 15h
-    mov dx, .colorStr
-    int 21h
-    
-    mov ah, 01h
-    mov dx, .colorStr
-    mov bl, createColor(BLACK, MAGENTA)
-    int 21h
-    
-    mov dh, 04h
-    mov dl, CURSOR_X
-    mov ah, 0Eh
-    int 21h
-
-    movzx cx, byte [kb_switch]
-    call boolToString
-    mov ah, 01h
-    mov bl, createColor(BLACK, MAGENTA)
-    int 21h
-    
-    mov dh, 05h
-    mov dl, CURSOR_X
-    mov ah, 0Eh
-    int 21h
-
-    movzx cx, byte [highMem]
-    call boolToString
-    mov ah, 01h
-    mov bl, createColor(BLACK, MAGENTA)
-    int 21h
-    
-    ret
-.colorStr db "00", 00h
-;================================================
-
-
-;================================================
-; DrawBorder:
-;================================================
-drawBorder:
-	mov bx, cursorPos(0, 0)
-	mov cx, SCREEN_WIDTH
-.top:
-	mov byte [gs:bx], 196
-	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
-	inc bx
-	loop .top
-    
-    mov bx, cursorPos(0, 2)
-    mov cx, SCREEN_WIDTH
-.top2:
-	mov byte [gs:bx], 196
-	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
-	inc bx
-	loop .top2
-	
-	mov bx, cursorPos(0, 24)
-	mov cx, SCREEN_WIDTH
-.bottom:
-	mov byte [gs:bx], 196
-	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
-	inc bx
-	loop .bottom
-	
-	mov bx, cursorPos(0, 1)
-	mov cx, (SCREEN_HEIGHT - 2)
-.left:
-	mov byte [gs:bx], 179
-	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
-	add bx, ((SCREEN_WIDTH * 2) - 1)
-	loop .left
-	
-	mov bx, cursorPos(79, 1)
-	mov cx, (SCREEN_HEIGHT - 2)
-.right:
-	mov byte [gs:bx], 179
-	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
-	add bx, 159
-	loop .right
-
-	mov bx, cursorPos(0, 24)
-	mov byte [gs:bx], 192
-	
-	mov bx, cursorPos(79, 24)
-	mov byte [gs:bx], 217
-	
-	mov bx, cursorPos(0, 0)
-	mov byte [gs:bx], 218
-	
-	mov bx, cursorPos(79, 0)
-	mov byte [gs:bx], 191
-	
-    mov bx, cursorPos(0, 2)
-	mov byte [gs:bx], 195
-    
-    mov bx, cursorPos(79, 2)
-	mov byte [gs:bx], 180
-    
-	ret
-;================================================
-
-
-;================================================
-drawGUI:
-    mov dx, 0101h
-    mov ah, 0Eh
-    int 21h
-    mov ah, 01h
-    mov bl, createColor(BLACK, MAGENTA)
-    mov dx, .lblTitle
-    int 21h
-    
-    mov dx, 0301h
-    mov ah, 0Eh
-    int 21h
-    
-    mov ah, 01h
-    mov bl, createColor(BLACK, MAGENTA)
-    mov dx, .lblColor
-    int 21h
-    
-    mov dx, 0401h
-    mov ah, 0Eh
-    int 21h
-    
-    mov ah, 01h
-    mov bl, createColor(BLACK, MAGENTA)
-    mov dx, .lblKB
-    int 21h
-    
-    mov dx, 0501h
-    mov ah, 0Eh
-    int 21h
-    
-    mov ah, 01h
-    mov bl, createColor(BLACK, MAGENTA)
-    mov dx, .lblHigh
-    int 21h
-    
-    ret
-%ifdef german
-.lblTitle   db "Konfigurationseditor 0.1", 00h
-.lblColor   db "Farbe der Shell       : ", 00h
-.lblKB      db "Y und Z vertauschen   : ", 00h
-.lblHigh    db "High-Memory aktivieren: ", 00h
-%elif english
-.lblTitle   db "configuration editor 0.1", 00h
-.lblColor   db "shell color:    ", 00h
-.lblKB      db "switch y and z: ", 00h
-.lblHigh    db "enable highmem: ", 00h
-%endif
-;================================================
+; ================================================
 
 
 ; ===============================================
 ; den kompletten Bildschirm leeren
 ; ===============================================
 clearScreen:
-	pusha
-	xor bx, bx
-	mov cx, 2000
+    pusha
+    xor bx, bx
+    mov cx, 2000
 .loop1:
-	mov word [gs:bx], dx
-	add bx, 2
-	loop .loop1
+    mov word [gs:bx], dx
+    add bx, 2
+    loop .loop1
     
     xor dx, dx
     mov ah, 0Eh
@@ -251,22 +67,23 @@ clearScreen:
     
     popa
     
-	ret
+    ret
 ; ===============================================
 
 start:
-    mov dh, createColor(BLACK, MAGENTA)
+    mov al, byte [0x1FFF]
+    mov byte [systemColor], al
+    mov byte [0x1FFF], COLOR
+    
+    mov dh, COLOR
     mov dl, 0x20
     call clearScreen
-
-    call drawBorder
-    call drawGUI
 
     mov dx, fileName
 	xor bx, bx
 	mov bp, configFile
-	mov ah, 05h
-	int 21h				; Datei laden
+	mov ah, 0x05
+	int 0x21            ; load config file
 	mov word [fileLenght], cx
 	cmp ax, -1
 	je .loadError
@@ -279,21 +96,21 @@ start:
 ; ================================================
 .scanLoop:
 	push si
-	mov di, cmdColor
+	mov di, configColor
 	mov cx, 6
 	rep cmpsb
 	je .color
 	pop si
 
 	push si
-	mov di, cmdHigh
+	mov di, configHigh
 	mov cx, 5
 	rep cmpsb
 	je .high
 	pop si
 	
 	push si
-	mov di, cmdKBXY
+	mov di, configKBXY
 	mov cx, 10
 	rep cmpsb
 	je .kb_yz
@@ -345,7 +162,7 @@ start:
 .kb_ok:
 	pop si
 	pop si
-	mov byte [kb_switch], 1
+	mov byte [kbSwitch], TRUE
 	add si, 14
 	jmp .scanLoop
 ; ================================================
@@ -354,7 +171,7 @@ start:
 .kb_nok:
 	pop si
 	pop si
-	mov byte [kb_switch], 0
+	mov byte [kbSwitch], FALSE
 	add si, 15
 	jmp .scanLoop
 ; ================================================
@@ -383,7 +200,7 @@ start:
 .ok:
 	pop si
 	pop si
-	mov byte [highMem], 1
+	mov byte [highMem], TRUE
 	add si, 9
 	jmp .scanLoop
 ; ================================================
@@ -392,7 +209,7 @@ start:
 .nok:
 	pop si
 	pop si
-	mov byte [highMem], 0
+	mov byte [highMem], FALSE
 	add si, 10
 	jmp .scanLoop
 ; ================================================
@@ -402,36 +219,33 @@ start:
 	pop si
 	
 	mov si, .msgLoadError
-	mov ah, 01h
+	mov ah, 0x01
     mov bl, byte [0x1FFF]
-    int 21h
+    int 0x21
 	
-	mov byte [colorByte], 07h
-	mov byte [highMem], 00h
-	mov byte [kb_switch], 00h
+	mov byte [colorByte], 0x07
+	mov byte [highMem], 0x00
+	mov byte [kbSwitch], 0x00
 ; ================================================
 	
 ; ================================================
 .cfg:
-
-    call printOptions
-    
     jmp mainLoop
 ; ================================================
 
 ; ================================================
 %ifdef german
-.msgLoadError db 0Dh, 0Ah, "Die Konfigurationsdatei konnte nicht gelesen werden!"
-              db 0Dh, 0Ah, "Setze Standartwerte!", 0Dh, 0Ah, 00h
+.msgLoadError db 0x0D, 0x0A, "Die Konfigurationsdatei konnte nicht gelesen werden!"
+              db 0x0D, 0x0A, "Setze Standartwerte!", 0x0D, 0x0A, 0x00
 %elif english
-.msgLoadError db 0Dh, 0Ah, "Unable to read config file!"
-              db 0Dh, 0Ah, "Using defaults!", 0Dh, 0Ah, 00h
+.msgLoadError db 0x0D, 0x0A, "Unable to read config file!"
+              db 0x0D, 0x0A, "Using defaults!", 0x0D, 0x0A, 0x00
 %endif
 .loadError:
     mov bl, createColor(BLACK, RED)
-    mov ah, 01h
+    mov ah, 0x01
     mov dx, .msgLoadError
-    int 21h
+    int 0x21
 
     mov bx, -1
 ; ================================================
@@ -439,108 +253,417 @@ start:
 
 ; ================================================
 mainLoop:
+    mov di, inputBuffer
+    mov cx, 64
     xor ax, ax
-    int 16h
-    
-    cmp ah, 48h
-    je .moveUp
-    cmp ah, 50h
-    je .moveDown
-    
-    cmp ah, 1Ch
-    je .edit
-    
-    cmp ah, 01h
-    je .end
+    rep stosw
 
+    mov ah, 0x01
+    mov dx, ready
+    mov bl, COLOR
+    int 0x21
+    
+    mov ah, 0x04				; read command from keyboard
+	mov dx, inputBuffer
+	mov cx, 64
+	int 0x21
+    
+    mov si, inputBuffer
+    call UpperCase
+    
+    mov si, inputBuffer
+    mov di, command
+.charLoop:
+    mov al, byte [si]
+    inc si
+    cmp al, 0x20
+    je .args
+    cmp al, 0x00
+    je .done
+    mov byte [di], al
+    inc di
+    jmp .charLoop
+.args:
+    mov di, argument
+    .charLoop2:
+        mov al, byte [si]
+        inc si
+        cmp al, 0x00
+        je .done
+        mov byte [di], al
+        inc di
+        jmp .charLoop2
+.done:
+    mov di, command			; EXIT-Command?
+	mov si, cmdEXIT
+	mov ah, 0x02
+	int 0x21
+	cmp al, 0x00
+	je exit
+    
+    mov di, command			; SHOW-Command?
+	mov si, cmdSHOW
+	mov ah, 0x02
+	int 0x21
+	cmp al, 0x00
+	je showConfig
+    
+    mov di, command			; SET-Command?
+	mov si, cmdSET
+	mov ah, 0x02
+	int 0x21
+	cmp al, 0x00
+	je setConfig
+    
+    mov di, command			; SAVE-Command?
+	mov si, cmdSAVE
+	mov ah, 0x02
+	int 0x21
+	cmp al, 0x00
+	je saveConfigFile
+    
+    mov ah, 0x01
+    mov bl, COLOR
+    mov dx, newLine
+    int 0x21
+    
     jmp mainLoop
     
-.moveUp:
-    dec byte [cursor_pos]
-    
-    cmp byte [cursor_pos], 02h
-    jne .move
-    mov byte [cursor_pos], 05h
-    jmp .move
-    
-.moveDown:
-    inc byte [cursor_pos]
-    
-    cmp byte [cursor_pos], 06h
-    jne .move
-    mov byte [cursor_pos], 03h
-
-.move:
-    mov dl, createColor(BLACK, MAGENTA)
-    call drawCursor
-
-    mov dh, byte [cursor_pos]
-    mov dl, CURSOR_X
-    mov ah, 0Eh
-    int 21h
-    
-    mov dl, createColor(WHITE, MAGENTA)
-
-    jmp mainLoop
-    
-.edit:
-
-    cmp byte [cursor_pos], 03h
-    je .editColor
-
-    cmp byte [cursor_pos], 04h
-    je .switchKB
-    
-    cmp byte [cursor_pos], 05h
-    je .switchHigh
-
-    jmp .return
-.editColor:
-
-    jmp .return
-
-.switchKB:
-    cmp byte [kb_switch], 01h
-    je .zeroKB
-    mov byte [kb_switch], 01h
-    jmp .return
-.zeroKB:
-    mov byte [kb_switch], 00h
-    jmp .return
-    
-.switchHigh:
-    cmp byte [highMem], 01h
-    je .zeroHigh
-    mov byte [highMem], 01h
-    jmp .return
-.zeroHigh:
-    mov byte [highMem], 00h
-    jmp .return
-    
-.return:
-    call printOptions
-    jmp mainLoop
-    
-.end:
-    xor bx, bx
-    jmp exit
-    
-cursor_pos db 03h
+cmdEXIT db "EXIT", 0x00
+cmdSHOW db "SHOW", 0x00
+cmdSET db "SET", 0x00
+cmdSAVE db "SAVE", 0x00
+ready db "> ", 0x00
+inputBuffer times 64 db 0x00
+command times 32 db 0x00
+argument times 32 db 0x00
 ; ================================================
+
+
+; ================================================
+saveConfigFile:
+    mov di, configFile
+    xor ax, ax
+    mov cx, 256
+    rep stosw
+    
+    mov di, configFile
+    mov si, configColor
+    movsw
+    movsw
+    movsw
+    
+    push di
+    
+    mov ah, 0x15
+    mov cl, byte [colorByte]
+    mov dx, .hexColor
+    int 0x21
+    
+    pop di
+    
+    mov si, .hexColor
+    movsw
+    mov si, newLine
+    movsw
+    
+    mov si, configHigh
+    movsw
+    movsw
+    movsb
+    
+    push di
+    movzx cx, byte [highMem]
+    call boolToString
+    pop di
+    mov si, dx
+    movsw
+    movsw
+    movsb
+    
+    mov si, newLine
+    movsw
+    
+    mov si, configKBXY
+    movsw
+    movsw
+    movsb
+    
+    
+    push di
+    
+    movzx cx, byte [kbSwitch]
+    call boolToString
+    pop di
+    mov si, dx
+    movsw
+    movsw
+    movsb
+    
+    mov si, newLine
+    movsw
+    
+    mov si, configEND
+    movsw
+    movsb
+    
+    mov ah, 0x0A
+    mov dx, fileName
+    int 0x21
+    
+    mov dx, fileName
+    mov cx, 44
+    xor bx, bx
+    mov bp, configFile
+    mov ah, 0x14
+    int 0x21
+    
+    jmp mainLoop
+.hexColor db "00", 0x00
+; ================================================
+
+
+; ================================================
+setConfig:
+    mov si, argument
+    .spaceSkipper:
+        mov al, byte [si]
+        inc si
+        cmp al, 0x20
+        je .spaceSkipper
+    dec si
+    
+    push si
+	mov di, configColor
+	mov cx, 5
+	rep cmpsb
+	je .changeColor
+	pop si
+
+	push si
+	mov di, configHigh
+	mov cx, 4
+	rep cmpsb
+	je .changeHighMem
+	pop si
+	
+	push si
+	mov di, configKBXY
+	mov cx, 9
+	rep cmpsb
+	je .changeKbSwitch
+	pop si
+    
+    jmp mainLoop
+.changeColor:
+    .spaceSkipper1:
+        mov al, byte [si]
+        inc si
+        cmp al, 0x20
+        je .spaceSkipper1
+    dec si
+    
+    mov dx, si
+    mov ah, 0x0D
+    int 0x21
+    
+    cmp ax, -1
+    je .invalidColorChange
+    
+    mov byte [colorByte], cl
+    
+    pop si
+    
+    mov ah, 0x01
+    mov bl, COLOR
+    mov dx, newLine
+    int 0x21
+    
+    jmp mainLoop
+    
+    .invalidColorChange:
+        mov dx, .invalidColorChangeError
+        mov ah, 0x01
+        mov bl, COLOR
+        int 0x21
+        
+        pop si
+        jmp mainLoop
+    .invalidColorChangeError db 0x0D, 0x0A, "invalid color!", 0x0D, 0x0A, 0x00
+    
+.changeHighMem:
+    .spaceSkipper2:
+        mov al, byte [si]
+        inc si
+        cmp al, 0x20
+        je .spaceSkipper2
+    dec si
+    
+    mov di, cmdTrue
+    mov cx, 4
+    rep cmpsb
+    je .setHighMemTrue
+    mov byte [highMem], FALSE
+    pop si
+    
+    mov ah, 0x01
+    mov bl, COLOR
+    mov dx, newLine
+    int 0x21
+    
+    jmp mainLoop
+    
+.setHighMemTrue:
+    mov byte [highMem], TRUE
+    pop si    
+    
+    mov ah, 0x01
+    mov bl, COLOR
+    mov dx, newLine
+    int 0x21
+    
+    jmp mainLoop
+    
+.changeKbSwitch:
+    .spaceSkipper3:
+        mov al, byte [si]
+        inc si
+        cmp al, 0x20
+        je .spaceSkipper3
+    dec si
+    
+    mov di, cmdTrue
+    mov cx, 4
+    rep cmpsb
+    je .setKbTrue
+    mov byte [kbSwitch], FALSE
+    pop si
+    
+    mov ah, 0x01
+    mov bl, COLOR
+    mov dx, newLine
+    int 0x21
+    
+    jmp mainLoop
+    
+.setKbTrue:
+    mov byte [kbSwitch], TRUE
+    pop si  
+    
+    mov ah, 0x01
+    mov bl, COLOR
+    mov dx, newLine
+    int 0x21
+      
+    jmp mainLoop
+; ================================================
+
+
+; ===============================================
+showConfig:
+    mov ah, 0x01
+    mov dx, lb_current_config
+    mov bl, COLOR
+    int 0x21
+    
+    mov ah, 0x01
+    mov dx, configColor
+    mov bl, COLOR
+    int 0x21
+    
+    mov ah, 0x15
+    mov cl, byte [colorByte]
+    mov dx, .hexColor
+    int 0x21
+    
+    mov ah, 0x01
+    mov bl, COLOR
+    mov dx, .hexColor
+    int 0x21
+    
+    mov ah, 0x01
+    mov dx, newLine
+    mov bl, COLOR
+    int 0x21
+    
+    mov ah, 0x01
+    mov dx, configHigh
+    mov bl, COLOR
+    int 0x21
+    
+    cmp byte [highMem], TRUE
+    jne .highMemFalse
+    
+    mov ah, 0x01
+    mov dx, cmdTrue
+    mov bl, COLOR
+    int 0x21
+    
+    jmp .highMemDone
+.highMemFalse:
+    mov ah, 0x01
+    mov dx, cmdFalse
+    mov bl, COLOR
+    int 0x21
+.highMemDone:
+    
+    mov ah, 0x01
+    mov dx, newLine
+    mov bl, COLOR
+    int 0x21
+    
+    mov ah, 0x01
+    mov dx, configKBXY
+    mov bl, COLOR
+    int 0x21
+    
+    cmp byte [kbSwitch], TRUE
+    jne .kbSwitchFalse
+    
+    mov ah, 0x01
+    mov dx, cmdTrue
+    mov bl, COLOR
+    int 0x21
+    
+    jmp .kbSwitchDone
+.kbSwitchFalse:
+    mov ah, 0x01
+    mov dx, cmdFalse
+    mov bl, COLOR
+    int 0x21
+.kbSwitchDone:
+    mov ah, 0x01
+    mov dx, newLine
+    mov bl, COLOR
+    int 0x21
+    
+    mov ah, 0x01
+    mov dx, newLine
+    mov bl, COLOR
+    int 0x21
+    
+    jmp mainLoop
+.hexColor db "00", 0x00
+; ===============================================
 
     
 ; ===============================================
 ; beendet das Programm
 ; ===============================================
 exit:
+    mov al, byte [systemColor]
+    mov byte [0x1FFF], al
+
     mov dh, byte [0x1FFF]
     mov dl, 0x20
     call clearScreen
     
+    xor bx, bx
     xor ax, ax
-    int 21h
+    int 0x21
+    
     cli
     hlt
 ; ===============================================
 
-configFile db 00h
+configFile db 0x00
