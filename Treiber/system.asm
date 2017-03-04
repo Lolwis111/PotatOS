@@ -8,74 +8,75 @@
 [BITS 16]
 
 main:
-	cmp ah, 00h			; exit program, jump to cli
+	cmp ah, 0x00        ; exit program, jump to cli
 	je exitProgram
 	
-	cmp ah, 01h			; print \0 terminated string
+	cmp ah, 0x01        ; print \0 terminated string
 	je printString
 	
-	cmp ah, 02h			; compare two strings
+	cmp ah, 0x02        ; compare two strings
 	je compareString
 	
-    cmp ah, 03h			; convert int to string
+    cmp ah, 0x03        ; convert int to string
 	je intToStr
     
-	cmp ah, 04h			; read string from keyboard
+	cmp ah, 0x04        ; read string from keyboard
 	je readLine 
 	
-    cmp ah, 05h			; load file
+    cmp ah, 0x05        ; load file
 	je loadFile
     
-	cmp ah, 06h			; get time as string
+	cmp ah, 0x06        ; get time as string
 	je getTimeString
 	
-	cmp ah, 07h			; get date as string
+	cmp ah, 0x07        ; get date as string
 	je getDateString
 	
-	cmp ah, 08h			; system version
+	cmp ah, 0x08        ; system version
 	je getSystemVersion
 
-    cmp ah, 09h			; convert string to int
+    cmp ah, 0x09        ; convert string to int
     je stringToInt
 
-    cmp ah, 0Ah         ; delete file
+    cmp ah, 0x0A        ; delete file
 	je deleteFile    
 
-    cmp ah, 0Bh         ; random number generator
+    cmp ah, 0x0B        ; random number generator
     je random           
-   
-    cmp ah, 0Ch         ; get cpu info
+
+    cmp ah, 0x0C        ; get cpu info
     je hardwareInfo
 
-   	cmp ah, 0Dh         ; string hex-byte to decimal
+   	cmp ah, 0x0D        ; string hex-byte to decimal
 	je hexToDec
 
-   	cmp ah, 0Eh         ; set cursor position
+   	cmp ah, 0x0E        ; set cursor position
 	je setCursorPosition
    
-   	cmp ah, 0Fh         ; get cursor positon
+   	cmp ah, 0x0F        ; get cursor positon
 	je getCursorPosition
    
-    cmp ah, 10h         ; print a single character
+    cmp ah, 0x10        ; print a single character
 	je printCharC
    
-    cmp ah, 11h         ; save root dir
+    cmp ah, 0x11        ; save root dir
 	je getRootDir
 	
-	cmp ah, 12h         ; load root dir
+	cmp ah, 0x12        ; load root dir
 	je setRootDir
 	
-	cmp ah, 13h         ; look for a file
+	cmp ah, 0x13        ; look for a file
 	je findFile
     
-	cmp ah, 14h         ; write a file
+	cmp ah, 0x14        ; write a file
 	je writeFile
     
-    cmp ah, 15h         ; convert byte to hex-string
+    cmp ah, 0x15        ; convert byte to hex-string
 	je decToHex
 
-    cmp ah, 16h         ; convert bcd-byte to int-byte
+    cmp ah, 0x16        ; convert bcd-byte to int-byte
     je bcdToInt
+    
     
     
     ; two all new 32-bit ready string-int operations
@@ -93,8 +94,8 @@ main:
 %include "defines.asm"
 %include "language.asm"
 	
-col db 00h
-row db 09h
+col db 0x00
+row db 0x09
 	
 ; =====================================================
 ; exits the current program and jumps back to cli
@@ -104,7 +105,7 @@ exitProgram:
 	jnz .rError         ; zero is good, everything else is errorcode
 .r:
 	mov dh, byte [row]  ; move cursor to the left
-	mov dl, 00h         
+	mov dl, 0x00        
 	call private_setCursorPosition
 
 	jmp MAIN_SYS+9      ; cli is at 0x2000, main loop is at 0x2009
@@ -166,9 +167,9 @@ printChar:
 	add bx, ax
 	pop dx
 	
-	cmp dh, 0Dh ; \n and \r are handled differenz
+	cmp dh, 0x0D ; \n and \r are handled differenz
 	je .cr
-	cmp dh, 0Ah
+	cmp dh, 0x0A
 	je .lf
 	
 	mov byte [gs:bx], dh    ; write the char and the color to vga memory
@@ -183,7 +184,7 @@ printChar:
 	ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .newLine:
-	mov byte [col], 00h ; move cursor to the left border
+	mov byte [col], 0x00 ; move cursor to the left border
 	inc byte [row]      ; increment linenumber
 	
 	cmp byte [row], 23
@@ -192,7 +193,7 @@ printChar:
 	ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .cr:
-	mov byte [col], 00h ; \r just jumps to the left border
+	mov byte [col], 0x00 ; \r just jumps to the left border
 	ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .lf:
@@ -214,7 +215,7 @@ printChar:
 	mov es, ax
 	mov ds, ax
 	mov si, 160
-	mov di, 00h
+	mov di, 0x00
 	mov cx, (SCREEN_BUFFER_SIZE - SCREEN_WIDTH)
 	rep movsw
 	
@@ -242,21 +243,21 @@ private_setCursorPosition:
 	shl ax, 2
 	add bx, ax
 
-	mov al, 0Fh
-	mov dx, 3D4h
+	mov al, 0x0F
+	mov dx, 0x3D4
 	out dx, al
 	
 	mov ax, bx
-	mov dx, 3D5h
+	mov dx, 0x3D5
 	out dx, al
 	
-	mov al, 0Eh
-	mov dx, 3D4h
+	mov al, 0x0E
+	mov dx, 0x3D4
 	out dx, al
 	
 	mov ax, bx
 	shr ax, 8
-	mov dx, 3D5h
+	mov dx, 0x3D5
 	out dx, al
 	
 	ret
@@ -300,17 +301,12 @@ loadFile: ; basically a wrapper for fat12.asm
 
 
 ; =========================================
-; DX -> file
-; CX -> size in byte
-; BX:BP -> buffer
+; DX <= file
+; CX <= size in byte
+; BX:BP <= buffer
 ; =========================================
 writeFile:
-	mov si, dx
-    push si
-    call FindFile
-    pop si
-    cmp ax, -1
-    je .return
+    mov si, dx
 	call WriteFile
 .return:
 	iret
@@ -338,11 +334,12 @@ setRootDir:
 
 
 ; =========================================
-; DX -> Dateiname
+; DX <= Dateiname
 ; =========================================
 deleteFile:
 	mov si, dx
 	call DeleteFile
+    
 	iret
 ; =========================================
 
@@ -366,18 +363,18 @@ findFile:
 ; =========================================
 readLine:
 	mov di, dx
-	mov word [.counter], 00h ; counts how many chars were read
+	mov word [.counter], 0x00 ; counts how many chars were read
 .kbLoop:
-	xor ax, ax            ; wait for key press
-	int 16h
-	test al, al             ; al=0 => special key
-	jz .kbLoop
+	xor ax, ax              ; wait for key press
+    int 0x16  
+    test al, al             ; al=0 => special key
+    jz .kbLoop
 
-	cmp al, 0Dh	        	; Enter?
-	je .return	    		; yes, return
+    cmp al, 0x0D            ; Enter?
+    je .return	    		; yes, return
 	
-	cmp al, 08h             ; Backspace?	
-	je .back                ; yes, delete last char
+    cmp al, 0x08            ; Backspace?	
+    je .back                ; yes, delete last char
 	
 	inc word [.counter]     ; increment counter
 	cmp word [.counter], cx ; if max_chars is reached, do not accept more chars
@@ -426,7 +423,7 @@ readLine:
 	jmp .kbLoop			; read the next char
 	
 .back:
-	cmp word [.counter], 00h ; decrement counter, but only delete the chars that were entered
+	cmp word [.counter], 0x00; decrement counter, but only delete the chars that were entered
 	jbe .kbLoop
 	dec word [.counter]
 	
@@ -434,7 +431,7 @@ readLine:
     
 	dec byte [col]      ; move on char back
 	
-	mov dh, 00
+	mov dh, 0x00
 	mov dl, byte [ds:SYSTEM_COLOR] 
 	call printChar
 	
@@ -447,7 +444,7 @@ readLine:
 	
 	; Variable
 	dec di				; move on char back
-	mov al, 00h			
+	mov al, 0x00			
 	stosb				; override with zero
 	dec di				
 	
@@ -459,7 +456,7 @@ readLine:
 	mov cx, word [.counter]
 	iret				; return
 	
-.counter dw 00h
+.counter dw 0x00
 
 
 ; =========================================
@@ -483,7 +480,7 @@ compareString:
 	pop di
 	iret
 .NotEqual:
-	mov al, 01h
+	mov al, 0x01
 	pop di
 	iret
 ; =========================================
@@ -513,7 +510,7 @@ intToStr:
 	mov bx, 10000
 	div bx				; 0 0000
 	
-	cmp al, 00h
+	cmp al, 0x00
 	jz .zero1
 	
 	add al, 48
@@ -521,7 +518,7 @@ intToStr:
 	jmp .digit2
 	
 .zero1:
-	mov bp, 01h
+	mov bp, 0x01
 	
 .digit2:
 	mov ax, dx
@@ -529,7 +526,7 @@ intToStr:
 	xor dx, dx
 	div bx				; 0 000
 	
-	cmp al, 00h
+	cmp al, 0x00
 	jz .ok2
 .nok2:
 	add al, 48
@@ -537,10 +534,10 @@ intToStr:
 	xor bp, bp
 	jmp .digit3
 .ok2:
-	cmp bp, 01h
+	cmp bp, 0x01
 	jnz .nok2
 .zero2:
-	mov bp, 01h
+	mov bp, 0x01
 	
 	
 .digit3:
@@ -549,7 +546,7 @@ intToStr:
 	xor dx, dx
 	div bx				; 0 00
 
-	cmp al, 00h
+	cmp al, 0x00
 	jz .ok3
 .nok3:
 	add al, 48
@@ -557,10 +554,10 @@ intToStr:
 	xor bp, bp
 	jmp .digit4
 .ok3:	
-	cmp bp, 01h
+	cmp bp, 0x01
 	jnz .nok3
 .zero3:
-	mov bp, 01h
+	mov bp, 0x01
 
 	
 .digit4:
@@ -578,7 +575,7 @@ intToStr:
 	
 .ok4:
 	; cmp byte [.status], 01h
-	cmp bp, 01h
+	cmp bp, 0x01
 	jnz .nok4
 
 .digit5:
@@ -662,8 +659,8 @@ intToString32:
 ; DX <= String
 ; =========================================
 getTimeString:
-	mov ah, 02h
-	int 1Ah
+	mov ah, 0x02
+	int 0x1A
 	mov di, .timeStr
 	;CH hours
 	;CL minutes
@@ -697,7 +694,7 @@ getTimeString:
 
 	iret
 
-.timeStr db "00:00 Uhr", 00h
+.timeStr db "00:00 Uhr", 0x00
 ; =========================================
 
 
@@ -706,8 +703,8 @@ getTimeString:
 ; DX <= Stringoffset
 ; =========================================
 getDateString:
-	mov ah, 04h
-	int 1Ah
+	mov ah, 0x04
+	int 0x1A
 	mov di, .dateStr
 	; CH century
 	; CL year
@@ -768,13 +765,13 @@ getDateString:
 
 	iret
 	
-.dateStr db "00.00.0000", 00h
+.dateStr db "00.00.0000", 0x00
 ; =========================================
 ; al => BCD Byte
 ; ax <= Integer
 private_bcdToInt:
 	mov bl, al			
-	and ax, 0Fh			
+	and ax, 0x0F
 	mov cx, ax			
 	shr bl, 4			
 	mov al, 10
@@ -852,7 +849,7 @@ stringToInt:
 	
     mov ecx, dword [.number]
     
-    cmp byte [.sign], 01h
+    cmp byte [.sign], 0x01
     jne .ret
     
     not ecx
@@ -862,7 +859,7 @@ stringToInt:
     xor ax, ax
 	iret
 .number dd 0x00000000
-.sign db 00h
+.sign db 0x00
 ; ======================================================
 
 
@@ -934,7 +931,7 @@ decToHex:
 	mov al, byte [bx]
 	mov byte [ds:si], al
 	inc si
-	mov byte [ds:si], 00h
+	mov byte [ds:si], 0x00
 	
 	popf
 	popa
@@ -1064,10 +1061,10 @@ hexToDec:
 
 ; ======================================================
 random:
-    mov ah, 04h
-    int 1Ah
-    mov ah, 02h
-    int 1Ah
+    mov ah, 0x04
+    int 0x1A
+    mov ah, 0x02
+    int 0x1A
 
     mov ax, cx
     rol ax, cl
@@ -1105,26 +1102,26 @@ hardwareInfo:
     mov [.vendorString+4], edx
     mov [.vendorString+8], ecx
 	
-    mov eax, 80000000h
+    mov eax, 0x80000000
     cpuid
-    cmp eax, 80000004h
+    cmp eax, 0x80000004
     jnge .return
 	
-    mov eax, 80000002h
+    mov eax, 0x80000002
     cpuid
     mov [.modelString], eax
     mov [.modelString+4], ebx
     mov [.modelString+8], ecx
     mov [.modelString+12], edx
 	
-    mov eax, 80000003h
+    mov eax, 0x80000003
     cpuid
     mov [.modelString+16], eax
     mov [.modelString+20], ebx
     mov [.modelString+24], ecx
     mov [.modelString+28], edx
 	
-    mov eax, 80000004h
+    mov eax, 0x80000004
     cpuid
     mov [.modelString+32], eax
     mov [.modelString+36], ebx
@@ -1132,8 +1129,8 @@ hardwareInfo:
     mov [.modelString+44], edx
 .return:
     ret
-.vendorString times 13 db 00h
-.modelString times 49 db 00h
+.vendorString times 13 db 0x00
+.modelString times 49 db 0x00
 ; ======================================================
 
 %ifdef DEBUG
