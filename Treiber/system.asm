@@ -97,9 +97,9 @@ main:
 col db 0x00
 row db 0x09
 	
-; =====================================================
+; ======================================================
 ; exits the current program and jumps back to cli
-; =====================================================
+; ======================================================
 exitProgram:	
 	test bx, bx         ; check for error code
 	jnz .rError         ; zero is good, everything else is errorcode
@@ -116,13 +116,13 @@ exitProgram:
 	call private_printString
 	
 	jmp .r
-; =====================================================
+; ======================================================
 
 
-; =====================================================
+; ======================================================
 ; DX -> String
 ; BL -> Color
-; =====================================================
+; ======================================================
 printString: ; public wrapper
 	call private_printString
 	iret
@@ -150,7 +150,7 @@ private_printString:
 	ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-printCharC: ; öffentlicher Wrapper
+printCharC: ; public wrapper
 	call printChar
 	iret
 	
@@ -225,14 +225,27 @@ printChar:
 	mov es, ax
 	pop si
 	ret
-; =====================================================		
+; ======================================================	
 
 
-; =====================================================
+; ======================================================
 ; DH -> Row
 ; DL -> Column
-; =====================================================
+; ======================================================
 private_setCursorPosition:
+
+    cmp dh, 0
+    jb .clampY0
+    cmp dh, 24
+    ja .clampY24
+    
+    cmp dl, 0
+    jb .clampX0
+    cmp dl, 79
+    ja .clampX79
+    
+.clampOK:
+
 	movzx ax, dh
 	movzx bx, dl
 
@@ -261,27 +274,41 @@ private_setCursorPosition:
 	out dx, al
 	
 	ret
+.clampY0:
+    mov dh, 0x00
+    jmp .clampOK
+.clampY24:
+    mov dh, 24
+    jmp .clampOK
+.clampX0:
+    mov dl, 0x00
+    jmp .clampOK
+.clampX79:
+    mov dl, 79
+    jmp .clampOK
+    
 setCursorPosition: ; public wrapper
 	call private_setCursorPosition
 	iret
-; =====================================================	
+; ======================================================
 
 
-; =====================================================	
+; ======================================================
 getCursorPosition:
 	mov dh, byte [row] ; return the cursor positon
 	mov dl, byte [col] ; 
 	iret
-; =====================================================	
+; ======================================================
 
 
-; =========================================
+; ======================================================
 ; loads a file into memory
+;
 ; buffer   => BX:BP
 ; filename => DX
 ; AX <= result, 0 = OK, -1 = ERROR
 ; CX <= Size 
-; =========================================
+; ======================================================
 loadFile: ; basically a wrapper for fat12.asm
 	push bp
 	push bx
@@ -297,70 +324,75 @@ loadFile: ; basically a wrapper for fat12.asm
 	mov si, dx
 	call LoadFile
 	iret
-; =========================================
+; ======================================================
 
 
-; =========================================
+; ======================================================
 ; DX <= file
 ; CX <= size in byte
 ; BX:BP <= buffer
-; =========================================
+; ======================================================
 writeFile:
     mov si, dx
 	call WriteFile
 .return:
 	iret
-; =========================================
+; ======================================================
 
 
-; =========================================
+; ======================================================
 ; AX -> load root dir
-; =========================================
+; ======================================================
 getRootDir:
 	call LoadRoot
 	mov bp, ROOT_OFFSET
 	mov cx, word [RootEntries]
 	iret
-; =========================================
+; ======================================================
 
 
-; =========================================
+; ======================================================
 ; AX -> save root dir
-; =========================================
+; ======================================================
 setRootDir:
 	call WriteRoot
 	iret
-; =========================================
+; ======================================================
 
 
-; =========================================
+; ======================================================
+; deletes a file
+;
 ; DX <= Dateiname
-; =========================================
+; ======================================================
 deleteFile:
 	mov si, dx
 	call DeleteFile
     
 	iret
-; =========================================
+; ======================================================
 
 
-; =========================================
-; DX -> filename
+; ======================================================
+; searches for a file in the root directory
+;
+; DX => filename
 ; AX <= -1 not found, else: index in root dir
-; =========================================
+; ======================================================
 findFile:
 	mov si, dx
 	call FindFile
+    
 	iret
-; =========================================
+; ======================================================
 
 
-; =========================================
+; ======================================================
 ; reads a string from the keyboard
 ; DX => dest string
 ; CX => max chars
 ; CX <= actual amount of chars read
-; =========================================
+; ======================================================
 readLine:
 	mov di, dx
 	mov word [.counter], 0x00 ; counts how many chars were read
@@ -459,15 +491,20 @@ readLine:
 .counter dw 0x00
 
 
-; =========================================
+; ======================================================
 ; compares two strings
 ; DI => string 1
 ; SI => string 2
 ; AL <= 0 equal, 1 not equal
-; =========================================
+; ======================================================
 compareString:
 	xor al, al
 	push di
+    push si
+    push bx
+    push cx
+    push dx
+    push bp
 .Loop:
 	lodsb
 	scasb
@@ -477,20 +514,30 @@ compareString:
 	jnz .Loop
 
 	xor al, al
+    pop bp
+    pop dx
+    pop cx
+    pop bx
+    pop si
 	pop di
 	iret
 .NotEqual:
 	mov al, 0x01
+    pop bp
+    pop dx
+    pop cx
+    pop bx
+    pop si
 	pop di
 	iret
-; =========================================
+; ======================================================
 
 
-; =========================================
-; intToStr
+; ======================================================
+; intToStr (16 bit)
 ; dx => String
-; cx => Zahl
-; =========================================
+; cx => number
+; ======================================================
 intToStr:
 	pusha
 	mov ax, cx
@@ -588,10 +635,10 @@ intToStr:
 	stosb
 	popa
 	iret
-; =========================================
+; ======================================================
 
 
-; =========================================
+; ======================================================
 intToString32:
     mov si, dx
     mov eax, ecx
@@ -651,13 +698,13 @@ intToString32:
     iret
 .leadingZero db 0x01
 .divisor dd 1000000000
-; =========================================
+; ======================================================
 
 
-; =========================================
+; ======================================================
 ; get time as string
 ; DX <= String
-; =========================================
+; ======================================================
 getTimeString:
 	mov ah, 0x02
 	int 0x1A
@@ -695,13 +742,13 @@ getTimeString:
 	iret
 
 .timeStr db "00:00 Uhr", 0x00
-; =========================================
+; ======================================================
 
 
-; =========================================
+; ======================================================
 ; get date as string
 ; DX <= Stringoffset
-; =========================================
+; ======================================================
 getDateString:
 	mov ah, 0x04
 	int 0x1A
@@ -766,7 +813,7 @@ getDateString:
 	iret
 	
 .dateStr db "00.00.0000", 0x00
-; =========================================
+; ======================================================
 ; al => BCD Byte
 ; ax <= Integer
 private_bcdToInt:
@@ -782,17 +829,17 @@ bcdToInt:
     call private_bcdToInt
     mov cx, ax
     iret
-; =========================================
+; ======================================================
 
 getSystemVersion:
 	mov ah, 0
 	mov al, 7
 	iret
-; =========================================
+; ======================================================
 
 
 ; ======================================================
-; convert string to in
+; convert string to int
 ; DX => String
 ; CX <= Number
 ; AX <= -1 Error
@@ -942,13 +989,90 @@ decToHex:
 
 
 ; ======================================================
+; Converts a hexadecimal digit in al to
+; a base10 value in cl
+; al <= hex digit
+; cl => base10 number
+; ======================================================
+private_hexToDec:
+    mov si, dx
+    xor cx, cx
+    mov cl, al
+    cmp cl, '0'         ; anything below 0 is invalid (check ascii map)
+    jb .invalidDigit
+    
+    cmp cl, '9'         ; anything from 0-9 is a valid digit
+    ja .checkAtoF       ; chars greater than 9 are letters (which can be valid)
+    
+    sub cl, '0'         ; get the decimal value from the ascii char
+    xor ax, ax          ; no error
+    ret                 ; return
+.checkAtoF:             ; check uppercase letters
+    cmp cl, 'A'         ; everyting below A is invalid
+    jb .invalidDigit    
+    cmp cl, 'F'         ; everything above F may be lowercase letter
+    ja .checkatof
+    
+    sub cl, 'A'         ; get decimal value from ascii char
+    xor ax, ax          ; no error
+    ret                 ; return
+.checkatof:             ; check lowercase letters
+    cmp cl, 'a'         ; now only a-f remain as valid digits
+    jb .invalidDigit    ; everything else is invalid
+    cmp cl, 'f'
+    ja .invalidDigit
+    
+    sub cl, 'a'         ; get decimal value
+    xor ax, ax          ; no error
+    ret                 ; return
+.invalidDigit:
+    xor cx, cx          ; zero the output value
+    mov ax, -1          ; an error occured
+    ret                 ; return
+; ======================================================
+    
+
+; ======================================================
+; converts the first two characters of the string into
+; decimal, assuming they represent a hexadecimal value
+; ======================================================
 hexToDec:
+;    mov si, dx          ; copy the given string
+;    xor bx, bx          ; this will be our working register
+;    xor cx, cx          ; this is the result
+;    mov al, byte [ds:si]   ; get the first char
+;    inc si              ; move to the next char
+    
+;    call private_hexToDec   ; try to convert the first char
+;    cmp ax, -1              ; occured an error?
+;    je .invalidDigit        ; if yes error out
+    
+;    add bx, cx              ; else add the value
+    
+;    shl bx, 4               ; multiply the result by 16 (since hexadecimal is base 16)
+    
+;    mov al, byte [ds:si]       ; get the next char
+;    call private_hexToDec   ; try to convert the second char
+;    cmp ax, -1              ; occured an error?
+;    je .invalidDigit        ; if yes error out
+    
+;    add bx, cx              ; else add the value
+;    mov cx, bx              ; copy the value to result register
+;    xor ax, ax              ; no error
+    
+;    iret                    ; return
+;.invalidDigit:
+;    xor cx, cx              ; clear the result
+;    mov ax, -1              ; indicate error
+;    iret                    ; return
+; ======================================================
+    
 	mov si, dx
 	xor ax, ax
 	xor bx, bx
 	mov al, byte [ds:si]
 	inc si
-	
+
 	cmp al, 48	; digits 0-9
 	je .num16
 	cmp al, 49
@@ -969,7 +1093,7 @@ hexToDec:
 	je .num16
 	cmp al, 57
 	je .num16
-.chars:			; digits A-F
+.chars:            ; digits A-F
 	cmp al, 65
 	je .char16
 	cmp al, 66
@@ -1028,7 +1152,7 @@ hexToDec:
 	je .char161
 	cmp al, 66
 	je .char161
-	cmp al, 67
+    cmp al, 67
 	je .char161
 	cmp al, 68
 	je .char161
@@ -1061,23 +1185,16 @@ hexToDec:
 
 ; ======================================================
 random:
-    mov ah, 0x04
-    int 0x1A
-    mov ah, 0x02
-    int 0x1A
-
-    mov ax, cx
-    rol ax, cl
-    rol dx, 8
-    mov cx, ax
-    add cx, dx
-    mov ax, cx
-    xor ax, word [seed]
-    mov word [seed], ax
-    mov cx, ax
-    
-    iret
-seed dw 623 
+    xor edx, edx
+    mov eax, 24298
+    mov ebx, dword [.lastX]
+    mul ebx
+    mov ebx, 199017
+    div ebx
+    mov dword [.lastX], edx
+    mov ecx, edx
+    ret
+.lastX dd 125
 ; ======================================================
 
 
