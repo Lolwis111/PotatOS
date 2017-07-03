@@ -46,22 +46,13 @@ delete_file:
 	int 21h
 	
 .return:
-	mov ah, 01h
-	mov bl, byte [SYSTEM_COLOR]
-	mov dx, newLine
-	int 21h
+    print newLine
 	jmp main
 .invalid:
-	mov bl, byte [SYSTEM_COLOR]
-	mov dx, WRITE_PROTECTION_ERROR
-	mov ah, 01h
-	int 21h
+	print WRITE_PROTECTION_ERROR
 	jmp .return
 .notFound:
-	mov bl, byte [SYSTEM_COLOR]
-	mov dx, FILE_NOT_FOUND_ERROR
-	mov ah, 01h
-	int 21h
+    print FILE_NOT_FOUND_ERROR
 	jmp .return
 ; ====================================================
 	
@@ -153,24 +144,19 @@ rename_file:
 	pop cx
 	add di, 20h
 	loop .fileLoop
+    
 .notFound:
-	mov bl, byte [SYSTEM_COLOR]
-	mov dx, FILE_NOT_FOUND_ERROR
-	mov ah, 01h
-	int 21h
+    print FILE_NOT_FOUND_ERROR
 	jmp .return
+    
 .badFileName:
-	mov bl, byte [SYSTEM_COLOR]
-	mov dx, FILE_ALREADY_EXISTS_ERROR
-	mov ah, 01h
-	int 21h
+    print FILE_ALREADY_EXISTS_ERROR
 	jmp .return
+    
 .invalid:
-	mov bl, byte [SYSTEM_COLOR]
-	mov dx, WRITE_PROTECTION_ERROR
-	mov ah, 01h
-	int 21h
+    print WRITE_PROTECTION_ERROR
 	jmp .return
+    
 .Found:
 	pop cx
 	mov si, .rArgument
@@ -179,10 +165,7 @@ rename_file:
 	mov ah, 12h
 	int 21h
 .return:
-	mov dx, newLine
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	int 21h
+	print newLine
 	jmp main
 .rArgument db "            ", 00h, 00h
 invalidFiles db "MAIN    SYSIRQ     SYSSYSTEM  SYSLOADER  SYS" ; Systemdateien

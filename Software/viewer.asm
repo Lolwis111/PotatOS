@@ -13,6 +13,7 @@ jmp start
 %include "strings.asm"
 %include "language.asm"
 %include "defines.asm"
+%include "functions.asm"
 
 ; msgLoading	db 0Dh, 0Ah, "Die Datei wird geladen...", 0Dh, 0Ah, 00h
 msgFile		db 0Dh, 0Ah, "Datei:", 00h
@@ -35,11 +36,7 @@ start:
 	mov di, fileName
 	call AdjustFileName
 	
-	mov dx, fileName
-	xor bx, bx
-	mov ebp, 0x9400 
-	mov ah, 05h
-	int 21h				;Datei laden
+    loadfile fileName, 0x9400 ; Datei laden
 	cmp ax, -1
 	je .error
 	
@@ -49,42 +46,27 @@ start:
 
 ; =====================================================================
 .noArgument:
-	mov dx, msgFile			;Dateiname von Eingabe holen
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	int 21h
-	mov dx, input
-	mov ah, 04h
-	mov cx, 11
-	int 21h
-	
-	mov si, input			;In Großbuchstaben wandeln
+    print msgFile ; Dateiname von Eingabe holen
+    readline input, 11
+    
+	mov si, input			; In Großbuchstaben wandeln
 	call UpperCase
 	
-	mov si, input			;Dateiname an FAT12 anpassen
+	mov si, input			; Dateiname an FAT12 anpassen
 	mov di, fileName
 	call AdjustFileName
 	cmp ax, -1
 	je .error
 	
-	mov dx, fileName
-	xor bx, bx
-	mov ebp, 0x9400
-	mov ah, 05h
-	int 21h				;Datei laden
+    loadfile fileName, 0x9400 ; Datei laden
 	cmp ax, -1
 	je .error
 	jmp init
 	
 .error:
-	mov dx, FILE_NOT_FOUND_ERROR		;Fehlermeldung anzeigen
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	int 21h
-	
-	mov bx, 1
-	xor ax, ax
-	int 21h
+    print FILE_NOT_FOUND_ERROR  ; Fehlermeldung anzeigen
+
+    EXIT 1
 ; =====================================================================
 	
 	
@@ -111,9 +93,7 @@ exitV:
 	inc bx
 	loop .clearLoop
 	
-	xor bx, bx
-	xor ax, ax
-	int 21h
+	EXIT 0
 ;======================================================================
 
 
@@ -122,14 +102,9 @@ exitInvalid:
     mov ax, word [reg_es] ; Ursprüngliches Segment wiederherstellen
     mov es, ax
 
-    mov ah, 01h
-    mov bl, byte [SYSTEM_COLOR]
-    mov dx, INVALID_FILE_ERROR
-    int 21h
+    print INVALID_FILE_ERROR
 
-    xor bx, bx
-    xor ax, ax
-    int 21h
+    EXIT 0
 ; =====================================================================
 
 

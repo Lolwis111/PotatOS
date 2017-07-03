@@ -8,7 +8,7 @@ drawInputBox:
 	.loopX:
 		mov byte [gs:di], 20h
 		inc di
-		mov byte [gs:di], createColor(BLACK, MAGENTA)
+		mov byte [gs:di], TEXT_COLOR
 		inc di
 		dec ch
 		test ch, ch
@@ -23,7 +23,7 @@ drawInputBox:
 .top:
 	mov byte [gs:di], 205
 	inc di
-	mov byte [gs:di], createColor(BLACK, BLUE)
+	mov byte [gs:di], BORDER_COLOR
 	inc di
 	loop .top
 	
@@ -32,7 +32,7 @@ drawInputBox:
 .bottom:
 	mov byte [gs:di], 205
 	inc di
-	mov byte [gs:di], createColor(BLACK, BLUE)
+	mov byte [gs:di], BORDER_COLOR
 	inc di
 	loop .bottom
 	
@@ -41,7 +41,7 @@ drawInputBox:
 .left:
 	mov byte [gs:di], 186
 	inc di
-	mov byte [gs:di], createColor(BLACK, BLUE)
+	mov byte [gs:di], BORDER_COLOR
 	add di, ((SCREEN_WIDTH * 2) - 1)
 	loop .left
 	
@@ -50,7 +50,7 @@ drawInputBox:
 .right:
 	mov byte [gs:di], 186
 	inc di
-	mov byte [gs:di], createColor(BLACK, BLUE)
+	mov byte [gs:di], BORDER_COLOR
 	add di, ((SCREEN_WIDTH * 2) - 1)
 	loop .right
 	
@@ -62,12 +62,12 @@ drawInputBox:
 	mov byte [gs:di], 200
 	mov di, cursorPos(48, 12)
 	mov byte [gs:di], 188
-	mov byte [gs:di+1], createColor(BLACK, BLUE)
+	mov byte [gs:di+1], BORDER_COLOR
 	add di, 2
 	
 	pop si
 	mov di, cursorPos(25, 8)
-	mov ah, createColor(BLACK, MAGENTA)
+	mov ah, TEXT_COLOR
 	xor bp, bp
 .charLoop:
 	mov al, byte [si]
@@ -92,36 +92,30 @@ drawInputBox:
 	jmp .charLoop
 
 .readLine:
-	mov cx, 0607h
-	mov ax, 0103h
-	int 10h
+	mov cx, 0x0607
+	mov ax, 0x0103
+	int 0x10
 
-	mov dh, 10
-	mov dl, 25
-	mov ah, 0Eh
-	int 21h
+	movecur 25, 10
 
-	mov dl, createColor(BLACK, MAGENTA)
+	mov dl, TEXT_COLOR
 	mov dh, '>'
-	mov ah, 10h
-	int 21h
+	mov ah, 0x10
+	int 0x21
 	
-	mov dh, 10
-	mov dl, 26
-	mov ah, 0Eh
-	int 21h
+	movecur 26, 10
 
 	
-	mov ah, 04h
+	mov ah, 0x04
 	mov cx, 4
 	mov dx, .inputBuffer
-	mov byte [0x1FFF], createColor(BLACK, MAGENTA)
-	int 21h
+	mov byte [0x1FFF], TEXT_COLOR
+	int 0x21
 	
 	mov ch, 32
 	mov ah, 1
 	mov al, 3			
-	int 10h
+	int 0x10
 	
 .exit:
 	
@@ -143,7 +137,7 @@ drawBox:
 	.loopX:
 		mov byte [gs:di], 20h
 		inc di
-		mov byte [gs:di], createColor(BLACK, MAGENTA)
+		mov byte [gs:di], TEXT_COLOR
 		inc di
 		dec ch
 		test ch, ch
@@ -158,7 +152,7 @@ drawBox:
 .top:
 	mov byte [gs:di], 205
 	inc di
-	mov byte [gs:di], createColor(BLACK, BLUE)
+	mov byte [gs:di], BORDER_COLOR
 	inc di
 	loop .top
 	
@@ -167,7 +161,7 @@ drawBox:
 .bottom:
 	mov byte [gs:di], 205
 	inc di
-	mov byte [gs:di], createColor(BLACK, BLUE)
+	mov byte [gs:di], BORDER_COLOR
 	inc di
 	loop .bottom
 	
@@ -176,7 +170,7 @@ drawBox:
 .left:
 	mov byte [gs:di], 186
 	inc di
-	mov byte [gs:di], createColor(BLACK, BLUE)
+	mov byte [gs:di], BORDER_COLOR
 	add di, ((SCREEN_WIDTH * 2) - 1)
 	loop .left
 	
@@ -185,7 +179,7 @@ drawBox:
 .right:
 	mov byte [gs:di], 186
 	inc di
-	mov byte [gs:di], createColor(BLACK, BLUE)
+	mov byte [gs:di], BORDER_COLOR
 	add di, ((SCREEN_WIDTH * 2) - 1)
 	loop .right
 	
@@ -198,21 +192,21 @@ drawBox:
 	mov di, cursorPos(64, 19)
 	mov byte [gs:di], 188
 	inc di
-	mov byte [gs:di], createColor(BLACK, BLUE)
+	mov byte [gs:di], BORDER_COLOR
 	inc di
 	
 	pop si
 	mov di, cursorPos(5, 5)
-	mov ah, createColor(BLACK, MAGENTA)
+	mov ah, TEXT_COLOR
 	xor bp, bp
 .charLoop:
 	mov al, byte [si]
 	inc si
 	test al, al
 	jz .inputLoop
-	cmp al, 0Dh
+	cmp al, 0x0D
 	je .nl
-	cmp al, 0Ah
+	cmp al, 0x0A
 	je .charLoop
 	mov byte [gs:di], al
 	add di, 2
@@ -230,9 +224,9 @@ drawBox:
 	
 .inputLoop:
 	xor ax, ax
-	int 16h
+	int 0x16
 	
-	cmp ah, 01h
+	cmp ah, 0x01
 	je .exit
 	jmp .inputLoop
 	
@@ -250,7 +244,7 @@ drawBorder:
 .top:
 	mov byte [gs:bx], 196
 	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
+	mov byte [gs:bx], BORDER_COLOR
 	inc bx
 	loop .top
 	
@@ -259,7 +253,7 @@ drawBorder:
 .bottom:
 	mov byte [gs:bx], 196
 	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
+	mov byte [gs:bx], BORDER_COLOR
 	inc bx
 	loop .bottom
 	
@@ -268,7 +262,7 @@ drawBorder:
 .left:
 	mov byte [gs:bx], 179
 	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
+	mov byte [gs:bx], BORDER_COLOR
 	add bx, ((SCREEN_WIDTH * 2) - 1)
 	loop .left
 	
@@ -277,7 +271,7 @@ drawBorder:
 .right:
 	mov byte [gs:bx], 179
 	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
+	mov byte [gs:bx], BORDER_COLOR
 	add bx, 159
 	loop .right
 
@@ -300,7 +294,7 @@ drawBorder:
 	mov byte [gs:di], 195
 	
 	mov di, cursorPos(4, 0)
-	mov ah, createColor(BLACK, MAGENTA)
+	mov ah, TEXT_COLOR
 	mov si, exitKey
 	call printString
 	
@@ -369,17 +363,17 @@ setupScreen:
 	mov al, byte [.hexStr+1]
 	mov byte [gs:bx], al
 	inc bx
-	mov byte [gs:bx], createColor(BLACK, CYAN)
+	mov byte [gs:bx], LABEL_COLOR
 	inc bx
 	mov al, byte [.hexStr+2]
 	mov byte [gs:bx], al
 	inc bx
-	mov byte [gs:bx], createColor(BLACK, CYAN)
+	mov byte [gs:bx], LABEL_COLOR
 	inc bx
 	mov al, byte [.hexStr+3]
 	mov byte [gs:bx], al
 	inc bx
-	mov byte [gs:bx], createColor(BLACK, CYAN)
+	mov byte [gs:bx], LABEL_COLOR
 
 .done:	
 	add bx, ((SCREEN_WIDTH * 2) - 5)
@@ -389,12 +383,12 @@ setupScreen:
 	
 	mov di, cursorPos(1, 1)
 	mov si, titleStr
-	mov ah, createColor(BLACK, CYAN)
+	mov ah, LABEL_COLOR
 	call printString
 	
 	mov di, cursorPos(1, 23)
 	mov si, titleStr
-	mov ah, createColor(BLACK, CYAN)
+	mov ah, LABEL_COLOR
 	call printString
 
 	call drawBorder
@@ -409,7 +403,7 @@ setupScreen:
 .loop2:
 	mov byte [gs:bx], 186
 	inc bx
-	mov byte [gs:bx], createColor(BLACK, BLUE)
+	mov byte [gs:bx], BORDER_COLOR
 	add bx, ((SCREEN_WIDTH * 2) - 1)
 	loop .loop2
 	
@@ -462,7 +456,7 @@ renderMemoryHex:
 	popa
 	ret
 	
-.hex db "00", 00h, 00h
+.hex db "00", 0x00, 0x00
 ;==========================================
 
 
@@ -532,7 +526,7 @@ drawPosition:
     
 	mov si, .number
 	mov di, cursorPos(4, 24)
-	mov ah, createColor(BLACK, MAGENTA)
+	mov ah, TEXT_COLOR
 	call printString
     
 	popa
@@ -549,7 +543,7 @@ drawPosition:
 ;==========================================
 drawCursor:
 	pusha
-	
+    
 	push dx
 	push ax
 	

@@ -6,6 +6,14 @@ jmp start
 %define DISP_BACKUP displayBackupMemory
 
 %include "defines.asm"
+%include "keys.asm"
+%include "functions.asm"
+
+%define TEXT_COLOR createColor(BLACK, MAGENTA)
+%define BORDER_COLOR createColor(BLACK, BLUE)
+%define DATA_COLOR createColor(BLACK, BRIGHT_YELLOW)
+%define LABEL_COLOR createColor(BLACK, CYAN)
+
 %include "include/memview_tools.asm"
 %include "include/memview_gui.asm"
 
@@ -41,8 +49,10 @@ inputStr2	db 0x0D
                 db "bereich navigiert werden. Durch das Druecken von Bild-Auf,", 0x0D
                 db "und Bild-Ab kann im Speicherbeich um jeweils 16 Byte weiter", 0x0D
                 db "oder zurueck navigiert werden. Um einen Wert zu veraendern", 0x0D
-                db "muss enter gedrueckt werden.", 0x0D
-                db "Um im schreibgeschuetzten Modus zu starten, den Schalter 'R''", 0x0D
+                db "muss Enter gedrueckt werden. (ASCII Zeichen können durch", 0x0D
+                db "Eingabe Prefix x eingegeben werden, die eingabe xA wuerde", 0x0D
+                db "den ASCII Buchstaben A eintragen).", 0x0D
+                db "Um im schreibgeschuetzten Modus zu starten, den Schalter 'R'", 0x0D
                 db "aktivieren.", 0x00
       
 %elifdef english
@@ -51,9 +61,11 @@ inputStr2	db 0x0D
                 db "MEMVIEW.BIN - Help", 0x0D
                 db "------------------------------", 0x0D
                 db "You can navigate through the memomory area using the arrow", 0x0D
-                db "keys. To move further in memory, you can move the selected", 0x0D
-                db "are by 16-bytes up or down by pressing page-up or page-down.", 0x0D
-                db "Press enter to alter the selected value.", 0x0D
+                db "keys. To move further in memory, you can move by 16 bytes", 0x0D
+                db "up or down by pressing page-up or page-down.", 0x0D
+                db "Press enter to alter the selected value. (with the prefix x", 0x0D
+                db "one can enter a ascii character directly, xA would write the", 0x0D
+                db "character A).", 0x0D
                 db "To start in read-only mode, pass 'R' on the command line.", 0x00
             
 %endif
@@ -129,9 +141,9 @@ editByte:
 	mov bx, ax
 	add bx, 2
 	
-	mov byte [gs:bx], 20h
+	mov byte [gs:bx], 0x20
 	add bx, 2
-	mov byte [gs:bx], 20h
+	mov byte [gs:bx], 0x20
 	
 	push bx
 	
@@ -141,19 +153,16 @@ editByte:
 	shl dl, 2
 	sub dl, cl
 	add dl, 5
-	mov ah, 0Eh
-	int 21h
+	mov ah, 0x0E
+	int 0x21
 	
 	mov ch, 32
 	mov ah, 1
 	mov al, 3			
-	int 10h
+	int 0x10
 	
-	mov ah, 04h
-	mov dx, .hex
-	mov byte [0x1FFF], createColor(WHITE, BLACK)
-	mov cx, 2
-	int 21h
+    mov byte [0x1FFF], createColor(WHITE, BLACK)
+    readline .hex, 2
 	cmp cx, 0
 	je .backup
 	cmp cx, 2
@@ -168,30 +177,42 @@ editByte:
 	add bx, 2
 	mov byte [gs:bx], al
 	
-	mov ah, 0Dh
+	mov ah, 0x0D
 	mov dx, .hex
-	int 21h
+	int 0x21
+    cmp ax, -1
+    je .checkASCII
+    
 	mov di, word [selectAdr]
 	mov byte [fs:di], cl
 
 .return:
-	xor dx, dx
-	mov ah, 0Eh
-	int 21h
+    movecur 0, 0
 	
-	mov cx, 0607h
-	mov ax, 0103h
-	int 10h
+	mov cx, 0x0607
+	mov ax, 0x0103
+	int 0x10
 	
 	ret
 .backup:
 	pop bx
+.backupNoPop:
 	mov di, word [selectAdr]
 	mov al, byte [.dataByte]
 	mov byte [fs:di], al
 	jmp .return
-.hex		db "00", 00h
-.dataByte	db 00h
+.checkASCII:
+    cmp byte [.hex], 'x'
+    jne .backupNoPop
+    
+    mov di, word [selectAdr]
+    mov cl, byte [.hex+1]
+    mov byte [fs:di], cl
+    
+    jmp .return
+    
+.hex		db "00", 0x00
+.dataByte	db 0x00
 ;==========================================
 
 
@@ -207,9 +228,7 @@ start:
     mov byte [readOnly], 0x01
     
 .ok:                            ; (directly jump here if no args given)
-    xor dx, dx
-	mov ah, 0Eh
-	int 21h
+    movecur 0, 0
 
 	mov al, byte [0x1FFF]       ; save color
 	mov byte [color], al
@@ -225,7 +244,7 @@ start:
 	xor ax, ax                   ; zero out fs (this will be our segment address for the rest of the execution)
 	mov fs, ax
 	
-	mov dx, (createColor(BLACK, BRIGHT_YELLOW)<<8)+(20h) ; standart color is yellow on black
+	mov dx, (DATA_COLOR<<8)+(20h) ; standart color is yellow on black
 	call cls
 	
 	call setupScreen        ; set up the cli gui
@@ -247,36 +266,36 @@ main:
 	xor ax, ax              ; wait for user input
 	int 0x16
 	
-	cmp ah, 0x49   ; page up key, move 16 bytes backwards
+	cmp ah, KEY_PAGEUP   ; page up key, move 16 bytes backwards
 	je .scrollUp
 	
-	cmp ah, 0x51   ; page down key, move 16 bytes forwards
+	cmp ah, KEY_PAGEDOWN ; page down key, move 16 bytes forwards
 	je .scrollDown
 	
     
     ; arrow keys navigate the cursor (wont autoscroll)
-	cmp ah, 0x48    ; arrow key up
+	cmp ah, KEY_UP    ; arrow key up
 	je .moveUp
-	cmp ah, 0x4B    ; arrow key left
+	cmp ah, KEY_LEFT  ; arrow key left
 	je .moveLeft
-	cmp ah, 0x4D    ; arrow key right
+	cmp ah, KEY_RIGHT ; arrow key right
 	je .moveRight
-	cmp ah, 0x50    ; arrow key down
+	cmp ah, KEY_DOWN  ; arrow key down
 	je .moveDown
 	
-	cmp ah, 0x3B    ; F1 key shows help
+	cmp ah, KEY_F1    ; F1 key shows help
 	je .showHelp
 	
-	cmp ah, 0x3C    ; F2 key sets the offset address
+	cmp ah, KEY_F2    ; F2 key sets the offset address
 	je .setOffset
     
-    cmp ah, 0x3D    ; F3 key sets the segment address
+    cmp ah, KEY_F3    ; F3 key sets the segment address
     je .setSegment
 	
-	cmp ah, 0x01    ; ESC exits
+	cmp ah, KEY_ESCAPE ; ESC exits
 	je .exit
 	
-	cmp ah, 0x1C    ; press enter to edit the selected byte
+	cmp ah, KEY_ENTER  ; press enter to edit the selected byte
 	je .edit
 	
 	jmp main
@@ -351,13 +370,14 @@ main:
 	mov word [.adr], dx
 	mov word [.nOffset], 0000h
 	
-	mov ah, 0Dh
+	mov ah, 0x0D
 	mov dx, word [.adr]
-	int 21h
+	int 0x21
+    
 	mov byte [.nOffset+1], cl
-	mov ah, 0Dh
+	mov ah, 0x0D
 	mov dx, word [.adr+2]
-	int 21h
+	int 0x21
 	add byte [.nOffset], cl
 	
 	mov cx, word [.nOffset]
@@ -378,13 +398,14 @@ main:
 	mov word [.adr], dx
 	mov word [.nOffset], 0000h
 	
-	mov ah, 0Dh
+	mov ah, 0x0D
 	mov dx, word [.adr]
-	int 21h
+	int 0x21
+    
 	mov byte [.nOffset+1], cl
-	mov ah, 0Dh
+	mov ah, 0x0D
 	mov dx, word [.adr+2]
-	int 21h
+	int 0x21
 	add byte [.nOffset], cl
 	
 	mov cx, word [.nOffset]
@@ -400,14 +421,14 @@ main:
     mov fs, ax
     
 	jmp main
-.adr 		dw 0000h
-.nOffset	dw 0000h
+.adr 		dw 0x0000
+.nOffset	dw 0x0000
 	
 .refreshCursor:
-
 	mov dx, word [lastCursor]
-	mov al, createColor(BLACK, BRIGHT_YELLOW)
+	mov al, DATA_COLOR
 	call drawCursor
+    
 	mov dx, word [cursor]
 	mov al, createColor(WHITE, BLACK)
 	call drawCursor
@@ -421,20 +442,20 @@ main:
 	
 .exit: 
 	mov dh, byte [color]
-	mov dl, 20h
+	mov dl, 0x20
 	call cls
 	
 	mov al, byte [color]
 	mov byte [0x1FFF], al
 	
 	; Cursor einblenden
-	mov cx, 0607h
-	mov ax, 0103h
-	int 10h
+	mov cx, 0x0607
+	mov ax, 0x0103
+	int 0x10
 	
-	xor bx, bx
-	xor ax, ax
-	int 21h
+	EXIT 0
 ;==========================================
 
+; the next 4000 bytes are the buffer to copy the videomemory too
+; one should leave this free as it gets overwritten
 displayBackupMemory db 0x00

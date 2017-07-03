@@ -106,7 +106,7 @@ LBACHS:
 ; Der eigentlich Bootvorgang
 ; ============================================================
 boot: 
-	mov byte [SYSTEM_BOOT_DRIVE], dl   ; Startlaufwerk sichern
+	; mov byte [SYSTEM_BOOT_DRIVE], dl   ; Startlaufwerk sichern
 
     cli                     ; Segmente entsprechend setzen
 	mov ax, 07C0h

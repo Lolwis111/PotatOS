@@ -4,20 +4,9 @@
 ; ====================================================
 view_dir:
 	mov word [.fileSize], 00h   ; Gesamtgröße auf 0 initalisieren
-	mov ah, 01h                 ; zwei NewLines ausgeben
-	mov bl, byte [SYSTEM_COLOR]
-	mov dx, newLine
-	int 21h
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, newLine
-	int 21h
+	print newLine
 	
-	mov bl, byte [SYSTEM_COLOR] ; Label1 ausgeben (siehe language.asm)
-	mov ah, 01h
-	mov dx, LS_LABEL_1
-	int 21h
-	
+	print LS_LABEL_1 ; Label1 ausgeben (siehe language.asm)
 	
 	mov ah, 11h
 	int 21h						; Stammverzeichnis laden
@@ -70,10 +59,7 @@ view_dir:
     mov si, fileName        ; Dateiname in NAME.EXT wandeln
     call ReadjustFileName
 
-	mov bl, byte [SYSTEM_COLOR]   ; neuen Dateiname ausgeben
-	mov ah, 01h
-	mov dx, di
-	int 21h
+    print di ; Dateiname ausgeben
 	
 	test byte [.attributes], 00010000b
 	jnz .dir ; prüfen ob es ein Ordner ist
@@ -84,23 +70,14 @@ view_dir:
     mov ah, 0Eh
     int 21h
 
-	mov bl, byte [SYSTEM_COLOR] ; und die Dateigröße ausgeben
-	mov ah, 01h
-	mov dx, .number
-	int 21h
+	print .number ; und die Dateigröße ausgeben
 	jmp .ok
 	
 .dir:
-	mov bl, byte [SYSTEM_COLOR] ; Verzeichnisse werden mit <DIR> kenntlich gemacht
-	mov ah, 01h
-	mov dx, ldir
-	int 21h
+    print ldir ; Verzeichnisse werden mit <DIR> kenntlich gemacht
 	
 .ok:
-	mov bl, byte [SYSTEM_COLOR] ; OK: NewLine ausgeben
-	mov ah, 01h
-	mov dx, newLine       
-	int 21h
+    print newLine ; OK => newLine ausgeben
 	pop si
 	jmp .next             ; und zum nächsten Eintrag gehen
 .skip:                    ; direkt Hierhin springen wenn der Eintrag übersprungen werden soll
@@ -121,25 +98,16 @@ view_dir:
 	pop si
 	pop cx
 .end:
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, LS_LABEL_2
-	int 21h
+    print LS_LABEL_2
 
 	mov cx, word [.fileSize]
 	mov ah, 03h
 	mov dx, .number
 	int 21h
 	
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, .number
-	int 21h
+    print .number
 	
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, newLine
-	int 21h
+	print newLine
 	
 	jmp main
 .number db "00000", 00h
@@ -153,10 +121,7 @@ view_dir:
 ; ====================================================
 view_dir_2:
 	mov word [.fileSize], 00h
-	mov ah, 01h
-	mov bl, byte [SYSTEM_COLOR]
-	mov dx, newLine
-	int 21h
+    print newLine
 	
 	mov ah, 11h
 	int 21h						; Stammverzeichnis laden
@@ -188,15 +153,9 @@ view_dir_2:
     mov si, fileName
     call ReadjustFileName
 
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, di
-	int 21h
+	print di
 	
-    mov bl, byte [SYSTEM_COLOR]
-    mov ah, 01h
-    mov dx, .spacer2
-    int 21h
+    print .spacer2
 
 	test byte [.attributes], 00010000b ; Prüfen ob das Attribut "Verzeichnis" gesetzt?
 	jnz .dir
@@ -231,30 +190,18 @@ view_dir_2:
 	pop cx
 .end:
 
-    mov bl, byte [SYSTEM_COLOR]
-    mov ah, 01h
-    mov dx, newLine
-    int 21h
+    print newLine
 
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, LS_LABEL_2
-	int 21h
+    print LS_LABEL_2
 
 	mov cx, word [.fileSize]
 	mov ah, 03h
 	mov dx, .number
 	int 21h
 	
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, .number
-	int 21h
+	print .number
 	
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, newLine
-	int 21h
+	print newLine
 	
 	jmp main
 .number db "00000", 00h

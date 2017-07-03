@@ -8,7 +8,7 @@ output_image_name="potatos.img" # Name des Ausgabeimages
 language="english" # zu erzeugende Sprache. Alle verfügbaren sind im Verzeichnis Lang/
 
 LIST_FILE=false
-NASM_FLAGS=" -Ox -w+oprhan-labels -f bin " # Mit Vorsicht verändern! -f bin ist wichtig! 
+NASM_FLAGS=" -Ox -f bin " # Mit Vorsicht verändern! -f bin ist wichtig! 
                                            # Ebenso die Leerzeichen an Anfang und Ende!!
 
 if [ "`whoami`" != "root" ] ; then # Prüfen ob als root ausgeführt wird
@@ -64,8 +64,8 @@ if [ "$1" = "clean" ] ; then
     exit
 fi
 
-echo "Erzeuge experimentelle 32-Bit Komponenten..."
-make -C Experimental/
+# echo "Erzeuge experimentelle 32-Bit Komponenten..."
+# make -C Experimental/
 
 echo "Erzeuge language.asm..."
 if [ ! -e "./Lang/$language" ] ; then

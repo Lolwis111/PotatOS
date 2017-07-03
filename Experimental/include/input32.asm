@@ -10,10 +10,9 @@
 ; ===============================================
 ; DL <= Befehl
 sendCommand:
-.wait:
     in al, STATUS_PORT
     test al, 02h
-    jz .wait
+    jz sendCommand
     mov al, dl
     out DATA_PORT, al
     ret
@@ -50,11 +49,11 @@ kb_readLine:
     jmp .charLoop
 
 .return:
-    mov byte [edi], 00h
+    mov byte [edi], 0x00
     popa
     movzx ecx, word [.charCount]
     ret
-.charCount dw 00h
+.charCount dw 0x00
 ; ===============================================
 
 
@@ -63,7 +62,7 @@ kb_readChar:
 .L1:
     xor eax, eax
     in al, STATUS_PORT
-    test al, 01h
+    test al, 0x01
     jz .L1
 
     in al, DATA_PORT
@@ -141,7 +140,7 @@ kb_readChar:
 .charsL1 db "qwertzuiop"
 .charsL2 db "asdfghjkl"
 .charsL3 db "yxcvbnm"
-.shiftStatus db 00h
+.shiftStatus db 0x00
 ; ===============================================
 
 %endif

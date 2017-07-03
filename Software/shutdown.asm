@@ -9,6 +9,7 @@
 [BITS 16]
 
 %include "defines.asm"
+%include "functions.asm"
 
 start:
 	mov bx, ax
@@ -23,46 +24,39 @@ start:
 	je help
 	
 noargs:
-	mov ah, 01h
-	mov dx, .noArg
-	mov bl, byte [SYSTEM_COLOR]
-	int 21h
+    print .noArg
 	
-	xor bx, bx
-	xor ax, ax
-	int 21h
-.noArg  db 0Dh, 0Ah
+	EXIT 0
+    
+.noArg db 0x0D, 0x0A
+
 %ifdef german
         db "Syntaxfehler."
-        db 0Dh, 0Ah
+        db 0x0D, 0x0A
         db "Benutzen sie 'shutdown h' fuer Hilfe."
 %elif english
         db "Syntaxerror."
-        db 0Dh, 0Ah
+        db 0x0D, 0x0A
         db "Use 'shutdown h' to get help"
 %endif
-        db 0Dh, 0Ah, 00h
+        db 0x0D, 0x0A, 0x00
 
 help:
-	mov ah, 01h
-	mov dx, .msgHelp
-	mov bl, byte [SYSTEM_COLOR]
-	int 21h
+    print .msgHelp
 	
-	xor bx, bx
-	int 21h
+	EXIT 0
 	
-.msgHelp	db 0Dh, 0Ah, "shutdown [r|s|h]"
+.msgHelp	db 0x0D, 0x0A, "shutdown [r|s|h]"
 %ifdef german
-			db 0Dh, 0Ah, "   r Neustart"
-			db 0Dh, 0Ah, "   s Ausschalten"
-			db 0Dh, 0Ah, "   h Hilfe"
+			db 0x0D, 0x0A, "   r Neustart"
+			db 0x0D, 0x0A, "   s Ausschalten"
+			db 0x0D, 0x0A, "   h Hilfe"
 %elif english
-            db 0Dh, 0Ah, "   r restart"
-            db 0Dh, 0Ah, "   s shutdown"
-            db 0Dh, 0Ah, "   h help"
+            db 0x0D, 0x0A, "   r restart"
+            db 0x0D, 0x0A, "   s shutdown"
+            db 0x0D, 0x0A, "   h help"
 %endif
-			db 0Dh, 0Ah, 00h
+			db 0x0D, 0x0A, 0x00
 
 reboot:
 	xor ax, ax
@@ -73,37 +67,37 @@ reboot:
 	hlt
 	
 shutdown:
-	mov ax, 5300h	; APM Prüfen
+	mov ax, 0x5300	; APM Prüfen
 	xor bx, bx		; Geräte-ID
-	int 15h
+	int 0x15
 	jc errorAPM
 
-	mov ax, 5304h	; Verbindung zu allen APM-Geräten trennen
+	mov ax, 0x5304	; Verbindung zu allen APM-Geräten trennen
 	xor bx, bx		; Geräte-ID
-	int 15h
+	int 0x15
 	jc .discconectError
 	jmp .noError
 	
 .discconectError:
-	cmp ah, 03h
+	cmp ah, 0x03
 	jne errorAPM
 	
 .noError:
-	mov ax, 5301h	; RealMode Interface ansprechen
+	mov ax, 0x5301	; RealMode Interface ansprechen
 	xor bx, bx		; Geräte-ID
-	int 15h
+	int 0x15
 	jc errorAPM
 	
-	mov ax, 5308h	; Energieverwaltung
-	mov bx, 0001h	; bei allen Geräten
-	mov cx, 0001h	; aktivieren
-	int 15h
+	mov ax, 0x5308	; Energieverwaltung
+	mov bx, 0x0001	; bei allen Geräten
+	mov cx, 0x0001	; aktivieren
+	int 0x15
 	jc errorAPM
 	
-	mov ax, 5307h	; Zustand
-	mov bx, 0001h	; bei allen Geräten
-	mov cx, 0003h	; auf 'off'
-	int 15h
+	mov ax, 0x5307	; Zustand
+	mov bx, 0x0001	; bei allen Geräten
+	mov cx, 0x0003	; auf 'off'
+	int 0x15
 	jc errorAPM
 	
 	cli				; CPU Anhalten (für den Fall dass APM nicht funktioniert, was leider
@@ -111,17 +105,14 @@ shutdown:
 	hlt
 	
 errorAPM:
-	mov ah, 01h
-	mov bl, 04h
-	mov dx, .apmerror
-	int 21h
+	print .apmerror, 0x04
+    
+	EXIT 1
 	
-	mov bx, 1
-	xor ax, ax
-	int 21h
-	
-%ifdef german
-.apmerror db 0Dh, 0Ah, "Fehler im APM-Interface", 0Dh, 0Ah, 00h
+.apmerror db 0x0D, 0x0A
+%ifdef german 
+    db "Fehler im APM-Interface"
 %elif english
-.apmerror db 0Dh, 0Ah, "Error in the APM interface", 0Dh, 0Ah, 00h
+    db "Error in the APM interface"
 %endif
+    db 0x0D, 0x0A, 0x00

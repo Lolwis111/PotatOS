@@ -10,10 +10,11 @@
 
 %include "defines.asm"
 %include "language.asm"
+%include "functions.asm"
 
 start:
 	mov si, CLI_WELCOME ; Willkommensnachricht
-	call Puts ; Ausgaben
+	call Puts ; Ausgeben
 	
 	jmp SOFTWARE_BASE
 
@@ -25,16 +26,10 @@ main:
     nop
     nop
 	call clearBuffer
+    
+    print ready
 	
-	mov bl, byte [SYSTEM_COLOR]
-	mov dx, ready
-	mov ah, 01h
-	int 21h
-	
-	mov dx, inputBuffer
-	mov ah, 04h
-	mov cx, 64
-	int 21h
+    readline inputBuffer, 64
 	
 	mov si, inputBuffer
 	call UpperCase
@@ -50,74 +45,34 @@ main:
     je dump_all
 %endif
 
-	mov di, command
-	mov si, cmdLS
-	mov ah, 02h
-	int 21h
-	test al, al
-	je view_dir
+    strcmp command, cmdLS
+    je view_dir
 
-    mov di, command
-    mov si, cmdLL
-    mov ah, 02h
-    int 21h
-    test al, al
+    strcmp command, cmdLL
     je view_dir_2
 
-	mov di, command
-	mov si, cmdHELP
-	mov ah, 02h
-	int 21h
-	test al, al
+	strcmp command, cmdHELP
 	je view_help
 	
-	mov di, command
-	mov si, cmdTIME
-	mov ah, 02h
-	int 21h
-	test al, al
+	strcmp command, cmdTIME
 	je show_time
 	
-	mov di, command
-	mov si, cmdDATE
-	mov ah, 02h
-	int 21h
-	test al, al
+	strcmp command, cmdDATE
 	je show_date
 	
-	mov di, command
-	mov si, cmdINFO
-	mov ah, 02h
-	int 21h
-	test al, al
+	strcmp command, cmdINFO
 	je show_version
 
-	mov di, command
-	mov si, cmdCOLOR
-	mov ah, 02h
-	int 21h
-	test al, al
+	strcmp command, cmdCOLOR
 	je change_color
 	
-	mov di, command
-	mov si, cmdCLEAR
-	mov ah, 02h
-	int 21h
-	test al, al
+	strcmp command, cmdCLEAR
 	je clear_screen
 	
-	mov di, command
-	mov si, cmdRENAME
-	mov ah, 02h
-	int 21h
-	test al, al
+	strcmp command, cmdRENAME
 	je rename_file
 
-	mov di, command
-	mov si, cmdDEL
-	mov ah, 02h
-	int 21h
-	test al, al
+	strcmp command, cmdDEL
 	je delete_file
 	
 	call look_extern
@@ -175,10 +130,7 @@ parseCommands:
 ; Zeigt die Hilfe an	
 ; ====================================================
 view_help:
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h					; Hilfe ausgeben
-	mov dx, HELP
-	int 21h
+    print HELP ; Hilfe ausgeben
 	
 	jmp main
 ; ====================================================
@@ -186,26 +138,13 @@ view_help:
 
 ; ====================================================	
 show_version:
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, newLine
-	int 21h
+    print newLine
+    
+    print newLine
 	
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, newLine
-	int 21h
-	
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, .lblName
-	int 21h
-	
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, .lblVersion
-	int 21h
-
+    print .lblName
+    
+    print .lblVersion
 	
 	mov ah, 08h
 	int 21h
@@ -232,41 +171,26 @@ show_version:
 	mov ah, 10h
 	int 21h
 	
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, newLine
-	int 21h
+    print newLine
 
     mov ah, 0Ch
     int 21h
     push bx
-    mov dx, ax
-    mov ah, 01h
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print ax
 
-    mov ah, 01h
-    mov dx, newLine
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print newLine
 
     pop bx
 
-    mov dx, bx
-    mov ah, 01h
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print bx
 	
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, newLine
-	int 21h
+	print newLine
 	
 	jmp main
 
-.lblVersion db "Version: ", 00h
-.lblName    db "PotatOS (C)", DEV_YEAR_S, "-", DEV_YEAR_C, 0Dh, 0Ah, 00h
-.number 	db "00000", 00h, 00h, 00h
+.lblVersion db "Version: ", 0x00
+.lblName    db "PotatOS (C)", DEV_YEAR_S, "-", DEV_YEAR_C, 0x0D, 0x0A, 0x00
+.number 	db "00000", 0x00, 0x00, 0x00
 ;====================================================
 
 
@@ -278,13 +202,13 @@ look_extern:
 	mov si, command
 	call StringLength
 
-	cmp cx, 00h
+	cmp cx, 0x00
 	je .noExt
 	
 	mov si, command
 	add si, cx
 	mov di, programExt
-	mov cx, 4
+	mov cx, 0x04
 	rep cmpsb
 	jne .eError
 	jmp .extOk
@@ -312,8 +236,8 @@ look_extern:
 	mov dx, rFileName		; Datei in den Speicher laden
 	xor bx, bx
 	mov bp, SOFTWARE_BASE   ; Basisadresse (in der Regel 0x0000:0x9000)
-	mov ah, 05h
-	int 21h
+	mov ah, 0x05
+	int 0x21
 	cmp ax, -1
 	je .error
 
@@ -322,42 +246,30 @@ look_extern:
     ; mov word [0x0000:SOFTWARE_BASE - 2], cx
 
 	mov ax, cmdargument
-	jmp SOFTWARE_BASE		; und in das Programm springen
+	jmp SOFTWARE_BASE ; und in das Programm springen
 	
-.error:						; Allgemeiner Fehler
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, LOAD_ERROR
-	int 21h
+.error: ; Allgemeiner Fehler
+    print LOAD_ERROR
 	ret
 	
-.eError:					; Keine-BIN-Datei-Fehler
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, NO_PROGRAM
-	int 21h
+.eError: ; Keine-BIN-Datei-Fehler
+    print NO_PROGRAM
 	ret
 ; ====================================================
 
 	
 ; ====================================================
 show_time:				; Zeigt die Zeit an (z.B. 12:04 Uhr)
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, newLine
-	int 21h
-	
-	mov ah, 06h
-	int 21h
+    print newLine
+    
+	mov ah, 0x06
+	int 0x21
 
-	mov ah, 01h
+	mov ah, 0x01
     mov bl, byte [SYSTEM_COLOR]
-	int 21h
-
-    mov ah, 01h
-    mov dx, newLine
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+	int 0x21
+    
+    print newLine
 
 	jmp main
 ; ====================================================
@@ -365,22 +277,16 @@ show_time:				; Zeigt die Zeit an (z.B. 12:04 Uhr)
 
 ; ====================================================
 show_date:				;Zeigt das Datum an	(z.B. 12.03.2014)
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	mov dx, newLine
-	int 21h
+	print newLine
 	
-	mov ah, 07h
-	int 21h
+	mov ah, 0x07
+	int 0x21
 	
 	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	int 21h
+	mov ah, 0x01
+	int 0x21
 
-    mov bl, byte [SYSTEM_COLOR]
-    mov dx, newLine
-    mov ah, 01h
-    int 21h
+    print newLine
 
 	jmp main
 ; ====================================================
@@ -393,8 +299,8 @@ Puts:
 	lodsb
 	or al, al
 	jz .return
-	mov ah, 0Eh
-	int 10h
+	mov ah, 0x0E
+	int 0x10
 	jmp Puts
 .return:
 	ret
@@ -413,26 +319,26 @@ clearBuffer:
 	mov di, command
 	mov si, cmdargument
 	mov bp, inputBuffer
-.L1:
-	mov byte [di], 00h
-	mov byte [bp], 00h
-	mov byte [si], 00h
+.Loop1:
+	mov byte [di], 0x00
+	mov byte [bp], 0x00
+	mov byte [si], 0x00
 	inc di
 	inc si
 	inc bp
 
     dec cx
     cmp cx, 00h
-    ja .L1
+    ja .Loop1
 
 	mov cx, 11
 	mov di, rFileName
-.L2 :
-	mov byte [di], 00h
+.Loop2 :
+	mov byte [di], 0x00
 	inc di
 	dec cx
-    cmp cx, 00h
-	ja .L2
+    cmp cx, 0x00
+	ja .Loop2
 
     pop bp
 	pop di
@@ -442,12 +348,12 @@ clearBuffer:
 ; ====================================================
 
 
-programExt	db ".BIN"						; Dateierweiterung eines Programms
-fileName 	db "             ", 00h			; Dateiname, Eingabeformat	(z.B. TEST.BIN)
-rFileName	db "           ", 0Dh, 0Ah, 00h	; Dateiname, FAT12-Format	(z.B. TEST    BIN)
-ldir		db "   <DIR>", 00h
-msgWelcome	db "BOOT OK.", 0Dh, 0Ah, 00h
-inputBuffer 	times 64 db 00h
-cmdargument 	times 64 db 00h
-command 		times 64 db 00h
-commandLength	dw 0000h
+programExt	db ".BIN"						    ; Dateierweiterung eines Programms
+fileName 	db "             ", 0x00			; Dateiname, Eingabeformat	(z.B. TEST.BIN)
+rFileName	db "           ", 0x0D, 0x0A, 0x00	; Dateiname, FAT12-Format	(z.B. TEST    BIN)
+ldir		db "   <DIR>", 0x00
+msgWelcome	db "BOOT OK.", 0x0D, 0x0A, 0x00
+inputBuffer 	times 64 db 0x00
+cmdargument 	times 64 db 0x00
+command 		times 64 db 0x00
+commandLength	dw 0x0000

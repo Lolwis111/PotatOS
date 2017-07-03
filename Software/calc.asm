@@ -13,95 +13,71 @@ jmp start
 
 %include "defines.asm"
 %include "language.asm"
+%include "functions.asm"
 
 %define STD_COLOR createColor(BLACK, BRIGHT_BLUE)
 %define NUM_COLOR createColor(BLACK, BRIGHT_YELLOW)
 
+lblOptions  db 0x0D, 0x0A
 %ifdef german
-    lblOptions  db 0x0D, 0x0A
-                db 0x0D, 0x0A, "Befehle: add, sub, div, mul, toBin, toHex, toOct, help, exit"
-                db 0x0D, 0x0A, 0x00
-                
-    msgResult	db 0x0D, 0x0A, "Ergebnis: ", 0x00
+    db 0x0D, 0x0A, "Befehle: add, sub, div, mul, toBin, toHex, toOct, help, exit"
 %elifdef english
-    lblOptions  db 0x0D, 0x0A
-                db 0x0D, 0x0A, "Commands: add, sub, div, mul, toBin, toHex, toOct, help, exit"
-                db 0x0D, 0x0A, 0x00
-                
-    msgResult   db 0x0D, 0x0A, "Result: ", 0x00
+    db 0x0D, 0x0A, "Commands: add, sub, div, mul, toBin, toHex, toOct, help, exit"
 %endif
+    db 0x0D, 0x0A, 0x00
+    
+msgResult   db 0x0D, 0x0A
+%ifdef german    
+    db "Ergebnis: "
+%elifdef english
+    db "Result: "
+%endif
+    db 0x00
 
-msgNewLine		db 0x0D, 0x0A, 0x00
-msgReady		db "> ", 0x00
+msgNewLine      db 0x0D, 0x0A, 0x00
+msgReady        db "> ", 0x00
 msgOverflow     db 0x0D, 0x0A, "Overflow", 0x0D, 0x0A, 0x00
 
-lblA			db "A = ", 0x00
-lblB			db 0x0D, 0x0A, "B = ", 0x00
-lblResult		db "0000000000", 0x00, 0x00, 0x00
-inputString		db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+lblA            db "A = ", 0x00
+lblB            db 0x0D, 0x0A, "B = ", 0x00
+lblResult       db "0000000000", 0x00, 0x00, 0x00
+inputString     db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 cmdANS          db "ANS", 0x00
-cmdADD			db "ADD", 0x00
-cmdSUB			db "SUB", 0x00
-cmdDIV			db "DIV", 0x00
-cmdMUL			db "MUL", 0x00
+cmdADD          db "ADD", 0x00
+cmdSUB          db "SUB", 0x00
+cmdDIV          db "DIV", 0x00
+cmdMUL          db "MUL", 0x00
 cmdTOBIN        db "TOBIN", 0x00
 cmdTOHEX        db "TOHEX", 0x00
 cmdTOOCT        db "TOOCT", 0x00
 
-cmdEXIT			db "EXIT", 0x00
+cmdEXIT         db "EXIT", 0x00
 
 color db 0x00
 
-; lblNumber		db "0000000000", 00h, 00h
-
-numberA			dd 0x00000000
-numberB			dd 0x00000000
-result	        dd 0x00000000
+numberA         dd 0x00000000
+numberB         dd 0x00000000
+result          dd 0x00000000
 
 ; ==========================================
 ; ClearScreen
 ; ==========================================
 cls:
-	pusha
-	xor bx, bx
-	mov cx, SCREEN_BUFFER_SIZE
+    pusha
+    xor bx, bx
+    mov cx, SCREEN_BUFFER_SIZE
 .loop1:
-	mov word [gs:bx], dx
-	add bx, 2
-	loop .loop1
-	popa
+    mov word [gs:bx], dx
+    add bx, 2
+    loop .loop1
+    popa
     
-    xor dx, dx
-    mov ah, 0Eh
-    int 21h
+    movecur 0, 0
     
-	ret
+    ret
 ; ==========================================
-
-
-; ==========================================
-; AH Color
-; SI String
-; BX Position
-; ==========================================
-printString:
-	pusha
-.chars:
-	mov al, byte [si]
-	inc si
-	test al, al
-	jz .return
-	mov byte [gs:bx], al
-	inc bx
-	mov byte [gs:bx], ah
-	inc bx
-	jmp .chars
-.return:
-	popa
-	ret
-; ==========================================
-	
+    
 
 ; ==========================================
 start:
@@ -109,132 +85,77 @@ start:
     mov byte [color], al
     mov byte [SYSTEM_COLOR], NUM_COLOR
 
-	mov dh, createColor(BLACK, WHITE)
-	mov dl, 0x20
-	call cls
+    mov dh, createColor(BLACK, WHITE)
+    mov dl, 0x20
+    call cls
 
-	jmp main
+    jmp main
 ; ==========================================
-	
-	
+    
+    
 ; ==========================================
 main:
-    mov ah, 0x01
-    mov bl, NUM_COLOR
-    mov dx, lblOptions
-    int 0x21
+    print lblOptions, NUM_COLOR
     
-	mov ah, 0x01				; >
-	mov bl, NUM_COLOR
-	mov dx, msgReady
-	int 0x21
-	
-	mov ah, 0x04				; read command from keyboard
-	mov dx, command
-	mov cx, 5
-	int 0x21
-	
-	mov si, command			; make command upper case
-	call UpperCase
-	
-	mov bl, NUM_COLOR
-	mov ah, 0x01				
-	mov dx, msgNewLine
-	int 0x21
-	
-	mov di, command			; EXIT-Command?
-	mov si, cmdEXIT
-	mov ah, 0x02
-	int 0x21
-	cmp al, 0x00
-	je exit
-	
-	mov di, command			; ADD-Command?
-	mov si, cmdADD
-	mov ah, 0x02
-	int 0x21
-	cmp al, 0x00
-	je add_numbers
-	
-	mov di, command			; SUB-Command?
-	mov si, cmdSUB
-	mov ah, 0x02
-	int 0x21
-	cmp al, 0x00
-	je sub_numbers
-	
-	mov di, command			; DIV-Command?
-	mov si, cmdDIV
-	mov ah, 0x02
-	int 0x21
-	cmp al, 0x00
-	je div_numbers
-	
-	mov di, command			; MUL-Command?
-	mov si, cmdMUL
-	mov ah, 0x02
-	int 0x21
-	cmp al, 0x00
-	je mul_numbers
-
-    mov di, command         ; toBin-Command?
-    mov si, cmdTOBIN
-    mov ah, 0x02
-    int 0x21
-    cmp al, 0x00
+    print msgReady, NUM_COLOR ; >
+    
+    readline command, 5 ; read command from keyboard
+    
+    mov si, command         ; make command upper case
+    call UpperCase
+    
+    print msgNewLine, NUM_COLOR
+    
+    strcmp command, cmdEXIT ; EXIT-Command?
+    je exit
+    
+    strcmp command, cmdADD ; ADD-Command?
+    je add_numbers
+    
+    strcmp command, cmdSUB ; SUB-Command?
+    je sub_numbers
+    
+    strcmp command, cmdDIV ; DIV-Command?
+    je div_numbers
+    
+    strcmp command, cmdMUL ; MUL-Command?
+    je mul_numbers
+    
+    strcmp command, cmdTOBIN ; toBin-Command?
     je dec_to_bin
 
-    mov di, command         ; toHex-Command?
-    mov si, cmdTOHEX
-    mov ah, 0x02
-    int 0x21
-    cmp al, 0x00
+    strcmp command, cmdTOHEX ; toHex-Command?
     je dec_to_hex
 
-    mov di, command         ; toOct-Command?
-    mov si, cmdTOOCT    
-    mov ah, 0x02
-    int 0x21
-    cmp al, 0x00
+    strcmp command, cmdTOOCT ; toOct-Command?
     je dec_to_oct
     
-	jmp main
+    jmp main
 ; ===============================================
 
 
 ; ==============================================
 readA:
-    mov bl, NUM_COLOR
-    mov ah, 0x01
-    mov dx, lblA
-    int 0x21
+    print lblA, NUM_COLOR
 
-    mov ah, 0x04
-    mov cx, 9
-    mov dx, inputString
-    int 0x21
+    readline inputString, 9
 
     mov si, inputString
     call UpperCase
-    mov di, cmdANS
-    mov ah, 0x02
-    int 0x21
-    cmp al, 0x00
+    strcmp inputString, cmdANS
     je .ans
 
-    mov ah, 0x09
-    mov dx, inputString
-    int 0x21
-    cmp ax, -1
+    strtol inputString    
+    cmp eax, -1
     je .ret
     ret
 .ans:
     mov ecx, dword [result]
-    xor ax, ax
+    xor eax, eax
     ret
 .ret:
     xor ecx, ecx
-    mov ax, -1
+    mov eax, -1
     ret
 ; ==============================================
 
@@ -242,33 +163,22 @@ readA:
 ; ===============================================
 readNumbers:
     call readA
-    cmp ax, -1
+    cmp eax, -1
     je .ret
     
     mov dword [numberA], ecx
     
-    mov bl, NUM_COLOR
-    mov ah, 0x01
-    mov dx, lblB
-    int 0x21
+    print lblB, NUM_COLOR
     
-    mov ah, 0x04
-    mov dx, inputString
-    mov cx, 9
-    int 0x21
+    readline inputString, 9
 
     mov si, inputString
     call UpperCase
-    mov di, cmdANS
-    mov ah, 0x02
-    int 0x21
-    cmp al, 0x00
+    strcmp inputString, cmdANS
     je .ans
 
-    mov ah, 0x09
-    mov dx, inputString
-    int 0x21
-    cmp ax, -1 
+    strtol inputString
+    cmp eax, -1 
     je .ret
 .ok:
     mov dword [numberB], ecx
@@ -278,215 +188,149 @@ readNumbers:
     jmp .ok
 .ret:
     xor ecx, ecx
-    mov ax, -1
+    mov eax, -1
     ret
 ; ===============================================
 
 
 ; ===============================================
 add_numbers:
-	call readNumbers
-	cmp ax, -1
+    call readNumbers
+    cmp eax, -1
     je main
     
-	mov eax, dword [numberA]
-	add eax, dword [numberB]
+    ltostr .str, dword [numberA]
+    
+    print msgNewLine
+    print .str
+    print msgNewLine
+    
+    ltostr .str, dword [numberB]
+    
+    print msgNewLine
+    print .str
+    print msgNewLine
+    
+    jmp main
+.str db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    
+    mov eax, dword [numberA]
+    add eax, dword [numberB]
+    push eax
     jnc .noOverflow
-
-    mov ah, 0x01
-    mov bl, createColor(RED, BLACK)
-    mov dx, msgOverflow
-    int 0x21
+    
+    print msgOverflow, createColor(RED, BLACK)
 
 .noOverflow:
-	mov ecx, eax				; convert result to string
-    mov dword [result], eax
-	mov ah, 0xAA
-	mov dx, lblResult 
-	int 0x21
-	
-	mov bl, NUM_COLOR
-	mov ah, 0x01
-	mov dx, msgResult
-	int 0x21
-	
-	mov ah, 0x01				; print result
-	mov dx, lblResult
-	mov bl, STD_COLOR
-	int 0x21
+    pop ecx ; convert result to string
+    mov dword [result], ecx
+    mov ah, 0xAA
+    mov dx, lblResult 
+    int 0x21
     
-	jmp main
+    print msgResult, NUM_COLOR
+    
+    print lblResult, STD_COLOR ; print result
+    
+    jmp main
 ; ===============================================
     
     
 ; ===============================================
 sub_numbers:
-	call readNumbers
-    cmp ax, -1
+    call readNumbers
+    cmp eax, -1
     je main
-	
-	mov ecx, dword [numberA]
-    mov eax, ecx
-	sub ecx, dword [numberB]
-    jo .overflow
-    jmp .noOverflow
+    
+    mov ecx, dword [numberA]
+    sub ecx, dword [numberB]
+    push ecx
+    jno .noOverflow
 
-.overflow:
-    mov ah, 0x01
-    mov bl, createColor(RED, BLACK)
-    mov dx, msgOverflow
-    int 0x21
+    print msgOverflow, createColor(RED, BLACK)
 
 .noOverflow:  
-    ;cmp ax, word [numberB]
-    ;jge .print
-       
-    ;mov ax, 65535
-    ;sub ax, cx
-    ;inc ax
-    
-    ;mov cx, ax
-    ;mov ah, 03h
-    ;mov dx, lblResult+1
-    ;int 21h
-          
-    ;mov byte [lblResult], '-'
-    ;jmp .ok
-          
-;.print:
+    pop ecx
     mov dword [result], ecx
-	mov ah, 0xAA             ; convert result to string
-	mov dx, lblResult 
-	int 0x21
-;.ok:    
-	mov bl, NUM_COLOR
-	mov ah, 0x01
-	mov dx, msgResult
-	int 0x21
-    
-	mov ah, 0x01			 ; print result
-	mov dx, lblResult
-	mov bl, STD_COLOR
-	int 0x21
+    mov ah, 0xAA       ; convert result to string
+    mov dx, lblResult 
+    int 0x21
 
-	jmp main
+    print msgResult, NUM_COLOR
+    
+    print lblResult, STD_COLOR ; print result
+
+    jmp main
 ; ===============================================
     
     
 ; ===============================================
 div_numbers:
-	call readNumbers
-	cmp ax, -1
+    call readNumbers
+    cmp ax, -1
     je main
     
     cmp dword [numberB], 0x00
     je .div0
     
-	xor edx, edx
+    xor edx, edx
     mov eax, dword [numberA]
     mov ecx, dword [numberB]
-	idiv ecx					; divide
-	
-	;AX => Ergebnis
-	;DX => Rest
-	
-	push edx
-	push eax
+    idiv ecx ; divide
+    
+    ; AX => Ergebnis
+    ; DX => Rest
+    
+    push edx
     
     mov dword [result], eax
-
-	pop ecx
-	mov ah, 0xAA				; convert result to string
-	mov dx, lblResult 
-	int 0x21
-	
-	mov bl, NUM_COLOR
-	mov ah, 0x01
-	mov dx, msgResult
-	int 0x21
-	
-	mov ah, 0x01				; print result
-	mov dx, lblResult
-	mov bl, STD_COLOR
-	int 0x21
-	
-	mov ah, 0x01				
-	mov dx, msgNewLine
-	mov bl, NUM_COLOR
-	int 0x21
-	
-	pop ecx
-	mov ah, 0xAA				; this is basically modulo, convert that to string too
-	mov dx, lblResult 
-	int 0x21
-	
-	mov bl, NUM_COLOR
-	mov ah, 0x01
-	mov dx, .lblRest
-	int 0x21
-	
-	mov ah, 0x01				; print modulo
-	mov dx, lblResult
-	mov bl, STD_COLOR
-	int 0x21
+    mov ecx, eax
+    mov ah, 0xAA ; convert result to string
+    mov dx, lblResult 
+    int 0x21
     
-	jmp main
-.div0:
-    mov bl, createColor(BLACK, RED)
-    mov ah, 01h
-    mov dx, DIV_NULL_ERROR
-    int 21h
+    print msgResult, NUM_COLOR
+    
+    print lblResult, STD_COLOR ; print result
+    
+    print msgNewLine, NUM_COLOR
+    
+    pop ecx
+    mov ah, 0xAA ; this is basically modulo, convert that to string too
+    mov dx, lblResult 
+    int 0x21
+    
+    print .lblRest, NUM_COLOR
+
+    print lblResult, STD_COLOR ; print modulo
+    
     jmp main
-.lblRest		db "Rest    : ", 00h
+.div0:
+    print DIV_NULL_ERROR, createColor(BLACK, RED)
+    jmp main
+.lblRest        db "Rest    : ", 00h
 ; ===============================================
 
     
 ; ===============================================
 mul_numbers:
-	call readNumbers
-	
-	mov eax, dword [numberA]
-	imul dword [numberB]
+    call readNumbers
+    
+    mov eax, dword [numberA]
+    imul dword [numberB]
 
     mov dword [result], eax
 
-	push eax					; low part
-	
-    ;push dx					; high part	
-	;pop cx
-	;mov ah, 03h				
-	;mov dx, lblResult 
-	;int 21h
-	
-	;mov ah, 01h
-	;mov dx, .lblHoch
-	;int 21h
-	
-	;mov ah, 01h				
-	;mov dx, lblResult
-	;int 21h
-	
-	;mov ah, 01h			
-	;mov dx, msgNewLine
-	;int 21h
-	
-	pop ecx
-	mov ah, 0xAA				; convert low part to string
-	mov dx, lblResult 
-	int 0x21
-	
-	mov bl, NUM_COLOR
-	mov ah, 0x01
-	mov dx, msgResult
-	int 0x21
-	
-	mov ah, 0x01				; print low part
-	mov dx, lblResult
-	mov bl, STD_COLOR
-	int 0x21
+    mov ecx, eax
+    mov ah, 0xAA                
+    mov dx, lblResult 
+    int 0x21
+    
+    print msgResult, NUM_COLOR    
+    print lblResult, STD_COLOR
 
-	jmp main
-; ===============================================	
+    jmp main
+; ===============================================   
 
 
 ; ===============================================
@@ -513,10 +357,7 @@ dec_to_bin:
     pop cx
     loop .bitLoop
 
-    mov ah, 0x01
-    mov bl, NUM_COLOR
-    mov dx, .bitString
-    int 0x21
+    print .bitString, NUM_COLOR
 
     jmp main
 .bitString db 0x0D, 0x0A, "00000000000000000000000000000000", 0x00
@@ -551,11 +392,7 @@ dec_to_hex:
     pop cx
     loop .charLoop
 
-    mov ah, 0x01
-    mov bl, NUM_COLOR
-    mov dx, .hexString
-    int 0x21
-
+    print .hexString, NUM_COLOR
 
     jmp main
 .hexString db 0x0D, 0x0A, "00000000", 0x00
@@ -587,11 +424,7 @@ dec_to_oct:
     pop cx
     loop .charLoop
 
-    mov ah, 0x01
-    mov bl, NUM_COLOR
-    mov dx, .octString
-    int 0x21
-
+    print .octString, NUM_COLOR
 
     jmp main
 .octString db 0x0D, 0x0A, "000000000000", 0x00
@@ -601,13 +434,11 @@ dec_to_oct:
 ; ===============================================
 exit:
     mov dh, byte [color]
-	mov dl, 0x20
+    mov dl, 0x20
     mov byte [SYSTEM_COLOR], dh
-	call cls
+    call cls
 
-	xor bx, bx
-	mov ah, 0x00
-	int 0x21
+    EXIT 0
 ; ===============================================
 
 
@@ -615,24 +446,24 @@ exit:
 UpperCase:
     push si
 .loop1:
-	cmp byte [si], 0x00
-	je .return
-	
-	cmp byte [si], 'a'
-	jb .noatoz
-	cmp byte [si], 'z'
-	ja .noatoz
-	
-	sub byte [si], 0x20
-	inc si
-	
-	jmp .loop1
+    cmp byte [si], 0x00
+    je .return
+    
+    cmp byte [si], 'a'
+    jb .noatoz
+    cmp byte [si], 'z'
+    ja .noatoz
+    
+    sub byte [si], 0x20
+    inc si
+    
+    jmp .loop1
 .return:
     pop si
-	ret
+    ret
 .noatoz:
-	inc si
-	jmp .loop1
+    inc si
+    jmp .loop1
 ; ===============================================
 
 command db 0x00

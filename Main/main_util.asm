@@ -3,40 +3,19 @@
 ; gibt den Inhalt der Puffer aus
 ; ====================================================
 dump_all:
-    mov ah, 01h
-    mov dx, newLine
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print newLine
 
-    mov ah, 01h
-    mov dx, inputBuffer
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print inputBuffer
 
-    mov ah, 01h
-    mov dx, newLine
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print newLine
 
-    mov ah, 01h
-    mov dx, cmdargument
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print cmdargument
 
-    mov ah, 01h
-    mov dx, newLine
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print newLine
 
-    mov ah, 01h
-    mov dx, command
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print command
 
-    mov ah, 01h
-    mov dx, newLine
-    mov bl, byte [SYSTEM_COLOR]
-    int 21h
+    print newLine
 
     jmp main
 ; ====================================================
@@ -72,7 +51,7 @@ clear_screen:
 ; Wechselt die Farbe der Konsole
 ; ====================================================
 change_color:
-	cmp byte [cmdargument], 00h
+	cmp byte [cmdargument], 0x00
 	je .color_help
 	
 	mov al, byte [cmdargument+1]
@@ -80,7 +59,7 @@ change_color:
 	
 	je main
 
-	mov ah, 0Dh
+	mov ah, 0x0D
 	mov dx, cmdargument
 	int 21h
 	
@@ -90,34 +69,25 @@ change_color:
 	mov dx, cx
 	mov ax, VIDEO_MEMORY_SEGMENT
 	mov gs, ax
-	mov bx, 01h
+	mov bx, 0x01
 	mov byte [SYSTEM_COLOR], dl
 	
 	mov cx, 2000
 .clearLoop:
 	mov byte [gs:bx], dl
-	add bx, 02h
+	add bx, 0x02
 	loop .clearLoop
 	
-	mov ah, 01h
-	mov dx, newLine
-	mov bl, byte [SYSTEM_COLOR]
-	int 21h
+    print newLine
 	
 	jmp main
 	
 .error:
-	mov dx, .errorStr
-	mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	int 21h
+    print .errorStr
 	jmp main
 	
 .color_help:
-	mov dx, COLOR_HELP	
-    mov bl, byte [SYSTEM_COLOR]
-	mov ah, 01h
-	int 21h
+    print COLOR_HELP
 	jmp main
 
 .errorStr db 0Dh, 0Ah, "Error", 0Dh, 0Ah, 00h
