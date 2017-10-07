@@ -154,15 +154,19 @@ printFiles:
     jz .nameOK
 
 .directoryName:
+    push di
+    mov cx, 11
     mov al, '.'
-    rep scasb   ; try to find the dot
-    jcxz .nameOK ; if no dot is found its ok
+    repnz scasb     ; try to find the dot
+    jcxz .nameOKpop ; if no dot is found its ok
     
-    cmp byte [di], 0x00 ; if there are chars after dot its ok too
-    jne .nameOK
+    cmp byte [di], 0x20 ; if there are chars after dot its ok too
+    jne .nameOKpop
     
-    mov byte [di-1], 0x00 ; but else we delete the dot
+    mov byte [di-1], 0x20 ; but else we delete the dot
     
+.nameOKpop:
+    pop di
 .nameOK:
     push si
     
@@ -412,6 +416,9 @@ launch_file:
     cmp ax, -1
     je .error
 
+    mov byte [entriesToSkip], 0x00
+    mov byte [selectedIndex], 0x00
+    
     jmp main.scrollOK
     
 .fileName times 12 db 0x00
