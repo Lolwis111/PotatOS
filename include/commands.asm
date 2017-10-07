@@ -1,27 +1,29 @@
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Stellt die CMD-Befehle für MAIN.SYS         %
-; % zur verfügung.                               %
+; % this represents the commands for main.sys    %
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %ifndef _COMMANDS_INC_
 %define _COMMANDS_INC_
 
-cmdLS		db "LS", 0x00       ; alle Dateien und ihre Größe auflisten
-cmdLL       db "LL", 0x00       ; alle Dateien aufzählen
+cmdLS		db "LS", 0x00       ; list all files and their sizes
 
-cmdHELP		db "HELP", 0x00     ; die Hilfe anzeigen
-cmdDATE		db "DATE", 0x00     ; das Datum anzeigen
-cmdTIME		db "TIME", 0x00     ; die Zeit anzeigen
-cmdINFO		db "INFO", 0x00     ; Informationen anzeigen
+cmdHELP		db "HELP", 0x00     ; print the help
+cmdDATE		db "DATE", 0x00     ; show the date
+cmdTIME		db "TIME", 0x00     ; show the time
+cmdINFO		db "INFO", 0x00     ; give some system information
 
-cmdCOLOR	db "COLOR", 0x00    ; die Farbe wechseln
-cmdCLEAR	db "CLS", 0x00      ; den Bildschirm leeren
+cmdCOLOR	db "COLOR", 0x00    ; change color of cli
+cmdCLEAR	db "CLS", 0x00      ; clear cli
 
-cmdRENAME	db "RENAME", 0x00   ; zum umbenennen von Dateien
-cmdDEL		db "DEL", 0x00      ; zum löschen von Dateien
+cmdRENAME	db "RENAME", 0x00   ; renaming files
+cmdDEL		db "DEL", 0x00      ; deleting files
+
+cmdRETURN   db "RETURN?", 0x00  ; print return value of last command/program
+
+cmdREPEAT   db "REPEAT", 0x00   ; execute the last command again
 
 %ifdef _DEBUG
-cmdDUMP     db "DUMP", 0x00     ; Gibt die Puffer aus
+cmdDUMP     db "DUMP", 0x00     ; debug: print all the buffers
 %endif
 
 %endif

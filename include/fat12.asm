@@ -10,9 +10,9 @@
 [BITS 16]
 
 %include "floppy16.asm"
-%define ROOT_OFFSET 4000h
-%define FAT_SEG 380h 	;380h
-%define ROOT_SEG 400h 	;400h
+%define ROOT_OFFSET 0x4000
+%define FAT_SEG 0x380  ;380h
+%define ROOT_SEG 0x400 ;400h
 
 ;=======================================
 ;LoadRoot()
@@ -23,7 +23,7 @@ LoadRoot:
 	push es
 
 	xor cx, cx	
-	mov ax, 32d
+	mov ax, 32
 	xor dx, dx
 	
 	mul word [RootEntries]
@@ -64,7 +64,7 @@ WriteRoot:
 	push es
 
 	xor cx, cx
-	mov ax, 32d
+	mov ax, 32
 	xor dx, dx
 	mul WORD [RootEntries]
 	
@@ -174,13 +174,13 @@ FindDir:
 	pop di
 	jne .skip
 	
-	add di, 11d
+	add di, 11
 	test byte [di], 00010000b
 	jnz .Found
 	
 .skip:
 	pop cx
-	add di, 20h
+	add di, 0x20
 	loop .loop1
 	
 .NotFound:
@@ -230,7 +230,7 @@ FindFile:
 	je .Found
 	
 	pop cx
-	add di, 20h
+	add di, 0x20
 	loop .loop1
 	
 .NotFound:
@@ -272,7 +272,7 @@ DeleteFile:
 	push cx
 	push si
 	push di
-	mov cx, 11d
+	mov cx, 11
 	rep cmpsb
 	je .found
 	
@@ -302,12 +302,12 @@ DeleteFile:
 	mov byte [di], 0
 	inc di
 	inc cx
-	cmp cx, 31d
+	cmp cx, 31
 	jl .cleanLoop
 	
 	call WriteRoot
 	call LoadFAT
-	mov di, 3800h
+	mov di, 0x3800
 	
 .moreCluster:
 	mov ax, word [.cluster]
@@ -318,7 +318,7 @@ DeleteFile:
 	mov bx, 3
 	mul bx
 	shr ax, 10
-	mov si, 3800h
+	mov si, 0x3800
 	add si, ax
 	mov ax, word [si]
 	
@@ -327,7 +327,7 @@ DeleteFile:
 	
 .odd:
 	push ax
-	and ax, 000Fh
+	and ax, 0x000F
 	mov word [si], ax
 	pop ax
 	shr ax, 4
@@ -339,12 +339,12 @@ DeleteFile:
 	mov word [si], ax
 	pop ax
 	
-	and ax, 0FFFh
+	and ax, 0x0FFF
 	
 .calcClusterCount:
 	mov word [.cluster], ax
 	
-	cmp ax, 0FF8h
+	cmp ax, 0x0FF8
 	jae .end
 	
 	jmp .moreCluster
@@ -393,9 +393,9 @@ CreateFile:
 	mov di, ROOT_OFFSET
 .entry_loop:
 	mov al, byte [di]
-	cmp al, 00h
+	cmp al, 0x00
 	je .found
-	cmp al, 0E5h
+	cmp al, 0xE5
 	je .found
 	add di, 32
 	loop .entry_loop
@@ -410,7 +410,7 @@ CreateFile:
 .found:
 	pop si
 	
-	mov cx, 11d
+	mov cx, 11
 	rep movsb
 	
 	sub di, 11
@@ -428,17 +428,17 @@ CreateFile:
 	
 	mov al, ch
 	call .bcdToInt
-	and ax, 001Fh
-	shl ax, 11d
+	and ax, 0x001F
+	shl ax, 11
 	mov bp, ax
 	mov al, byte [.minute]
 	call .bcdToInt
-	and ax, 003Fh
-	shl ax, 5d
+	and ax, 0x003F
+	shl ax, 5
 	add bp, ax
 	mov al, byte [.second]
 	call .bcdToInt
-	and ax, 001Fh
+	and ax, 0x001F
 	add bp, ax
 	
 	push bp
@@ -455,18 +455,18 @@ CreateFile:
 	
 	mov al, cl
 	call .bcdToInt
-	add ax, 20d
-	and ax, 007Fh
-	shl ax, 9d
+	add ax, 20
+	and ax, 0x007F
+	shl ax, 9
 	mov si, ax
 	mov al, byte [.minute]
 	call .bcdToInt
-	and ax, 000Fh
-	shl ax, 5d
+	and ax, 0x000F
+	shl ax, 5
 	add si, ax
 	mov al, byte [.second]
 	call .bcdToInt
-	and ax, 001Fh
+	and ax, 0x001F
 	add si, ax
 	
 	mov byte [di+11], 0		; Attributes
@@ -526,15 +526,15 @@ CreateFile:
 ; AX <- Number
 .bcdToInt:
 	mov bl, al			;Speichern
-	and ax, 0Fh			;die Oberen Bits löschen
+	and ax, 0x0F		;die Oberen Bits löschen
 	mov cx, ax			;kopieren
 	shr bl, 4			;die Oberen Bits über die Unteren Bits schreiben
 	mov al, 10
 	mul bl				;AX = 10 * bl		(Zehnerstelle)
 	add ax, cx			;Untere Stellen addieren
 	ret
-.minute db 00h
-.second db 00h
+.minute db 0x00
+.second db 0x00
 ;=======================================
 
 
@@ -576,16 +576,16 @@ WriteFile:
 	call CreateFile
 	cmp ax, -1
 	je .error
-	cmp word [.fileSize], 00h
+	cmp word [.fileSize], 0x00
 	je .writeDone
 	call LoadFAT
-	mov si, 3803h
+	mov si, 0x3803
 	mov bx, 2
 	mov cx, word [.clusterCount]
 	xor dx, dx
 .findFreeCluster:
 	lodsw
-	and ax, 0FFFh
+	and ax, 0x0FFF
 	jz .foundEvenCluster
 .moreOdd:
 	inc bx
@@ -621,7 +621,7 @@ WriteFile:
 	jmp .moreEven
 .listDone:
 	xor cx, cx
-	mov word [.count], 01h
+	mov word [.count], 0x01
 .chainLoop:
 	mov ax, word [.count]
 	cmp ax, word [.clusterCount]
@@ -635,13 +635,13 @@ WriteFile:
 	mul bx
 	mov bx, 2
 	div bx
-	mov si, 3800h
+	mov si, 0x3800
 	add si, ax
 	mov ax, word [ds:si]
 	or dx, dx
 	jz .even
 .odd:
-	and ax, 000Fh
+	and ax, 0x000F
 	mov di, .clusterChain
 	add di, cx
 	mov bx, word [di+2]
@@ -652,7 +652,7 @@ WriteFile:
 	add cx, 2
 	jmp .chainLoop
 .even:
-	and ax, 0F000h
+	and ax, 0xF000
 	mov di, .clusterChain
 	add di, cx
 	mov bx, word [di+2]
@@ -670,18 +670,18 @@ WriteFile:
 	mul bx
 	mov bx, 2
 	div bx
-	mov si, 3800h
+	mov si, 0x3800
 	add si, ax
 	mov ax, word [ds:si]
 	or dx, dx
 	jz .lastEven
 .lastOdd:
-	and ax, 000Fh
-	add ax, 0FF80h
+	and ax, 0x000F
+	add ax, 0xFF80
 	jmp .clusterDone
 .lastEven:
-	and ax, 0F000h
-	add ax, 0FF8h
+	and ax, 0xF000
+	add ax, 0x0FF8
 .clusterDone:
 	mov word [ds:si], ax
 	call WriteFAT
@@ -694,12 +694,12 @@ WriteFile:
 	je .writeRootEntry
 	pusha
 	add ax, 31
-	mov cx, 01h
+	mov cx, 0x01
 	mov bp, word [.dataBuffer]
 	mov bx, word [.dataBuffer+2]
 	call WriteSectors
 	popa
-	add word [.dataBuffer+2], 512d
+	add word [.dataBuffer+2], 512
 	add cx, 2
 	jmp .saveLoop
 .writeRootEntry:
@@ -711,12 +711,12 @@ WriteFile:
 	push cx
 	push si
 	push di
-	mov cx, 11d
+	mov cx, 11
 	rep cmpsb
 	je .entryFound
 	pop di
 	pop si
-	add di, 32d	
+	add di, 32
 	pop cx
 	loop .scanLoop
 	jmp .error
@@ -728,7 +728,7 @@ WriteFile:
 	mov word [di+26], ax
 	mov cx, word [.fileSize]
 	mov word [di+28], cx
-	mov word [di+30], 0000h
+	mov word [di+30], 0x0000
 	call WriteRoot
 .writeDone:
 	popa
@@ -741,12 +741,12 @@ WriteFile:
 	mov ax, -1
 	ret
 
-.clusterChain times 128 dw 00h 
-.clusterCount dw 00h
-.fileName db "           ", 00h
-.fileSize dw 00h
-.count dw 0000h
-.dataBuffer dq 00h
+.clusterChain times 128 dw 0x00 
+.clusterCount dw 0x0000
+.fileName db "           ", 0x00
+.fileSize dw 0x0000
+.count dw 0x0000
+.dataBuffer dw 0x0000, 0x0000
 ;=======================================
 
 
@@ -787,10 +787,10 @@ LoadFile:
 	mov ax, ROOT_SEG
 	mov es, ax
 	
-	mov dx, word [es:di+001Ah]		; Startcluster
+	mov dx, word [es:di+0x1A]		; Startcluster
 	
 	push ecx
-	mov ecx, dword [es:di+001Ch]	; Dateigröße
+	mov ecx, dword [es:di+0x1C]	; Dateigröße
 	mov word [.fileSize], cx
 	pop ecx
 	
@@ -829,17 +829,17 @@ LoadFile:
 	mov ax, word [cluster]
 	mov dx, ax
 	mov cx, ax
-	shr dx, 00001h
+	shr dx, 1
 	add cx, dx
 	
 	xor bx, bx
 	add bx, cx
 	mov dx, word [es:bx]
-	test ax, 0001h
+	test ax, 0x0001
 	jnz .oddCluster
 	
 .evenCluster:
-	and dx, 0FFFh
+	and dx, 0x0FFF
 	
 	jmp .done
 .oddCluster:
@@ -847,7 +847,7 @@ LoadFile:
 	
 .done:
 	mov word [cluster], dx
-	cmp dx, 0FF0h
+	cmp dx, 0x0FF0
 	
 	jb .loadImage
 .success:
@@ -859,8 +859,8 @@ LoadFile:
 	
 	mov cx, word [.fileSize]
 	ret
-.fileSize dw 0000h
-.rootOffset dd 00000000h
+.fileSize dw 0x0000
+; .rootOffset dd 0x00000000
 ;=======================================
 
 %endif

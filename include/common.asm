@@ -7,7 +7,7 @@
 %ifndef _COMMON_INC_
 %define _COMMON_INC_
 
-%define DEV_YEAR_C "2016"
+%define DEV_YEAR_C "2017"
 %define DEV_YEAR_S "2012"
 
 MAJOR_VERSION db 0

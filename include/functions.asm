@@ -49,21 +49,22 @@
 	int 0x21
 %endmacro 
 
-%macro strtoi 1
-    mov ah, 0x09
-    mov dx, %1
-    int 0x21
-%endmacro
-
-%macro ltostr 2
+%macro ltostr 2 ; converts arg2 to string in arg1
     mov ecx, %2
     mov dx, %1
-    mov ah, 0x09
+    mov ah, 0xAA
     int 0x21
 %endmacro
 
-%macro strtol 1
+%macro itostr 2 ; converts arg2 to string in arg1
+    movzx ecx, %2
+    mov dx, %1
     mov ah, 0xAA
+    int 0x21
+%endmacro
+
+%macro strtol 1 ; converts arg1 string to long
+    mov ah, 0x09
     mov dx, %1
     int 0x21
 %endmacro

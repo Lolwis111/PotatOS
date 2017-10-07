@@ -1,16 +1,16 @@
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Stellt Methoden zur Stringmanipulation       %
-; % bereit. Können von allen Anwendungen genutzt %
-; % werden. Erfordert stos, lods und movs        %
+; % simple methods for manipulating string       %
+; % Can be used by anyone who includes this file %
+; % Needs stos, lods and movs instructions       %
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %ifndef _STRINGS_INC_
 %define _STRINGS_INC_
 
 ; ==============================
-; Dateiname von TEST.BIN nach TEST    BIN wandeln.
-; si => Dateiname
-; di <= FAT12 Dateiname
+; convert 'TEST.BIN' to 'TEST    BIN'
+; si => human filename
+; di <= FAT12 filename
 ; ==============================
 AdjustFileName:
 	xor cx, cx
@@ -47,9 +47,9 @@ AdjustFileName:
 
 
 ; ==============================
-; Dateiname von "TEST" nach "TEST       " wandeln.
-; si => Dateiname
-; di <= FAT12 Dateiname
+; convert "TEST" to "TEST       "
+; si => human directory name
+; di <= FAT12 directory name
 ; ==============================
 AdjustDirName:
 	xor cx, cx
@@ -81,7 +81,7 @@ AdjustDirName:
 
 
 ; ==============================
-; String in Großbuchstaben wandeln
+; convert string to uppercase letters
 ; SI => String
 ; ==============================
 UpperCase:
@@ -109,7 +109,7 @@ UpperCase:
 ; ==============================
 ; SI -> String
 ; AL -> Splitter
-; CX <- Länge
+; CX <- length
 ; ==============================
 StringLength:
 	push bx
@@ -139,7 +139,7 @@ StringLength:
 
 
 ; ==============================
-; Index des ersten Leerzeichens abrufen (Parameter parsen)
+; looks for the very first space (to parse arguments)
 ; SI => String
 ; CX <= Index
 ; ==============================
@@ -173,55 +173,31 @@ fileNameLength:
 
 
 ; =============================
-; Dateiname von 'TEST    BIN' nach
-; TEST.BIN wandeln.
-; SI <= FAT-Dateiname
-; DI => normaler Dateiname
+; convert 'TEST    BIN' to
+; 'TEST.BIN'
+; SI <= FAT filename
+; DI => human filename
 ; =============================
 ReadjustFileName:
     mov di, .newFileName
     pusha
     mov cx, 8
-.scan: ; alles bis zum Leerzeichen, aber maximal 8 Zeichen kopieren
-    cmp byte [si], 20h
+.scan: ; copy up to first space or 8 characters (whatever comes first)
+    cmp byte [si], 0x20
     je .return
     movsb
     loop .scan
 .return:
-    mov al, '.' ; den Punkt nach dem Dateinamen einfügen
+    mov al, '.' ; insert the dot between name and extension
     stosb
-    add si, cx  ; die Leerzeichen überspringen
-    movsw       ; die letzten drei Zeichen (Erweiterung
-    movsb       ; ebenfalls kopieren.
-    xor al, al  ; \0-terminieren
+    add si, cx  ; skip spaces
+    movsw       ; copy the last three characters
+    movsb       ; (extension)
+    xor al, al  ; put \0 at the end
     stosb
     popa
     ret
-.newFileName db "            ", 00h
+.newFileName times 13 db 0x00
 ; =============================
 
-;==============================
-;Index des ersten Leerzeichens abrufen (Parameter parsen)
-;AX => String1
-;BX => String2
-;CX <= Index
-;==============================
-;AppendString:
-;	mov si, ax
-;	push ax
-;	mov al, 00h
-;	call StringLength
-;	pop ax
-;	add ax, cx
-;	push ax
-;	mov si, bx
-;	call StringLength
-;	pop ax
-;	mov di, ax
-;	mov si, bx
-;	rep movsb
-	
-;	ret
-;==============================
-	
 %endif

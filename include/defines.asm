@@ -1,18 +1,19 @@
-; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Definiert grafische Werte für das System     %
-; % Farben, Bildschirminformationen              %
-; %                                              %
-; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %ifndef _DEFINES_ASM_
 %define _DEFINES_ASM_
+
+    [BITS 16]
 
 	%define SCREEN_WIDTH 80
 	%define SCREEN_HEIGHT 25
     %define SCREEN_BUFFER_SIZE (SCREEN_HEIGHT * SCREEN_WIDTH)
+    
 	%define VIDEO_MEMORY_SEGMENT 0xB800
-    %define SYSTEM_COLOR 0x1FFF
-    %define SYSTEM_KB_STATUS 0x1FFE
+    %define VIDEO_GRAPHICS_SEGMENT 0xA000
+    %define VIDEO_TEXT_SEGMENT VIDEO_MEMORY_SEGMENT
+    
+    %define SYSTEM_COLOR 0x1FFF     ; byte indicating which color is used at the moment
+    %define SYSTEM_KB_STATUS 0x1FFE ; byte indicating if y and z should be switched
+    %define ERROR_CODE 0x1FFC       ; return code of the last executed command/programm
     %define TRUE 0x01
     %define FALSE 0x00
     %define _HIGH_MEM_ FALSE
@@ -39,6 +40,9 @@
 	
 	%define RESULT_OK		0x01
 	%define RESULT_CANCEL	0x00
+    
+    %define EXIT_SUCCESS 0x00
+    %define EXIT_FAILURE 0x01
 	
     %define LOADER_SYS      0x500
     %define SYSTEM_SYS      0x1000
@@ -46,4 +50,4 @@
     %define STRINGS_SYS     0x8000
     %define SOFTWARE_BASE   0x9000
 
-%endif
+%endif ; _DEFINES_ASM_

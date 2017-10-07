@@ -1,167 +1,202 @@
 #!/bin/bash
 
-build_home=$PWD  # Das aktuelle Arbeitsverzeichnis
-include_system="$build_home/include/" # Pfad zu den systemweiten Include-Dateien
-include_software="$build_home/Software/include/" # softwarespezifische Include-Dateien
-include_driver="$build_home/Treiber/include/" # systemspezifische Include-Dateien
-output_image_name="potatos.img" # Name des Ausgabeimages
-language="english" # zu erzeugende Sprache. Alle verfügbaren sind im Verzeichnis Lang/
+build_home=$PWD  # copy working directory
+include_system="$build_home/include/" # globaly available include files
+include_software="$build_home/software/include/" # program internal include files
+include_driver="$build_home/driver/include/" # os internal include files
+output_image_name="potatos.img" # output file name
+language="english" # language to create this in, check Lang/ for available languages
 
 LIST_FILE=false
-NASM_FLAGS=" -Ox -f bin " # Mit Vorsicht verändern! -f bin ist wichtig! 
-                                           # Ebenso die Leerzeichen an Anfang und Ende!!
+NASM_FLAGS=" -Ox -f bin " # just flags for assembler, make sure you keep '-f bin'
 
-if [ "`whoami`" != "root" ] ; then # Prüfen ob als root ausgeführt wird
-	echo "  Der Build muss als root ausgeführt werden!"
-    echo "  (Das loopback-mounting funktioniert sonst nicht!)"
+if [ "`whoami`" != "root" ] ; then # check if script has root rights
+	echo "  You have to lunch this as root!"
+    echo "  (loopback mounting is a root-only service!)"
 	exit
 fi
 
-# Säuberungsprozess:
-rm -f $output_image_name  # Image löschen
-cd Misc # alte string-Datei löschen
-rm -f "strings.sys"
-cd ..
-cd Boot # alten Bootloader löschen
-for i in *.bin *.lst
-do
-    rm -f "$i"
-done
-cd ..
-cd Treiber # alte Systemdateien löschen
-for i in *.sys *.lst
-do
-    rm -f "$i"
-done
-cd ..
-cd Loader # alte Stage2 Komponenten löschen
-for i in *.sys *.lst
-do
-    rm -f "$i"
-done
-cd ..
-cd Main # alte Komandozeilenkomponenten löschen
-for i in *.sys *.lst
-do
-    rm -f "$i"
-done
-cd ..
-cd Software # alte Programme löschen
-for i in *.bin *.lst
-do
-    rm -f "$i"
-done
-cd ..
+buildCounter=$(cat .builds)
+echo "${buildCounter} builds since 6th October 2017"
 
-cd include
-if [ -e "language.asm" ] ; then # language.asm löschen 
+# cleaning process:
+rm -f $output_image_name  # delete old image
+
+cd misc # delete old strings.sys
+rm -f "strings.sys"
+
+cd ../boot/ # delte old bootloader
+for i in *.bin *.lst
+do
+    rm -f "$i"
+done
+
+cd ../driver/ # delete old system drivers
+for i in *.sys *.lst
+do
+    rm -f "$i"
+done
+
+cd ../loader/ # delte stage2 boot loader
+for i in *.sys *.lst
+do
+    rm -f "$i"
+done
+
+cd ../main/ # delte old cmd
+
+for i in *.sys *.lst
+do
+    rm -f "$i"
+done
+
+cd ../software/ # delete old programms
+for i in *.bin *.lst
+do
+    rm -f "$i"
+done
+
+cd ../include/
+if [ -e "language.asm" ] ; then # delete language.asm 
     rm -f language.asm 
 fi
+
 cd ..
 
 if [ "$1" = "clean" ] ; then
-    echo -e "\e[92mFertig!\e[39m"
+    echo -e "\e[92mDone!\e[39m"
     exit
 fi
 
-# echo "Erzeuge experimentelle 32-Bit Komponenten..."
-# make -C Experimental/
+if [ "$1" == "experimental" ] ; then
+    echo "compiling experimental 32-bit components"
+    make -C experimental/
+fi
 
-echo "Erzeuge language.asm..."
-if [ ! -e "./Lang/$language" ] ; then
-    echo "Die Sprache `$language` wurde nicht im Verzeichnis `Lang/` gefunden!";
-    echo -e "\e[91mFehler beim Build\e[39m"
+echo "creating language.asm"
+if [ ! -e "./lang/$language" ] ; then
+    echo "The Language `$language` was not found in `lang/` !";
+    echo -e "\e[91mError while assembling\e[39m"
     exit
 fi
 
-./Tools/MkLocale/bin/mklocale $language $build_home || exit
+./tools/MkLocale/bin/mklocale $language $build_home || exit
 
 if [ ! -e $output_image_name ]
 then
-	echo "> Floppyimage erzeugen..."
+	echo "> create floppy image"
 	mkdosfs -C $output_image_name 1440 || exit
 fi
 
 if [ $LIST_FILE = true ] ; then
-    echo "Erzeuge zusätzliche List-files"
+    echo "create listing files"
 fi
 
-echo "> Bootloader erzeugen..."
+echo "> building bootloader"
 list=""
 if [ $LIST_FILE = true ] ; then
-    list=" -l Boot/boot.lst "
+    list=" -l boot/boot.lst "
 fi
-nasm $NASM_FLAGS $list -i $include_system -o Boot/boot.bin Boot/boot.asm || exit
+nasm $NASM_FLAGS $list -i $include_system -o boot/boot.bin boot/boot.asm || exit
 
 if [ $LIST_FILE = true ] ; then
-    list=" -l Loader/loader.lst "
+    list=" -l loader/loader.lst "
 fi
-nasm $NASM_FLAGS $list -i $include_system -o Loader/loader.sys Loader/loader.asm || exit
+nasm $NASM_FLAGS $list -i $include_system -o loader/loader.sys loader/loader.asm || exit
 
-echo "> CMD erzeugen..."
-cd Main
+echo "> building terminal"
+
+cd main
 if [ $LIST_FILE = true ] ; then
     list=" -l main.lst "
 fi
 nasm $NASM_FLAGS $list -i $include_system -o main.sys main.asm || exit
-cd ..
 
-echo "> Programme erzeugen..."
-cd Software
+
+echo "> building programms"
+cd ../software/
 for i in *.asm
 do
     if [ $LIST_FILE = true ] ; then
         list=" -l `basename $i .asm`.lst "
     fi
 	nasm $NASM_FLAGS $list -d "$language" -i $include_system -i $include_software $i -o `basename $i .asm`.bin || exit
-    echo -ne "." # für jedes Programm einen Punkt ausgeben
+    echo -ne "." # print a dot on success for each program
 done
-cd ..
 
 echo "" # newLine
 
-echo "> System erzeugen..."
-cd Treiber
+echo "> building drivers"
+
+cd ../driver/
+
 for i in *.asm
 do
     if [ $LIST_FILE = true ] ; then
         list=" -l `basename $i .asm`.lst "
     fi
     nasm $NASM_FLAGS $list -i $include_system -i $include_driver $i -o `basename $i .asm`.sys || exit
-    echo -ne "." # für jeden Treiber einen Punkt ausgeben
+    echo -ne "." # print a dot on success for each driver
 done
+
+echo "" # newLine
+
+echo "> building tests"
+
+cd ../tests/
+
+for i in *.asm
+do
+    if [ $LIST_FILE = true ] ; then
+        list=" -l `basename $i .asm`.lst "
+    fi
+    nasm $NASM_FLAGS $list -i $include_system $i -o `basename $i .asm`.bin || exit
+    echo -ne "." # print a dot on success for each driver
+done
+
 cd ..
 
 echo "" # newLine
 
-echo "> Bootloader installieren..."
-# die ersten 512 Bytes mit dem Bootloader überschreiben
-dd status=noxfer conv=notrunc if=Boot/boot.bin of=$output_image_name || exit
+echo "> installing bootloader"
+# overwrite first sector in floppy with boot loader
+dd status=noxfer conv=notrunc if=boot/boot.bin of=$output_image_name || exit
 
 
-echo "> Komponenten installieren..."
-rm -rf tmp-loop # alten Mountpunkt löschen
-mkdir tmp-loop || exit # neuen Mountpunkt anlegen
+echo "> installing components"
+rm -rf tmp-loop # delete old mount point
+mkdir tmp-loop || exit # create new mount point
 mount -o loop -t msdos $output_image_name tmp-loop || exit
 
-cp Loader/loader.sys tmp-loop/ # System kopieren
-cp Main/main.sys tmp-loop
+cp loader/loader.sys tmp-loop/ # copy system
+cp main/main.sys tmp-loop/
+cp README tmp-loop/readme.txt
 
-cp Software/*.bin Treiber/*.sys tmp-loop # Alle Programme und Treiber kopieren
+cp software/*.bin driver/*.sys tmp-loop/ # copy programms and drivers
 
-echo "> Resourcen installieren..."
-cp Misc/*.* tmp-loop # Resourcen kopieren
+cp tests/*.bin tmp-loop/
 
-sleep 0.2 # kurz warten (Abschluss der Schreibvorgänge)
+echo "> copying resources"
+cp -r misc/* tmp-loop/ # copy resources
 
-echo "> Image freigeben"
-umount tmp-loop || exit # floppy freigeben
+if [ "$1" == "experimental" ] ; then
+    echo "> installing 32-bit components"
+    cp experimental/*.bin tmp-loop/
+fi
 
-rm -rf tmp-loop 
+sleep 0.2 # wait a moment to make sure everything is written
 
-# Rechte anpassen
+echo "> release image"
+umount tmp-loop || exit # release floppy
+
+rm -rf tmp-loop/
+
+# adjust rights
 chmod a+rw $output_image_name
 
-echo -e "\e[92m> Fertig!\e[39m"
+echo -e "\e[92m> Done $(date +"%H:%M:%S")!\e[39m"
+
+((buildCounter++))
+echo ${buildCounter} > .builds
 
 exit

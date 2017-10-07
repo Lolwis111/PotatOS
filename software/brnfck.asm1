@@ -1,0 +1,222 @@
+; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; % BRNFCK.ASM  ->  BRNFCK.BIN                   %
+; %                                              %
+; % Stellt einen einfachen Brainfuck interpreter %
+; % zur verfuegung.                              %
+; % TODO:                                        %
+; %     - Schleifen Befehle [, ] implementieren  %
+; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%include "defines.asm"
+
+[ORG SOFTWARE_BASE]
+[BITS 16]
+
+jmp start
+
+%include "functions.asm"
+
+%define STD_COLOR createColor(BLACK, BRIGHT_BLUE)
+%define NUM_COLOR createColor(BLACK, BRIGHT_YELLOW)
+
+
+; ==========================================
+
+segments    dw 0x0000, 0x0000, 0x0000
+
+msgNewLine	db 0x0D, 0x0A, 0x00
+
+msgExit     db 0x0D, 0x0A
+%ifdef german
+            db "Ausfuehrung beendet."
+%elif english
+            db "Done."
+%endif
+            db 0x0D, 0x0A, 0x00
+
+msgReady	db "Brainfuck> ", 0x00
+
+inputString times 256 db 0x00
+
+color db 0x00
+; ==========================================
+
+
+; ==========================================
+; ClearScreen
+; > löscht den Bildschirminhalt
+; ==========================================
+cls:
+	pusha
+	xor bx, bx
+	mov cx, 2000
+.loop1:
+	mov word [gs:bx], dx
+	add bx, 2
+	loop .loop1
+	popa
+    
+    xor dx, dx
+    mov ah, 0x0E
+    int 0x21
+    
+	ret
+; ==========================================	
+
+
+; ==========================================
+; Initalisiert das Programm
+; ==========================================
+start:
+    mov al, byte [0x1FFF]
+    mov byte [color], al
+    mov byte [0x1FFF], NUM_COLOR
+
+	mov dh, createColor(BLACK, WHITE)
+	mov dl, 0x20
+	call cls
+
+	jmp main
+; ==========================================
+	
+	
+; ==========================================
+; Liest ein Brainfuck-Programm ein
+; und fuehrt es im Anschluss aus
+; ==========================================
+main:
+    print msgReady, NUM_COLOR
+	
+    readline inputString, 256
+	 
+    print msgNewLine, NUM_COLOR
+    
+    mov bp, buffer+1024
+    
+    mov si, inputString
+	jmp run
+; ===============================================
+
+
+;===============================================
+run:
+    mov al, byte [si]
+    inc si
+    
+    cmp al, '>'
+    je .ptrInc
+    
+    cmp al, '<'
+    je .ptrDec
+
+    cmp al, '+'
+    je .valueInc
+    
+    cmp al, '-'
+    je .valueDec
+    
+    cmp al, '['
+    jmp .loopStart
+    
+    cmp al, ']'
+    jmp .loopEnd
+    
+    test al, al
+    jz exit
+    
+    jmp run
+    
+.ptrInc:
+    inc bp
+    jmp run
+.ptrDec:
+    dec bp
+    jmp run
+.valueInc:
+    inc byte [bp]
+    jmp run
+.valueDec:
+    dec byte [bp]
+    jmp run
+.valuePrint:
+    push bp
+    mov ah, 0x10
+    mov dl, NUM_COLOR
+    mov dh, byte [bp]
+    int 0x21
+    pop bp
+    jmp run
+ .valueRead:
+    push bp
+    xor ax, ax
+    int 0x16
+    pop bp
+    mov byte [bp], al
+    jmp .valuePrint
+.loopStart:
+    cmp byte [bp], 0x00
+    jne run
+    
+    dec si
+    
+    xor ax, ax
+    inc ax
+    .loop1:
+        inc si
+        cmp byte [si], '['
+        jne .ok11
+        inc ax
+        jmp .ok21
+        .ok11:
+            cmp byte [si], ']'
+            jne .ok21
+            dec ax
+        .ok21:
+            test ax, ax
+            jnz .loop1
+            jmp run
+.loopEnd:
+    xor ax, ax
+    .loop2:
+        dec si
+        cmp byte [si], '['
+        jne .ok12
+        inc ax
+        jmp .ok22
+        .ok12:
+            cmp byte [si], ']'
+            jne .ok22
+            dec ax
+        .ok22:
+            test ax, ax
+            jnz .loop2
+            jmp run
+;===============================================
+
+
+; ===============================================
+; Beendet das Programm und leert dabei
+; den Bildschirminhalt
+; ===============================================
+exit:
+    mov dx, msgExit
+    mov bl, byte [0x1FFF]
+    mov ah, 01h
+    int 21h
+
+    xor ax, ax
+    int 16h
+
+    mov dh, byte [color]
+	mov dl, 20h
+    mov byte [0x1FFF], dh
+	call cls
+
+	xor bx, bx
+	xor ax, ax
+	int 21h
+    cli
+    hlt
+; ===============================================
+
+buffer db 0x00
