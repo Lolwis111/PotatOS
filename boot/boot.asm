@@ -1,10 +1,5 @@
-; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Stellt den Bootloader von PotatOS dar.       %
-; % Lädt die Datei loader.sys und startet diese. %
-; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-[ORG 0x0]           ; 7C00 -> Register später setzen
-[BITS 16]
+[ORG 0x0] ; bootloader is executed at 0x7C00
+[BITS 16] ; but we fix that by adjusting all the segments
 
 start: 
     jmp boot
@@ -119,11 +114,6 @@ LoadRoot:
     mov word [dataSector], ax ; data sector = ReservedSectors + FatSizeS + RootSizeS
     add word [dataSector], cx
     
-    pusha
-    mov si, msg1
-    call Print
-    popa
-    
     ; after calculating size load root at 0x00007E00
     mov ebx, 0x0200
     call ReadSectors
@@ -158,11 +148,6 @@ LoadFAT:
     
     mov cx, word [fat_size] ; fat size
     mov ax, word [ReservedSectors] ; fat is right behind the reserved sectors (usually sector 2)
-    
-    pusha
-    mov si, msg2
-    call Print
-    popa
     
     mov ebx, 0x0200 ; load the fat at 0x00007E00
     call ReadSectors
@@ -235,9 +220,6 @@ msgLoading  db 0x0D, 0x0A, "Loading Bootimage..."
 msgNewLine  db 0x0D, 0x0A, 0x00
 msgOK       db "OK", 0x0D, 0x0A, 0x00
 msgFailure  db 0x0D, 0x0A, "ERROR: PRESS ANY KEY TO RESET", 0x0D, 0x0A, 0x00
-
-msg1 db "A1", 0x00
-msg2 db "A2", 0x00
 
 times 507-($-$$) db 0   ; pad this file to 507 Bytes (leaving 3 Bytes for config + 2 Bytes for signature)
 
