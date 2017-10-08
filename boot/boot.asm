@@ -11,6 +11,7 @@ start:
 
 %include "bpb.asm" ; BIOS Parameter Block
 %include "defines.asm"
+%include "floppy/lba.asm"
 
 ; ==============================
 ; prints a string
@@ -34,78 +35,55 @@ Print:
 ; ES:BX = target buffer address
 ; =========================================================
 ReadSectors:
-    .main:
-        mov di, 0x0005                          ; give it five tries
-    .sectorloop:
+	mov di, 0x0005 ; 5 tries per sector
+    .triesLoop:
         push ax
-        push bx
+        push ebx
         push cx
-        call LBACHS                             ; lineare Sektorangabe in Cluster-Sektor-Head wandeln
-        mov ax, 0x0201                          ; BIOS: einen Sektor lesen
-        mov ch, byte [absoluteTrack]            ; Spur
-        mov cl, byte [absoluteSector]           ; Sektor
-        mov dh, byte [absoluteHead]             ; Kopf
-        mov dl, byte [DriveNumber]              ; Laufwerk (normalerweise 0)
-        int 0x13                                ; BIOS aufrufen
-        jnc .success                            ; Fehler? Nein-> Weiter
-        xor ax, ax                              ; Ja -> Laufwerk zurücksetzen 
-        int 0x13                                ; 
-        dec di                                  ; und nochmal probieren.
+	
+        call LBA2CHS ; calculate parameters from sector
+	
+        ; cl = absolute sector
+        mov ch, al ; absolute track
+        mov dh, dl ; absolute head
+        mov dl, byte [DriveNumber]
+	
+        mov ax, 0x0201 ; read sector
+    
+        int 0x13 ; read
+        jnc .success
+	
+        xor ax, ax ; reset floppy on error
+        int 0x13
+	
+        dec di ; decrement try counter
+	
         pop cx
-        pop bx
+        pop ebx
         pop ax
-        jnz .sectorloop
-        int 0x18                                ; Nach fünf versuchen kommt der Tod
+	
+        cmp di, 0x00 ; and try again
+        jnz .triesLoop
+	
+        int 0x18 ; reboot after 5 fails
     .success:
         pop cx
-        pop bx
-        pop ax
-        add bx, word [BytesPerSector]           ; den nächsten Pufferbereich addressieren
-        inc ax                                  ; den nächsten Sektor addressieren
-        loop .main                              ; und weiterlesen.
-        ret
+        pop ebx
+        
+        movzx eax, word [BytesPerSector] ; advance pointer
+        add ebx, eax
+        
+        pop ax 
+    
+        inc ax ; go to next sector
+	
+        loop ReadSectors ; read CX sectors
+    ret
 ;==========================================================
-
-
-; =========================================================
-; Adresse aus Cluster berechnen
-; LBA = (Cluster - 2) * Sektoren pro Cluster
-; =========================================================
-ClusterLBA:
-    sub ax, 0x0002
-    movzx cx, byte [SectorsPerCluster]
-    mul cx
-    add ax, word [datasector]
-    ret
-; ============================================================
-
-
-; ============================================================
-; Linear Block Adresse nach Cylinder Head Sektor Adresse konvertieren
-; AX => LBA Adresse
-;
-; Sektor      = (logischer Sektor / Sektoren pro Spur) + 1
-; Kopf    = (logischer Sektor / Sektoren pro Spur) MOD Anzahl Köpfe
-; Zylinder = logischer Sektor / (Sektoren pro Spur * Anzahl Köpfe)
-; ============================================================
-LBACHS:
-    xor dx, dx
-    div word [SectorsPerTrack] 
-    inc dl
-    mov byte [absoluteSector], dl
-    xor dx, dx
-    div word [HeadsPerCylinder]
-    mov byte [absoluteHead], dl
-    mov byte [absoluteTrack], al
-    ret
-; ============================================================
     
 
-; ============================================================
-; Der eigentlich Bootvorgang
-; ============================================================
 boot: 
-    cli                     ; set all the segments
+    cli
     mov ax, 0x07C0
     mov ds, ax
     mov es, ax
@@ -127,122 +105,139 @@ boot:
 LoadRoot:
     ; calculate size in cx
     xor cx, cx  
-    xor dx, dx
-    mov ax, 0x0020          ; 32 bytes per entry
-    mul word [RootEntries]  ; size = 32 Byte * entry count
-    div word [BytesPerSector]
-    xchg ax, cx
+    xor dx, dx ; set to 0 for div
+    mov ax, 32
+    mul word [RootEntries] ; RootSizeB = 32 * RootEntries
+    div word [BytesPerSector] ; RootSizeS = RootSizeB / BytePerSector
+    mov cx, ax
+
+    movzx ax, byte [NumberOfFATS]
+    mul word [SectorsPerFAT] ; FatSizeS = NumberOfFATS * SectorsPerFAT 
+    mov word [fat_size], ax  ; save FatSizeS for later
+    add ax, word [ReservedSectors] ; Root = FatSizeS + ReservedSectors
     
-    ; Startadresse in AX berechnen
-    mov al, byte [NumberOfFATS]         ;
-    mul word [SectorsPerFAT]            ; calculate size of fat
-    add ax, word [ReservedSectors]      ; add size of bootsector
-    mov word [datasector], ax           ; base address of the root dir
-    add word [datasector], cx
+    mov word [dataSector], ax ; data sector = ReservedSectors + FatSizeS + RootSizeS
+    add word [dataSector], cx
     
-    ; Rootverzeichnis laden (0x7C00:0x0200)
-    mov bx, 0x0200
+    pusha
+    mov si, msg1
+    call Print
+    popa
+    
+    ; after calculating size load root at 0x00007E00
+    mov ebx, 0x0200
     call ReadSectors
 
-
-    ; Nach LOADER.SYS suchen
-    mov cx, word [RootEntries]
-    mov di, 0x0200  ; Basisadresse des Rootverzeichnis
-.Loop:
-    push cx
-    mov cx, 11      ; 11 Zeichen pro Dateiname
-    mov si, ImageName
+    mov di, 0x0200 ; search loader.sys in the root directory
+.fileLoop:
+    cmp byte [es:di], 0x00 ; end of directory => file not found
+    je fileNotFound
+    
     push di
-    rep cmpsb       ; Auf übereinstimmung prüfen
+    
+    mov cx, 11
+    mov si, ImageName ; compare the file name of each entry
+    rep cmpsb
+    je LoadFAT ; go to the next step when the file is found
+    
     pop di
-    je LoadFAT      ; Datei laden wenn überstimmung
-    pop cx
-    add di, 32
-    loop .Loop      ; Nächste Datei überprüfen
-    jmp Failure     ; Datei nicht vorhanden
+    add di, 32 ; move to next entry
+    jmp .fileLoop
+    
     
 LoadFAT:
     mov si, msgNewLine
     call Print
-    ; Startcluster speichern
-    mov dx, word [di+26]    ; 32 Byte Eintrag -> Offset 26 Startadresse
+
+    pop di
+   
+    ; get cluster from the entry
+    mov dx, word [di+26]
+    
     mov word [cluster], dx
     
-    ; FAT Größe in CX berechnen
-    movzx ax, byte [NumberOfFATS]
-    mul word [SectorsPerFAT]
-    mov cx, ax
+    mov cx, word [fat_size] ; fat size
+    mov ax, word [ReservedSectors] ; fat is right behind the reserved sectors (usually sector 2)
     
-    ; FAT Position in AX berechnen
-    mov ax, word [ReservedSectors]
+    pusha
+    mov si, msg2
+    call Print
+    popa
     
-    ; FAT nach 0x7C00:0x0200 laden
-    mov bx, 0x0200
+    mov ebx, 0x0200 ; load the fat at 0x00007E00
     call ReadSectors
     
     mov si, msgNewLine
     call Print
-    mov ax, 0x0050  ; Bootdatei Zieladresse
-    xor bx, bx
-    mov es, ax      ; Bootdatei Zieladresse
-    push bx
-LoadImage:
-    pop bx
-    mov ax, word [cluster]
-    call ClusterLBA         ; convert address
-    movzx cx, byte [SectorsPerCluster]
-    call ReadSectors
-    push bx
     
-    ; calculate next cluster
+    ; we gonna load loader.sys at 0x00000500
+    ; so by pointing es to 0x0050 and bx to 0x0000
+    ; we can have up to 64kib if secondary bootloader! :)
+    mov ax, 0x0050 
+    xor ebx, ebx
+    mov es, ax
+    
+    push ebx
+    
+loadFile:
+    pop ebx
+    
+    mov ax, word [cluster] ; calculate witch cluster to load
+    call Cluster2LBA
+    add ax, word [dataSector] ; put dataSector offset on
+    
+    movzx cx, byte [SectorsPerCluster] ; clusters in fat12 can have up to 8 sectors so adjust that here
+    call ReadSectors ; (ReadSectors advances ebx, so we dont have to care about this here)
+    
+    push ebx
+    
+    ; address of next cluster = (cluster*1.5) + 1 = cluster + (cluster/2) + 1
     mov ax, word [cluster]
-    mov dx, ax
-    mov cx, ax
-    shr dx, 1
-    mov bx, 0x0200
-    add cx, dx
-    add bx, cx
-    mov dx, word [bx]
-    test ax, 1
+    mov bx, ax
+    shr bx, 1  ; bx = cluster/2
+    add bx, ax ; bx = cluster/2 + cluster
+    add bx, 0x0200 ; bx = cluster/2 + cluster + 0x200 (offset where fat is)
+    mov dx, word [fs:bx] ; load the next cluster in the chain from that address
+    
+    test al, 0x01 ; check wether cluster is even or odd
     jnz .oddCluster
     
 .evenCluster:
-    and dx, 0000111111111111b
+    and dx, 0x0FFF ; get lower 12 bits
     jmp .done
     
 .oddCluster:
-    shr dx, 4
+    shr dx, 4 ; by shifting 4 to the right we get the upper 12 bits
     
 .done:
     mov word [cluster], dx  ; save new cluster
-    cmp dx, 0x0FF0
-    jb LoadImage
-    mov si, msgOK
-    call Print
-    jmp 0x0050:0x0000
     
-    cli
-    hlt
-
-Failure:
-    mov si, msgFailure
-    call Print
-    xor ax, ax
-    int 0x16        ; wait for any key
-    int 0x19        ; Reset 
+    cmp dx, 0x0FF0 ; check if we reached the end of the cluster chain
+    jb loadFile
     
-        
-absoluteSector db 0
-absoluteHead db 0
-absoluteTrack db 0
+    mov si, msgOK ; if yes, print an success string
+    call Print
+    
+    jmp 0x0050:0x0000 ; and jump into our second stage
+    
+fileNotFound:
+    mov si, msgFailure ; print an error message
+    call Print
+    xor ax, ax ; wait for the user to press any key
+    int 0x16
+    int 0x19 ; and reboot the system
 
-datasector  dw 0x0000
+dataSector  dw 0x0000
 cluster     dw 0x0000
+fat_size    dw 0x0000
 ImageName   db "LOADER  SYS"
 msgLoading  db 0x0D, 0x0A, "Loading Bootimage..."
 msgNewLine  db 0x0D, 0x0A, 0x00
 msgOK       db "OK", 0x0D, 0x0A, 0x00
 msgFailure  db 0x0D, 0x0A, "ERROR: PRESS ANY KEY TO RESET", 0x0D, 0x0A, 0x00
+
+msg1 db "A1", 0x00
+msg2 db "A2", 0x00
 
 times 507-($-$$) db 0   ; pad this file to 507 Bytes (leaving 3 Bytes for config + 2 Bytes for signature)
 
