@@ -1,21 +1,18 @@
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Stage2 Bootloader. Bereitet das System vor   %
-; % indem es alle wichtigen Dateien lädt.        %
+; % stage2 bootloader. loads all the important   %
+; % files and does some initalisation            %
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 [ORG 0x500]
 [BITS 16]
 
-jmp main16
+jmp start
 
-; ==================================================================
-; NASM Befehle
-; ==================================================================
 %include "fat12.asm"
 %include "common.asm"
 %include "defines.asm"
-; ==================================================================
 
+; ====================================================================================
 Print:
 	lodsb
 	or al, al
@@ -25,90 +22,75 @@ Print:
 	jmp Print
 .return:
 	ret
-
-
-msgError		db 0x0D, 0x0A, "FATAL: MISSING SYSTEM FILE!", 0x00
-				db 0x0D, 0x0A, "PRESS ANY KEY TO REBOOT", 0x0D, 0x0A, 0x00
+; ====================================================================================
+    
+    
+; ====================================================================================
+msgError1		db 0x0D, 0x0A, "strings.sys missing!", 0x00
+msgError2		db 0x0D, 0x0A, "system.sys missing!", 0x00
+msgError3		db 0x0D, 0x0A, "sysinit.sys missing!", 0x00
 msgHello		db 0x0D, 0x0A, "Loading files...", 0x0D, 0x0A, 0x0D, 0x0A, 0x00
+; ====================================================================================
 
-; ==================================================================	
-main16:
+
+; ====================================================================================
+start:
 	cli
-	xor ax, ax      ; alle Segmentregister nullen
+	xor ax, ax      ; zero out all the segments
 	mov ds, ax
 	mov es, ax
 	mov fs, ax
 	mov gs, ax
-	mov ax, 0x3000  ; Stack nach 3000:0000 legen
+	mov ax, 0x3000  ; put stack to 0x3000:0x0000
 	mov ss, ax
 	xor sp, sp
 	sti
 	
-	mov ax, 0x0003	; Textmodus, 80x25 Zeichen, 16 Farben
+	mov ax, 0x0003	; go into 16 color, 80x25 chars textmode
 	int 0x10
-	mov ax, 0x1003	; blinkende Schrift deaktivieren
+	mov ax, 0x1003	; we do not need blinking
 	xor bx, bx
 	int 0x10
 	
 	mov si, msgHello
 	call Print
-
-    call LoadRoot               ; Lädt die Datei strings.dat an die Adresse 0000:8000
-    xor bx, bx
-    mov bp, STRINGS_SYS
+    
+    call LoadRoot               ; load 'strings.sys' at 0x0000:0x8000
+    xor bp, bp
+    mov bx, STRINGS_SYS
     mov si, Strings
-    call LoadFile
-    cmp ax, -1
-    je .error
+    call ReadFile
+    jc .error1
 
-	call LoadRoot				; Lädt die Datei system.sys an die Adresse 0000:1000
-	xor bx, bx
-	mov bp, SYSTEM_SYS
+	call LoadRoot				; load 'system.sys' 0x0000:0x1000
+	xor bp, bp
+	mov bx, SYSTEM_SYS
 	mov si, Driver
-	call LoadFile
-	cmp ax, -1
-	je .error
+	call ReadFile
+	jc .error2
 
-	call LoadRoot				; Lädt die Datei sinit.sys an die Adresse 0000:9000
-	mov si, sinit		
-	xor bx, bx
-	mov bp, SOFTWARE_BASE
-	call LoadFile
-	cmp ax, -1
-	je .error
-
-	call LoadRoot				; Lädt die Datei main.sys an die Adresse 0000:2000
-	xor bx, bx
-	mov bp, MAIN_SYS
-	mov si, ImageName
-	call LoadFile
-	cmp ax, -1
-	je .error
+	call LoadRoot				; load 'sysinit.sys' at 0x0000:0x9000
+	xor bp, bp
+	mov bx, SOFTWARE_BASE
+    mov si, Sysinit
+	call ReadFile
+	jc .error3
+    
+	jmp SOFTWARE_BASE ; jump to the loaded program (in this case its sysinit.sys)
 	
-	jmp 0x2000
-	
-.error:                         ; Fehlermeldung wenn eine Datei fehlt
-	mov si, msgError
-	call Print
+    
+; if any of the files is missing we have a problem
+.error1:
+    mov si, msgError1
+    jmp .error
+.error2:
+    mov si, msgError2
+    jmp .error
+.error3:
+    mov si, msgError3
+.error:
+    call Print
 	xor ax, ax
 	int 0x16
-	int 0x19                    ; Warm-Reboo
-.colorByte db 00h
-; ==========================================
-
-
-; ==========================================
-; Löscht den Bildschirminhalt
-; ==========================================
-clearScreen:
-	mov ax, 0xB800
-	mov gs, ax
-	xor bx, bx
-	mov cx, 2000
-.clearLoop:
-	inc bx
-	mov byte [gs:bx], dl
-	inc bx
-	loop .clearLoop
-	ret
-; ==========================================
+	int 0x19                    ; try rebooting when everything goes wrong
+; ====================================================================================

@@ -9,7 +9,7 @@
 [BITS 16]
 
 main:
-    cmp ah, 0x00        ; exit program, jump to cli
+    cmp ah, 0x00        ; exit program and start terminal
     je exitProgram
     
     cmp ah, 0x01        ; print \0 terminated string
@@ -78,11 +78,10 @@ main:
     cmp ah, 0x16        ; convert bcd-byte to int-byte
     je bcdToInt
     
-    ; all new 32-bit ready string-int operation
-    
     cmp ah, 0x17        ; start a process
     je startProgram
     
+    ; all new 32-bit ready string-int operation
     cmp ah, 0xAA
     je intToString32
     
@@ -104,8 +103,12 @@ exitProgram:
     mov dh, byte [row]  ; move cursor to the left
     mov dl, 0x00        
     call private_setCursorPosition
-
-    jmp MAIN_SYS+9      ; cli is at 0x2000, main loop is at 0x2009
+    
+    mov dx, .fileName   ; just start command.bin and go back to the terminal
+    mov di, -1
+    jmp startProgram
+    
+.fileName db "COMMAND BIN", 0x00
 ; ======================================================
 
 
@@ -143,8 +146,8 @@ startProgram:
     cmp byte [si+10], 'N'
     jne .noExecutableError
     
-    xor bx, bx              ; load the program into memory
-    mov bp, SOFTWARE_BASE
+    mov bx, SOFTWARE_BASE ; load the program into memory
+    xor bp, bp
     call private_loadFile
     
     cmp ax, 0               ; check if that worked    
@@ -406,26 +409,25 @@ getCursorPosition:
 
 ; ======================================================
 ; loads a file into memory
-;
-; buffer   => BX:BP
-; filename => DX
-; AX <= result, 0 = OK, -1 = ERROR
-; CX <= Size 
+; BP:EBX <= target buffer
+; DX <= filename
+; AX => error code (0 = OK, -1 = ERROR)
+; ECX => size
 ; ======================================================
 private_loadFile: ; basically a wrapper for fat12.asm
     push bp
-    push bx
+    push ebx
     push dx
     
     call LoadRoot
     
     pop dx
-    pop bx
+    pop ebx
     pop bp
     
     xor ax, ax
     mov si, dx
-    call LoadFile
+    call ReadFile
     ret
     
 loadFile:
@@ -440,9 +442,10 @@ loadFile:
 ; BX:BP <= buffer
 ; ======================================================
 writeFile:
-    mov si, dx
-    call WriteFile
-.return:
+    ; TODO: WriteFile rewrite
+    ;mov si, dx
+    ;call WriteFile
+;.return:
     iret
 ; ======================================================
 
@@ -452,7 +455,7 @@ writeFile:
 ; ======================================================
 getRootDir:
     call LoadRoot
-    mov bp, ROOT_OFFSET
+    mov bp, DIRECTORY_OFFSET
     mov cx, word [RootEntries]
     iret
 ; ======================================================
@@ -462,7 +465,8 @@ getRootDir:
 ; AX -> save root dir
 ; ======================================================
 setRootDir:
-    call WriteRoot
+    ; TODO: WriteRoot/WriteDir
+    ; call WriteRoot
     iret
 ; ======================================================
 
@@ -473,8 +477,10 @@ setRootDir:
 ; DX <= Dateiname
 ; ======================================================
 deleteFile:
-    mov si, dx
-    call DeleteFile
+    ; TODO: rework delete file
+    
+    ; mov si, dx
+    ; call DeleteFile
     
     iret
 ; ======================================================
