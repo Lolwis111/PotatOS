@@ -104,9 +104,25 @@ exitProgram:
     mov dl, 0x00        
     call private_setCursorPosition
     
-    mov dx, .fileName   ; just start command.bin and go back to the terminal
-    mov di, -1
-    jmp startProgram
+    push ds ; save the segments
+    push es
+    
+    mov ax, 0x8000 ; we loaded command.bin at 0x8000:0x0000
+    mov ds, ax
+    xor si, si
+    mov es, si
+    mov di, 0x9000 ; so just copy it down into the program memory
+    mov cx, 2048
+    rep movsw
+    
+    pop es ; restore the segments
+    pop ds
+    mov ax, -1
+    jmp SOFTWARE_BASE
+    
+    ; mov dx, .fileName   ; just start command.bin and go back to the terminal
+    ; mov di, -1
+    ; jmp startProgram
     
 .fileName db "COMMAND BIN", 0x00
 ; ======================================================
@@ -415,16 +431,6 @@ getCursorPosition:
 ; ECX => size
 ; ======================================================
 private_loadFile: ; basically a wrapper for fat12.asm
-    push bp
-    push ebx
-    push dx
-    
-    call LoadRoot
-    
-    pop dx
-    pop ebx
-    pop bp
-    
     xor ax, ax
     mov si, dx
     call ReadFile
@@ -455,7 +461,6 @@ writeFile:
 ; ======================================================
 getRootDir:
     call LoadRoot
-    mov bp, DIRECTORY_OFFSET
     mov cx, word [RootEntries]
     iret
 ; ======================================================

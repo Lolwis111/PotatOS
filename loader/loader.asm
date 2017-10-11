@@ -8,16 +8,30 @@
 
 jmp start
 
-%include "fat12.asm"
-%include "common.asm"
-%include "defines.asm"
+%include "defines.asm" ; some defines (including offsets)
+%include "bpb.asm"     ; bios parameter block (for disk access)
+%include "floppy/lba.asm" ; linear block address converters
+%include "floppy/readsectors.asm" ; low-level floppy driver
+%include "fat12/fat.asm"  ; loading fat from disk
+%include "fat12/root.asm" ; loading root-dir from disk
+%include "fat12/readfile.asm" ; loading file from disk
+%include "fat12/readdirectory.asm" ; loading directory from disk
+
+Sysinit   db "SYSINIT SYS", 0x00 ; reads config and sets up system
+Driver    db "SYSTEM  SYS", 0x00 ; API for int0x21
+Strings   db "STRINGS SYS", 0x00 ; contains language specific strings that devs can use
+Command   db "COMMAND BIN", 0x00
+SystemDir db "SYSTEM     ", 0x00 ; system directory
 
 ; ====================================================================================
+; Prints a string from si using BIOS interrupts as int0x21 is not setup
+; by the time loader.sys is executed
+; ====================================================================================
 Print:
-	lodsb
-	or al, al
-	jz .return
-	mov ah, 0x0E
+	lodsb       ; load next char
+	or al, al   ; check if it is 0
+	jz .return  ; if yes we are done
+	mov ah, 0x0E ; else print it using bios
 	int 0x10
 	jmp Print
 .return:
@@ -26,10 +40,14 @@ Print:
     
     
 ; ====================================================================================
-msgError1		db 0x0D, 0x0A, "strings.sys missing!", 0x00
-msgError2		db 0x0D, 0x0A, "system.sys missing!", 0x00
-msgError3		db 0x0D, 0x0A, "sysinit.sys missing!", 0x00
-msgHello		db 0x0D, 0x0A, "Loading files...", 0x0D, 0x0A, 0x0D, 0x0A, 0x00
+msgError0 db 0x0D, 0x0A, "System directory", 0x00
+msgError1 db 0x0D, 0x0A, "strings.sys", 0x00
+msgError2 db 0x0D, 0x0A, "system.sys", 0x00
+msgError3 db 0x0D, 0x0A, "sysinit.sys", 0x00
+msgError4 db 0x0D, 0x0A, "command.bin"
+msgError  db " missing!", 0x00 
+
+msgHello  db 0x0D, 0x0A, "Loading files...", 0x0D, 0x0A, 0x00
 ; ====================================================================================
 
 
@@ -53,33 +71,45 @@ start:
 	int 0x10
 	
 	mov si, msgHello
-	call Print
+    call Print
     
-    call LoadRoot               ; load 'strings.sys' at 0x0000:0x8000
-    xor bp, bp
+    call LoadRoot       ; load the root directory
+    
+    mov si, SystemDir
+    call ReadDirectory  ; load the 'system' directory
+    jc .error0
+    
+    xor bp, bp          ; load 'strings.sys' at 0x0000:0x8000
     mov bx, STRINGS_SYS
     mov si, Strings
     call ReadFile
     jc .error1
 
-	call LoadRoot				; load 'system.sys' 0x0000:0x1000
-	xor bp, bp
+	xor bp, bp          ; load 'system.sys' 0x0000:0x1000
 	mov bx, SYSTEM_SYS
 	mov si, Driver
 	call ReadFile
 	jc .error2
 
-	call LoadRoot				; load 'sysinit.sys' at 0x0000:0x9000
-	xor bp, bp
+	xor bp, bp          ; load 'sysinit.sys' at 0x0000:0x9000
 	mov bx, SOFTWARE_BASE
     mov si, Sysinit
 	call ReadFile
 	jc .error3
     
+    mov bp, 0x8000      ; load 'command.bin' into high memory area
+    xor bx, bx
+    mov si, Command
+    call ReadFile
+    jc .error4
+    
 	jmp SOFTWARE_BASE ; jump to the loaded program (in this case its sysinit.sys)
 	
     
 ; if any of the files is missing we have a problem
+.error0:
+    mov si, msgError0
+    jmp .error
 .error1:
     mov si, msgError1
     jmp .error
@@ -88,7 +118,12 @@ start:
     jmp .error
 .error3:
     mov si, msgError3
+    jmp .error
+.error4:
+    mov si, msgError4
 .error:
+    call Print
+    mov si, msgError
     call Print
 	xor ax, ax
 	int 0x16

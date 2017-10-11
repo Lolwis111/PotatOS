@@ -43,13 +43,6 @@ do
     rm -f "$i"
 done
 
-cd ../main/ # delte old cmd
-
-for i in *.sys *.lst
-do
-    rm -f "$i"
-done
-
 cd ../software/ # delete old programms
 for i in *.bin *.lst
 do
@@ -104,17 +97,8 @@ if [ $LIST_FILE = true ] ; then
 fi
 nasm $NASM_FLAGS $list -i $include_system -o loader/loader.sys loader/loader.asm || exit
 
-echo "> building terminal"
-
-cd main
-if [ $LIST_FILE = true ] ; then
-    list=" -l main.lst "
-fi
-nasm $NASM_FLAGS $list -i $include_system -o main.sys main.asm || exit
-
-
 echo "> building programms"
-cd ../software/
+cd ./software/
 for i in *.asm
 do
     if [ $LIST_FILE = true ] ; then
@@ -155,39 +139,38 @@ do
 done
 
 cd ..
-
 echo "" # newLine
 
 echo "> installing bootloader"
 # overwrite first sector in floppy with boot loader
 dd status=noxfer conv=notrunc if=boot/boot.bin of=$output_image_name || exit
 
-
 echo "> installing components"
-rm -rf tmp-loop # delete old mount point
-mkdir tmp-loop || exit # create new mount point
-mount -o loop -t msdos $output_image_name tmp-loop || exit
+rm -rf tmp-loop/ # delete old mount point
+mkdir tmp-loop/ || exit # create new mount point
+mount -o loop -t msdos $output_image_name tmp-loop/ || exit
+
+mkdir tmp-loop/system/
 
 cp loader/loader.sys tmp-loop/ # copy system
-cp main/main.sys tmp-loop/
 cp README tmp-loop/readme.txt
 
-cp software/*.bin driver/*.sys tmp-loop/ # copy programms and drivers
-
-cp tests/*.bin tmp-loop/
+cp driver/*.sys tmp-loop/system/ # copy the drivers
+cp software/*.bin tmp-loop/system/ # copy programms
 
 echo "> copying resources"
 cp -r misc/* tmp-loop/ # copy resources
+mv tmp-loop/strings.sys tmp-loop/system/
 
 if [ "$1" == "experimental" ] ; then
     echo "> installing 32-bit components"
-    cp experimental/*.bin tmp-loop/
+    cp experimental/*.bin tmp-loop/system/
 fi
 
 sleep 0.2 # wait a moment to make sure everything is written
 
 echo "> release image"
-umount tmp-loop || exit # release floppy
+umount tmp-loop/ || exit # release floppy
 
 rm -rf tmp-loop/
 
