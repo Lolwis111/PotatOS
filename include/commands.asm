@@ -6,6 +6,7 @@
 %define _COMMANDS_INC_
 
 cmdLS		db "LS", 0x00       ; list all files and their sizes
+cmdCD       db "CD", 0x00       ; navigate too another directory (currently no paths supported)
 
 cmdHELP		db "HELP", 0x00     ; print the help
 cmdDATE		db "DATE", 0x00     ; show the date
@@ -19,8 +20,6 @@ cmdRENAME	db "RENAME", 0x00   ; renaming files
 cmdDEL		db "DEL", 0x00      ; deleting files
 
 cmdRETURN   db "RETURN?", 0x00  ; print return value of last command/program
-
-cmdREPEAT   db "REPEAT", 0x00   ; execute the last command again
 
 %ifdef _DEBUG
 cmdDUMP     db "DUMP", 0x00     ; debug: print all the buffers
