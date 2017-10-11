@@ -9,6 +9,7 @@
 ; %include "fat12/deletefile.asm"
 ; %include "fat12/writefile.asm"
 %include "fat12/readfile.asm"
+%include "fat12/readdirectory.asm"
 %include "fat12/root.asm"
 %include "fat12/fat.asm"
 %include "fat12/findfile.asm"

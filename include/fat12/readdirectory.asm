@@ -2,17 +2,15 @@
 ; ReadFile()
 ;       reads a file from the current directory
 ;       into the memory
-;       SI <= filename
-;       BP:BX <= target buffer
-;       ECX => filesize
+;       SI <= directory name
 ;       carry flag for error indication
 ; ===========================================================
-ReadFile:
+ReadDirectory:
     pusha
     push es
     
-    mov word [.targetBuffer], bp
-    mov word [.targetBuffer+2], bx
+    mov word [.targetBuffer], 0x0000
+    mov word [.targetBuffer+2], DIRECTORY_OFFSET
     
     mov di, si
     mov si, DIRECTORY_OFFSET
@@ -35,13 +33,18 @@ ReadFile:
     jmp .findFileLoop
 
 .fileFound:
+    test byte [si], 00010000b
+    jz .notADirectory
+
     pop di
     pop si
 
     mov ax, word [si+26]
     mov word [.cluster], ax ; copy start cluster
-    mov eax, dword [si+28]
-    mov dword [.fileSize], eax ; copy filesize
+   
+    cmp ax, 0x0000 ; if the first cluster is zero we just load the root directory
+    je .loadRoot
+    
     
     call LoadFAT ; when we got the entry we load the FAT (this is where the real magic happens)
     
@@ -94,20 +97,32 @@ ReadFile:
     cmp dx, 0x0FF0 ; check for end of cluster chain
     jb .clusterLoop
     
-.loadDone:
     pop es
     popa
-    mov ecx, dword [.fileSize] ; last 4 bytes of the entry are the filesize
     xor ax, ax
     clc
     ret
-    
+.loadRoot:
+    call LoadRoot
+    pop es
+    popa
+    xor ax, ax
+    clc
+    ret
+.notADirectory:
+    pop di
+    pop si
+    pop es
+    popa
+    mov ax, NOT_A_DIRECTORY
+    stc
+    ret
 .fileNotFound:
     pop es
     popa
+    mov ax, FILE_NOT_FOUND
     stc
     ret
-.fileSize dd 0x00000000
 .cluster dw 0x0000 ; cluster we are currently working with
 .dataSector dw 0x0000 ; start address of the data sector
 .targetBuffer dw 0x0000, 0x0000
