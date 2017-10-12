@@ -22,3 +22,6 @@ Misc/strings.sys
 # we also do not need the image file
 *.img
 *.flp
+
+# ignore .builds (its a build counter for your local needs)
+.builds
