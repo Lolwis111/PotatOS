@@ -1,59 +1,59 @@
-             @@@@@@@@@@@@@@                   
-           @@@@@        @@@@@                 
-          @@@               @@                
-          @@                 @@@              
-         @@                    @@             
-         @                      @@            
-        @@                       @@           
-        @                         @@          
-        @        PotatOS           @@         
-       @@                           @         
-       @                            @@        
-      @@                             @@       
-      @                              @@       
-      @                               @       
-     @@      @@@@@         @@@@@      @@      
-     @@     @@@@@@@       @@@@@@@      @      
-     @     @@@@@@@@      @@@@@@@@      @      
-    @@     @@@@ @@@      @@@@ @@@      @@     
-    @@     @@@@@@@@      @@@@@@@@      @@     
-    @@     @@@@@@@@      @@@@@@@@       @     
-    @       @@@@@@        @@@@@@        @     
-    @        @@@@          @@@@         @@    
-    @                                   @@    
-    @                                   @@    
-    @  444  4444 4444 444  4    4 4444   @    
-    @  4  4 4    4  4 4  4 44  44 4      @    
-    @  444  4444 4444 4  4 4 44 4 4444   @    
-    @  4 4  4    4  4 4  4 4    4 4      @    
-    @  4  4 4444 4  4 444  4    4 4444   @    
-    @       @@@@@@@@@@@@@@@@@@@@@        @    
-    @                                    @    
-    @                                    @    
-    @  PotatOS is 16 Bit.                @    
-    @  PotatOS was created by Levin Palm @    
-    @                                    @    
-    @ 'sudo ./build.sh compiles it all   @
-    @ 'sudo ./build.sh clean' cleans     @    
-   @@  old binarys and file         .     @   
-   @@  ./run.sh executes PotatOS in       @    
-   @@  QEMU                               @   
-   @@  All rights reserved               @@   
-   @@  Use this at your own risk!        @@   
-   @@  I recommend to test this in a     @@   
-   @@  virtual maschine!                 @@   
-   @@ PotatOS ist love - PotatOS is life @@ 
-    @@                                   @@   
-    @@                                   @@   
-    @@      Tools:                       @@   
-    @@@       - Netwide Assembler        @@   
-     @@       - GNU C++ Compiler         @@   
-      @@      - dosfstools               @    
-      @@@     - qemu                     @    
-       @@@    - EasyBMP                  @    
-        @@@@  (see Tools/LLP/EasyBMP/)   @    
-          @@@        (C) 2017           @@     
-           @@@@                      @@@      
-             @@@@@                @@@@        
-               @@@@@@@@         @@@@          
-                  @@@@@@@@@@@@@@@             
+             @@@@@@@@@@@@@@@@@@@@@@                   
+           @@@@@                @@@@@                 
+          @@@                       @@                
+          @@                         @@@              
+         @@                            @@             
+         @                              @@            
+        @@                               @@           
+        @                                 @@          
+        @          PotatOS                 @@         
+       @@                                   @         
+       @                                    @@        
+      @@                                     @@       
+      @                                      @@       
+      @                                       @       
+     @@         @@@@@           @@@@@         @@      
+     @@        @@@@@@@         @@@@@@@         @      
+     @        @@@@@@@@        @@@@@@@@         @      
+    @@        @@@@ @@@        @@@@ @@@         @@     
+    @@        @@@@@@@@        @@@@@@@@         @@     
+    @@        @@@@@@@@        @@@@@@@@          @     
+    @          @@@@@@          @@@@@@           @     
+    @           @@@@            @@@@            @@    
+    @                                           @@    
+    @                                           @@    
+    @     ###  #### #### ###  #    # ####        @    
+    @     #  # #    #  # #  # ##  ## #           @    
+    @     ###  #### #### #  # # ## # ####        @    
+    @     # #  #    #  # #  # #    # #           @    
+    @     #  # #### #  # ###  #    # ####        @    
+    @        @@@@@@@@@@@@@@@@@@@@@@@@@           @    
+    @                                            @    
+    @                                            @    
+    @    PotatOS is 16 Bit.                      @    
+    @    PotatOS was created by Levin Palm       @    
+    @                                            @    
+    @   'sudo ./build.sh compiles it all         @
+    @   'sudo ./build.sh clean' cleans            @    
+   @@    old binarys and file         .           @   
+   @@    ./run.sh executes PotatOS in             @    
+   @@    QEMU                                     @   
+   @@    All rights reserved                     @@   
+   @@    Use this at your own risk!              @@   
+   @@    I recommend to test this in a           @@   
+   @@    virtual maschine!                       @@   
+   @@   PotatOS ist love - PotatOS is life       @@ 
+    @@                                           @@   
+    @@                                           @@   
+    @@        Tools:                             @@   
+    @@@         - Netwide Assembler              @@   
+     @@         - GNU C++ Compiler               @@   
+      @@        - dosfstools                     @    
+      @@@       - qemu                           @    
+       @@@      - EasyBMP                        @    
+        @@@@    (see Tools/LLP/EasyBMP/          @    
+          @@@          (C) 2017                 @@     
+           @@@@                              @@@      
+             @@@@@                        @@@@        
+               @@@@@@@@                 @@@@          
+                  @@@@@@@@@@@@@@@@@@@@@@@            
