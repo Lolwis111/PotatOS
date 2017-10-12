@@ -11,9 +11,6 @@ ReadFile:
     pusha
     push es
     
-    mov word [.targetBuffer], bp
-    mov word [.targetBuffer+2], bx
-    
     mov di, si
     mov si, DIRECTORY_OFFSET
     
@@ -37,7 +34,14 @@ ReadFile:
 .fileFound:
     pop di
     pop si
-
+    jmp .ok
+.customDirectory: ; if you want to load files from a different location directory 
+    pusha         ; (not the one pwd points to) just set si to the directory entry
+    push es       ; and call ReadFile.customDirectory
+.ok:
+    mov word [.targetBuffer], bp
+    mov word [.targetBuffer+2], bx
+    
     mov ax, word [si+26]
     mov word [.cluster], ax ; copy start cluster
     mov eax, dword [si+28]
