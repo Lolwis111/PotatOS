@@ -11,8 +11,8 @@ LIST_FILE=false
 NASM_FLAGS=" -Ox -f bin " # just flags for assembler, make sure you keep '-f bin'
 
 if [ "`whoami`" != "root" ] ; then # check if script has root rights
-	echo "  You have to lunch this as root!"
-    echo "  (loopback mounting is a root-only service!)"
+	echo -e "\e[1;31m  You have to lunch this as root!"
+    echo -e "  (loopback mounting is a root-only service!)\e[0;39m"
 	exit
 fi
 
@@ -177,7 +177,7 @@ rm -rf tmp-loop/
 # adjust rights
 chmod a+rw $output_image_name
 
-echo -e "\e[92m> Done $(date +"%H:%M:%S")!\e[39m"
+echo -e "\e[1;32m> Done $(date +"%H:%M:%S")!\e[0;39m"
 
 ((buildCounter++))
 echo ${buildCounter} > .builds
