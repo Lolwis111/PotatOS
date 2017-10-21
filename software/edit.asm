@@ -10,7 +10,7 @@ jmp start
 %include "keys.asm"
 %include "functions.asm"
 
-%define COLOR createColor(BLACK, WHITE)
+%define COLOR createColor(WHITE, BLACK)
 %define FILE_OFFSET fileBuffer
 
 ; ===============================================

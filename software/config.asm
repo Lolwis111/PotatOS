@@ -10,7 +10,7 @@ jmp start
 %include "floppy16.asm"
 %include "screen.asm"
 
-%define COLOR createColor(BLACK, MAGENTA)
+%define COLOR createColor(MAGENTA, BLACK)
 
 systemColor db 0x00
 

@@ -74,9 +74,9 @@ main:
     strcmp command, cmdRETURN
     je print_return_code ; command_util
     
-    call look_extern
+    jmp look_extern
     
-    jmp main
+    ; jmp main
 ; ====================================================
 
 

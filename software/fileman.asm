@@ -14,9 +14,9 @@ jmp start
 
 %include "bpb.asm"
 
-%define BORDER_COLOR createColor(BLACK, BLUE)
-%define TEXT_COLOR createColor(BLACK, MAGENTA)
-%define SELECTION_COLOR createColor(WHITE, BLACK)
+%define BORDER_COLOR createColor(BLUE, BLACK)
+%define TEXT_COLOR createColor(MAGENTA, BLACK)
+%define SELECTION_COLOR createColor(BLACK, WHITE)
 
 titleString      db "FILEMAN", 0x00
 
@@ -55,7 +55,7 @@ clearContentBox:
 ; ================================================
 countFiles:
     xor ax, ax
-    mov si, currentDirectory
+    mov si, DIRECTORY_OFFSET
     mov es, ax
     mov byte [fileCount], 0x00
 .loop:
@@ -83,23 +83,6 @@ start:
     
     call drawBorder
     
-    mov ah, 0x11
-    int 0x21 ; load root directory
-    
-    mov bx, 32  ; 32 bytes per entry
-    mov ax, word [RootEntries] ; number of entries
-    xor dx, dx 
-    mul bx ; multiply to get size of root directory
-    mov cx, dx ; put upper part in cx
-    shl ecx, 16 ; shift to get it into upper half of ecx
-    mov cx, ax ; put lower part in
-    
-    shr ecx, 1 ; div by 2 to increase speed
-    
-    mov si, bp
-    mov di, currentDirectory
-    rep movsw ; copy the root directory into currentDirectory location
-    
     call countFiles
     
     call clearContentBox
@@ -114,10 +97,13 @@ start:
 ; ================================================
 printFiles:
     pusha
+    push es
+    push ds
     
     xor ax, ax
-    mov si, currentDirectory
     mov es, ax
+    mov ds, ax
+    mov si, DIRECTORY_OFFSET
     
     xor dx, dx
     movzx ax, byte [entriesToSkip]
@@ -247,6 +233,8 @@ printFiles:
     
     jmp .fileLoop
 .endOfDir:
+    pop ds
+    pop es
     popa
     ret
 .attributes db 0x00
@@ -348,7 +336,7 @@ launch_file:
     xor dx, dx
     add ax, bx
     mov bx, 32
-    mov si, currentDirectory
+    mov si, DIRECTORY_OFFSET
     mul bx
     add si, ax
     
@@ -412,10 +400,10 @@ launch_file:
     
 .loadDirectory:
     
-    loadfile .fileName, currentDirectory
+    loadfile .fileName, DIRECTORY_OFFSET
     cmp ax, -1
     je .error
-
+    
     mov byte [entriesToSkip], 0x00
     mov byte [selectedIndex], 0x00
     
@@ -435,6 +423,3 @@ exit:
     
     EXIT EXIT_SUCCESS
 ; ================================================
-
-
-currentDirectory db 0x00

@@ -10,10 +10,11 @@ jmp start
 %include "keys.asm"
 %include "functions.asm"
 
-%define TEXT_COLOR createColor(BLACK, MAGENTA)
-%define BORDER_COLOR createColor(BLACK, BLUE)
-%define DATA_COLOR createColor(BLACK, BRIGHT_YELLOW)
-%define LABEL_COLOR createColor(BLACK, CYAN)
+%define TEXT_COLOR createColor(MAGENTA, BLACK)
+%define BORDER_COLOR createColor(BLUE, BLACK)
+%define DATA_COLOR createColor(BRIGHT_YELLOW, BLACK)
+%define LABEL_COLOR createColor(CYAN, BLACK)
+%define CURSOR_COLOR createColor(BLACK, WHITE)
 
 %include "include/memview_tools.asm"
 %include "include/memview_gui.asm"
@@ -87,6 +88,7 @@ decToHex:
 	mov al, byte [bx]
 	mov byte [si], al
 	inc si
+    
 	mov bx, .hexChar
 	add bl, ah
 	mov al, byte [bx]
@@ -256,7 +258,7 @@ start:
 	call drawPosition       ; draw the position string (segment:offset)
 	
 	mov dx, word [cursor]   ; copy cursor position
-	mov al, createColor(WHITE, BLACK) ; cursor color is black on white
+	mov al, CURSOR_COLOR ; cursor color is black on white
 	call drawCursor         ; draw the cursor
 	
 	jmp main
@@ -434,7 +436,7 @@ main:
 	call drawCursor
     
 	mov dx, word [cursor]
-	mov al, createColor(WHITE, BLACK)
+	mov al, CURSOR_COLOR
 	call drawCursor
 	
 	call drawPosition	

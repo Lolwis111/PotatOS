@@ -50,7 +50,7 @@
 	%define BRIGHT_YELLOW	0x0E
 	%define BRIGHT_WHITE	0x0F
 	
-	%define createColor(background, foreground) ((foreground*16)+background)
+	%define createColor(foreground, background) ((background*16)+foreground)
 	%define cursorPos(x, y) ((y * (SCREEN_WIDTH * 2)) + (x * 2))
 	
     ; ADDRESSES

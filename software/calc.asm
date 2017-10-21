@@ -15,8 +15,8 @@ jmp start
 %include "language.asm"
 %include "functions.asm"
 
-%define STD_COLOR createColor(BLACK, BRIGHT_BLUE)
-%define NUM_COLOR createColor(BLACK, BRIGHT_YELLOW)
+%define STD_COLOR createColor(BRIGHT_BLUE, BLACK)
+%define NUM_COLOR createColor(BRIGHT_YELLOW, BLACK)
 
 lblOptions  db "\r\n\n"
 %ifdef german
@@ -103,7 +103,7 @@ start:
     mov byte [color], al
     mov byte [SYSTEM_COLOR], NUM_COLOR
 
-    mov dh, createColor(BLACK, WHITE)
+    mov dh, createColor(WHITE, BLACK)
     mov dl, 0x20
     call cls
 
@@ -265,7 +265,7 @@ add_numbers:
     push eax
     jnc .noOverflow
     
-    print msgOverflow, createColor(RED, BLACK)
+    print msgOverflow, createColor(BLACK, RED)
 
 .noOverflow:
     pop ecx ; convert result to string
@@ -291,7 +291,7 @@ sub_numbers:
     push ecx
     jno .noOverflow
 
-    print msgOverflow, createColor(RED, BLACK)
+    print msgOverflow, createColor(BLACK, RED)
 
 .noOverflow:  
     pop ecx
@@ -343,7 +343,7 @@ div_numbers:
     
     jmp main
 .div0:
-    print DIV_NULL_ERROR, createColor(BLACK, RED)
+    print DIV_NULL_ERROR, createColor(RED, BLACK)
     jmp main
 .lblRest        db "Rest    : ", 0x00
 ; ===============================================
