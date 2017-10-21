@@ -16,6 +16,7 @@ jmp start
 %include "fat12/root.asm" ; loading root-dir from disk
 %include "fat12/readfile.asm" ; loading file from disk
 %include "fat12/readdirectory.asm" ; loading directory from disk
+%include "fat12/countfiles.asm" ; count files in system directory
 
 Sysinit   db "SYSINIT SYS", 0x00 ; reads config and sets up system
 Driver    db "SYSTEM  SYS", 0x00 ; API for int0x21
@@ -97,11 +98,21 @@ start:
 	call ReadFile
 	jc .error3
     
-    mov bp, 0x8000      ; load 'command.bin' into high memory area
-    xor bx, bx
-    mov si, Command
-    call ReadFile
-    jc .error4
+    ; copy the system directory to 0x8000:0x0000
+    push es
+    
+    call CountFiles
+    mov ax, 32
+    xor di, di
+    mul cx
+    mov si, DIRECTORY_OFFSET
+    mov cx, ax
+    
+    mov ax, 0x8000
+    mov es, ax
+    rep movsb ; copy from ds:si -> es:di (0x0000:DIRECTORY_OFFSET -> 0x8000:0x0000)
+    
+    pop es
     
 	jmp SOFTWARE_BASE ; jump to the loaded program (in this case its sysinit.sys)
 	

@@ -365,20 +365,20 @@ look_extern:
 	
 .programExt	db ".BIN"
     
-.noExt: ; Prüfen ob ein Programm ohne Dateiendung eingegeben wurde
+.noExt: ; if there is no extension add .bin and try loading that
 	xor al, al
 	mov si, command
 	call StringLength
 	
-	mov si, command         ; Manuell die Dateiendung anfügen
-	add si, cx              ; um zu prüfen ob das Programm einfach nur ohne
-	mov byte [si], '.'      ; Erweiterung aufgerufen wurde
+	mov si, command
+	add si, cx
+	mov byte [si], '.'
 	mov byte [si+1], 'B'
 	mov byte [si+2], 'I'
 	mov byte [si+3], 'N'
 	
 .extOk:
-	mov si, command			; Dateiname an FAT12 anpassen
+	mov si, command
 	mov di, rFileName
 	call AdjustFileName
 	cmp ax, -1
@@ -389,14 +389,15 @@ look_extern:
     mov ah, 0x17
     int 0x21
     
-    cmp ax, 0x05
-	je .eError
-    
-.error: ; Allgemeiner Fehler
+    cmp ax, 0x01
+    je .eError
+    jmp .error
+db "#ERROR"
+.error: ; generell error
     print LOAD_ERROR
-	ret
-	
-.eError: ; Keine-BIN-Datei-Fehler
+	jmp main
+db "#EERROR"	
+.eError: ; not a bin file error
     print NO_PROGRAM
-	ret
+	jmp main
 ; ====================================================

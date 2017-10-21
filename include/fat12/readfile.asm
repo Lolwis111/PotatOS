@@ -44,8 +44,8 @@ ReadFile:
     
     mov ax, word [si+26]
     mov word [.cluster], ax ; copy start cluster
-    mov eax, dword [si+28]
-    mov dword [.fileSize], eax ; copy filesize
+    mov ecx, dword [si+28]
+    mov dword [.fileSize], ecx ; copy filesize
     
     call LoadFAT ; when we got the entry we load the FAT (this is where the real magic happens)
     

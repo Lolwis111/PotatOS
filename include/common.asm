@@ -10,14 +10,11 @@
 %define DEV_YEAR_C "2017"
 %define DEV_YEAR_S "2012"
 
-MAJOR_VERSION db 0
-MINOR_VERSION db 8
+MAJOR_VERSION db 1
+MINOR_VERSION db 1
 
-ImageName 	db	"MAIN    SYS", 00h
-sinit	 	db	"SINIT   SYS", 00h
-Driver		db	"SYSTEM  SYS", 00h
-config		db  "CONFIG  CFG", 00h
+Sysinit     db  "SYSINIT SYS", 00h
+Driver      db  "SYSTEM  SYS", 00h
 Strings     db  "STRINGS SYS", 00h
-SYSTEMROOT	db	"SYSTEM     "
 
 %endif

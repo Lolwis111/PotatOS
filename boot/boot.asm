@@ -8,6 +8,9 @@ start:
 %include "defines.asm"
 %include "floppy/lba.asm"
 
+%define FAT_SIZE 0x7BF0
+%define DATA_SECTOR 0x7BF2
+
 ; ==============================
 ; prints a string
 ; si <= string address
@@ -108,11 +111,11 @@ LoadRoot:
 
     movzx ax, byte [NumberOfFATS]
     mul word [SectorsPerFAT] ; FatSizeS = NumberOfFATS * SectorsPerFAT 
-    mov word [fat_size], ax  ; save FatSizeS for later
+    mov word [FAT_SIZE], ax  ; save FatSizeS for later
     add ax, word [ReservedSectors] ; Root = FatSizeS + ReservedSectors
     
-    mov word [dataSector], ax ; data sector = ReservedSectors + FatSizeS + RootSizeS
-    add word [dataSector], cx
+    mov word [DATA_SECTOR], ax ; data sector = ReservedSectors + FatSizeS + RootSizeS
+    add word [DATA_SECTOR], cx
     
     ; after calculating size load root at 0x00007E00
     mov ebx, 0x0200
@@ -146,7 +149,7 @@ LoadFAT:
     
     mov word [cluster], dx
     
-    mov cx, word [fat_size] ; fat size
+    mov cx, word [FAT_SIZE] ; fat size
     mov ax, word [ReservedSectors] ; fat is right behind the reserved sectors (usually sector 2)
     
     mov ebx, 0x0200 ; load the fat at 0x00007E00
@@ -169,7 +172,7 @@ loadFile:
     
     mov ax, word [cluster] ; calculate witch cluster to load
     call Cluster2LBA
-    add ax, word [dataSector] ; put dataSector offset on
+    add ax, word [DATA_SECTOR] ; put dataSector offset on
     
     movzx cx, byte [SectorsPerCluster] ; clusters in fat12 can have up to 8 sectors so adjust that here
     call ReadSectors ; (ReadSectors advances ebx, so we dont have to care about this here)
@@ -212,9 +215,7 @@ fileNotFound:
     int 0x16
     int 0x19 ; and reboot the system
 
-dataSector  dw 0x0000
 cluster     dw 0x0000
-fat_size    dw 0x0000
 ImageName   db "LOADER  SYS"
 msgLoading  db 0x0D, 0x0A, "Loading Bootimage..."
 msgNewLine  db 0x0D, 0x0A, 0x00

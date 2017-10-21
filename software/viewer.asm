@@ -1,7 +1,6 @@
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Stellt ein einfaches Programm zur Bild-      %
-; % anzeige dar. Kann *.llp Bilder anzeigen.     %
-; % TODO: LLP Dokumentation                      %
+; % this is a simple program to view LLP-images  %
+; % TODO: documentation on LLP                   %
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %include "defines.asm"
@@ -83,8 +82,8 @@ exitV:
     int 0x10
     
 .clear_screen:
-    mov ax, VIDEO_TEXT_SEGMENT
-    mov gs, ax
+    mov ax, VIDEO_TEXT_SEGMENT ; override the screen in SYSTEM_COLOR
+    mov gs, ax				   ; and with spaces
     xor bx, bx
     mov cx, SCREEN_BUFFER_SIZE
     mov al, byte [SYSTEM_COLOR]
@@ -143,10 +142,10 @@ printImage:
     xor dx, dx 
     
 .pixelLoop:
-    movzx cx, byte [fs:bp]
-    mov al, byte [fs:bp+1]
+    movzx cx, byte [fs:bp] ; get the amount
+    mov al, byte [fs:bp+1] ; get the color
     add dx, cx
-    .compressLoop:
+    .compressLoop: ; draw color al cx times
         mov byte [gs:bx], al
         inc bx
         loop .compressLoop

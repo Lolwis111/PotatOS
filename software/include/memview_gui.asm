@@ -127,6 +127,7 @@ drawInputBox:
 
 ;================================================
 ; Zeichnet eine Box mit Rahmen
+; Zeichnet Box mit dem Rahmen (4, 4) - (64, 19)
 ;================================================
 drawBox:
 	push si

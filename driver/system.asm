@@ -11,28 +11,28 @@
 main:
     cmp ah, 0x00        ; exit program and start terminal
     je exitProgram
-    
+
     cmp ah, 0x01        ; print \0 terminated string
     je printString
-    
+
     cmp ah, 0x02        ; compare two strings
     je compareString
-    
+
     cmp ah, 0x03        ; convert int to string
     je intToStr
-    
+
     cmp ah, 0x04        ; read string from keyboard
-    je readLine 
-    
+    je readLine
+
     cmp ah, 0x05        ; load file
     je loadFile
-    
+
     cmp ah, 0x06        ; get time as string
     je getTimeString
-    
+
     cmp ah, 0x07        ; get date as string
     je getDateString
-    
+
     cmp ah, 0x08        ; system version
     je getSystemVersion
 
@@ -40,10 +40,10 @@ main:
     je stringToInt
 
     cmp ah, 0x0A        ; delete file
-    je deleteFile    
+    je deleteFile
 
     cmp ah, 0x0B        ; random number generator
-    je random           
+    je random
 
     cmp ah, 0x0C        ; get cpu info
     je hardwareInfo
@@ -53,60 +53,60 @@ main:
 
     cmp ah, 0x0E        ; set cursor position
     je setCursorPosition
-   
+
     cmp ah, 0x0F        ; get cursor positon
     je getCursorPosition
-   
+
     cmp ah, 0x10        ; print a single character
     je printCharC
-   
+
     cmp ah, 0x11        ; save root dir
     je getRootDir
-    
+
     cmp ah, 0x12        ; load root dir
     je setRootDir
-    
+
     cmp ah, 0x13        ; look for a file
     je findFile
-    
+
     cmp ah, 0x14        ; write a file
     je writeFile
-    
+
     cmp ah, 0x15        ; convert byte to hex-string
     je decToHex
 
     cmp ah, 0x16        ; convert bcd-byte to int-byte
     je bcdToInt
-    
+
     cmp ah, 0x17        ; start a process
     je startProgram
-    
+
     ; all new 32-bit ready string-int operation
     cmp ah, 0xAA
     je intToString32
-    
+
     iret
 
 %include "fat12.asm"
 %include "common.asm"
 %include "language.asm"
-    
+
 col db 0x00
 row db 0x08
-    
+
 ; ======================================================
 ; exits the current program and jumps back to cli
 ; ======================================================
 exitProgram:
     mov word [ERROR_CODE], bx
-    
+
     mov dh, byte [row]  ; move cursor to the left
-    mov dl, 0x00        
+    mov dl, 0x00
     call private_setCursorPosition
-    
+
     push ds ; save the segments
     push es
-    
+
     ; mov ax, 0x8000 ; we loaded command.bin at 0x8000:0x0000
     ; mov ds, ax
     ; xor si, si
@@ -114,16 +114,16 @@ exitProgram:
     ; mov di, 0x9000 ; so just copy it down into the program memory
     ; mov cx, 2048
     ; rep movsw
-    
+
     ; pop es ; restore the segments
     ; pop ds
     ; mov ax, -1
     ; jmp SOFTWARE_BASE
-    
+
     mov dx, .fileName   ; just start command.bin and go back to the terminal
     mov di, -1
     jmp startProgram
-    
+
 .fileName db "COMMAND BIN", 0x00
 ; ======================================================
 
@@ -132,12 +132,12 @@ exitProgram:
 ; DX <= filename
 ; DI <= argument string to pass
 ; TODO: for some reason the "file not found"-code is skipped
-; 		and nothing happens if a file is not present
+;       and nothing happens if a file is not present
 ; ======================================================
 startProgram:
     cmp di, -1
     je .noArgs
-    
+
     mov si, di
     mov di, .argumentTemp
 
@@ -163,20 +163,20 @@ startProgram:
     jne .noExecutableError
     cmp byte [si+10], 'N'
     jne .noExecutableError
-    
+
     push si
-    
+
     mov bx, SOFTWARE_BASE ; load the program into memory
     xor bp, bp
     call private_loadFile
-    
+
     pop si
-    
-    cmp ax, 0               ; check if that worked    
-    jne .trySystemDir 
-    
+
+    cmp ax, 0               ; check if that worked
+    jne .trySystemDir
+
     add esp, 6  ; remove stack pointers created by interrupt instruction, we do not need this
-    
+
     mov ax, .argumentTemp
     jmp SOFTWARE_BASE   ; start programm
 .noExecutableError:
@@ -189,11 +189,11 @@ startProgram:
     push ds
     mov ax, 0x8000
     mov ds, ax
-    
+
 .fileLoop: ; look for the file in the system/ dir which hardcoded is loaded at 0x8000:0x0000
     cmp byte [ds:si], 0x00
     je .error
-    
+
     push si
     push di
     mov cx, 11
@@ -201,24 +201,24 @@ startProgram:
     je .fileFound
     pop di
     pop si
-    
+
     add si, 32
     jmp .fileLoop
 .fileFound:
     pop di
     pop si
     pop ds
-    
+
     mov bx, SOFTWARE_BASE ; load the program into memory
     xor bp, bp
     call ReadFile.customDirectory
     jc .error
-    
+
     add esp, 6  ; remove stack pointers created by interrupt instruction, we do not need this
-    
+
     mov ax, .argumentTemp
     jmp SOFTWARE_BASE   ; start programm
-    
+
 .error:
     stc
     mov ax, 0x02
@@ -238,47 +238,47 @@ printString: ; public wrapper
 private_printString:
     mov si, dx  ; copy string to source register
     mov dl, bl  ; copy color
-    push bx    
+    push bx
 .charLoop: ; read the string char by char and only stop when \0 appears
-    lodsb       
-    test al, al 
+    lodsb
+    test al, al
     jz .end
-    
+
     cmp al, '\'         ; check if an escape character was entered (\n, \r, etc.)
     je .checkEscapeChar
-    
+
 .print:
     mov dh, al
     call printChar ; each char is printed seperatly
-    
+
     jmp .charLoop
-    
+
 .checkEscapeChar:
     lodsb
-    
+
     test al, al
     jz .end
-    
-    cmp al, '\' 
+
+    cmp al, '\'
     je .slashBackslash ; \\ justs prints a single \
-    
+
     cmp al, 'n' ; \n is a newline
     je .slashN
-    
+
     cmp al, 'r' ; \r is carriage return
     je .slashR
 
     cmp al, 'b' ; \b is back
     je .backSlash
-    
+
     cmp al, 't' ; \t is horizontal tabulator
     je .tabSlash
-    
+
     cmp al, '0' ; \0 is end of string (not sure if this works tho)
     je .slash0
-    
+
     jmp .charLoop
-    
+
 .slashBackslash:
     mov al, '\'
     jmp .print
@@ -297,26 +297,26 @@ private_printString:
 .tabSlash:
     mov al, 0x09
     jmp .print
-    
+
 .end:
     pop bx ; adjust cursor position at the end
     mov dh, byte [row]
     mov dl, byte [col]
     call private_setCursorPosition
     ret
-; ======================================================    
+; ======================================================
 
-    
-; ======================================================    
+
+; ======================================================
 printCharC: ; public wrapper
     call printChar
     iret
-    
+
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 printChar:
     push dx
     mov ax, VIDEO_MEMORY_SEGMENT ; calculate address in memory that belongs to cursor positon
-    mov gs, ax                
+    mov gs, ax
     movzx bx, byte [col]   ; forumla: (x * 2) + (y * SCREEN_WIDTH)
     movzx ax, byte [row]
     shl bx, 1
@@ -324,32 +324,32 @@ printChar:
     mul cx
     add bx, ax
     pop dx
-    
+
     cmp dh, 0x0D ; \n and \r are handled differenz
     je .cr
     cmp dh, 0x0A
     je .lf
-    
+
     mov byte [gs:bx], dh    ; write the char and the color to vga memory
     mov byte [gs:bx+1], dl
     add bx, 2
-    
+
     inc byte [col]
-    
+
     cmp byte [col], 160 ; when we reach the right end of the screen we goto to the next line
-                        ; 
-    je .newLine 
+                        ;
+    je .newLine
     ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .newLine:
     mov byte [col], 0x00 ; move cursor to the left border
     inc byte [row]       ; increment linenumber
-    
+
     cmp byte [row], 24
     jae .moveBuffer     ; when we are at the very bottom we move the whole buffer one row up
-    
+
     ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -372,11 +372,11 @@ printChar:
     push si
     mov byte [row], 23  ; copy the whole vga memory (beginning at line 2)
     mov ax, es          ; one line up
-    
+
     push ax             ; the very bottom row is filled with spaces
     mov ax, ds
     push ax
-    
+
     mov ax, VIDEO_MEMORY_SEGMENT ; move the screen memory so that everything moves on line up
     mov es, ax
     mov ds, ax
@@ -384,7 +384,7 @@ printChar:
     mov di, 0x00
     mov cx, (SCREEN_BUFFER_SIZE - SCREEN_WIDTH)
     rep movsw
-    
+
     pop ax
     mov ds, ax
     pop ax
@@ -392,7 +392,7 @@ printChar:
     pop si
     ret
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; ======================================================    
+; ======================================================
 
 
 ; ======================================================
@@ -401,16 +401,16 @@ printChar:
 ; ======================================================
 private_setCursorPosition:
 
-    cmp dh, 0		; check that y axis is in the range of 0-24
+    cmp dh, 0       ; check that y axis is in the range of 0-24
     jb .clampY0
     cmp dh, 24
     ja .clampY24
-    
-    cmp dl, 0		; check that x axis is in the range of 0-79
+
+    cmp dl, 0       ; check that x axis is in the range of 0-79
     jb .clampX0
     cmp dl, 79
     ja .clampX79
-    
+
 .clampOK:
 
     movzx ax, dh
@@ -426,20 +426,20 @@ private_setCursorPosition:
     mov al, 0x0F
     mov dx, 0x3D4
     out dx, al
-    
+
     mov ax, bx
     mov dx, 0x3D5
     out dx, al
-    
+
     mov al, 0x0E
     mov dx, 0x3D4
     out dx, al
-    
+
     mov ax, bx
     shr ax, 8
     mov dx, 0x3D5
     out dx, al
-    
+
     ret
 .clampY0:
     mov dh, 0x00
@@ -453,7 +453,7 @@ private_setCursorPosition:
 .clampX79:
     mov dl, 79
     jmp .clampOK
-    
+
 setCursorPosition: ; public wrapper
     call private_setCursorPosition
     iret
@@ -463,7 +463,7 @@ setCursorPosition: ; public wrapper
 ; ======================================================
 getCursorPosition:
     mov dh, byte [row] ; return the cursor positon
-    mov dl, byte [col] ; 
+    mov dl, byte [col] ;
     iret
 ; ======================================================
 
@@ -480,7 +480,7 @@ private_loadFile: ; basically a wrapper for fat12.asm
     mov si, dx
     call ReadFile ; call the fat12 driver
     ret
-    
+
 loadFile: ; public wrapper
     call private_loadFile
     iret
@@ -528,10 +528,10 @@ setRootDir:
 ; ======================================================
 deleteFile:
     ; TODO: rework delete file
-    
+
     ; mov si, dx
     ; call DeleteFile
-    
+
     iret
 ; ======================================================
 
@@ -545,7 +545,7 @@ deleteFile:
 findFile:
     mov si, dx
     call FindFile ; call fat12 driver
-    
+
     iret
 ; ======================================================
 
@@ -561,24 +561,24 @@ readLine:
     mov word [.counter], 0x00 ; counts how many chars were read
 .kbLoop:
     xor ax, ax              ; wait for key press
-    int 0x16  
-    
+    int 0x16
+
     test al, al             ; al=0 => special key
     jz .kbLoop
 
     cmp al, 0x0D            ; Enter?
     je .return              ; yes, return
-    
-    cmp al, 0x08            ; Backspace?    
+
+    cmp al, 0x08            ; Backspace?
     je .back                ; yes, delete last char
-    
+
     inc word [.counter]     ; increment counter
     cmp word [.counter], cx ; if max_chars is reached, do not accept more chars
     jg .kbLoop
-    
+
     cmp byte [SYSTEM_KB_STATUS], 0 ; check if y and z should be switched
     je .store
-    
+
     cmp al, 'z' ; if yes => switch
     je .y
     cmp al, 'y'
@@ -587,9 +587,9 @@ readLine:
     je .Y
     cmp al, 'Y'
     je .Z
-    
+
     jmp .store ; save the char in the dest string
-    
+
 .y:
     mov al, 'y'
     jmp .store
@@ -604,54 +604,54 @@ readLine:
 .store: ; saves the char in dest string and prints it on the screen
         ; also refreshes all relevant addresses
     stosb               ; save char
-    
+
     pusha
-    
+
     mov dh, al
     mov dl, byte [ds:SYSTEM_COLOR]
     call printChar
     mov dl, byte [col]
     mov dh, byte [row]
     call private_setCursorPosition
-    
+
     popa
-    
+
     jmp .kbLoop         ; read the next char
-    
+
 .back:
     cmp word [.counter], 0x00; decrement counter, but only delete the chars that were entered
     jbe .kbLoop
     dec word [.counter]
-    
+
     pusha
-    
+
     dec byte [col]      ; move on char back
-    
+
     mov dh, 0x00
-    mov dl, byte [ds:SYSTEM_COLOR] 
+    mov dl, byte [ds:SYSTEM_COLOR]
     call printChar
-    
+
     dec byte [col] ; move cursor back
     mov dh, byte [row]
     mov dl, byte [col]
     call private_setCursorPosition
-    
+
     popa
-    
+
     ; Variable
     dec di              ; move on char back
-    mov al, 0x00            
+    mov al, 0x00
     stosb               ; override with zero
-    dec di              
-    
+    dec di
+
     jmp .kbLoop
-    
+
 .return:
     xor al, al
     stosb               ; strings are \0 terminated
     mov cx, word [.counter]
     iret                ; return
-    
+
 .counter dw 0x00
 
 ; ======================================================
@@ -664,8 +664,8 @@ compareString:
     pusha
     xor al, al
 .Loop:
-    lodsb	; load on char in SI
-    scasb	; look for that char in DI
+    lodsb   ; load on char in SI
+    scasb   ; look for that char in DI
     jne .NotEqual ; if the characters are not equal the strings are not equal
     test al, al ; if the char is zero the string reached its end
     jnz .Loop
@@ -693,35 +693,35 @@ intToStr: ; divide by 10, remainder is digit, rest of number gets divided by 10 
     mov di, dx
     xor cx, cx
     xor bp, bp
-    
+
     cmp ax, 0x00
     jns .digit1
-    
+
     neg ax
     mov byte [di], '-'
     inc di
-    
-.digit1:        
+
+.digit1:
     xor dx, dx
     mov bx, 10000
     div bx              ; 0 0000
-    
+
     cmp al, 0x00
     jz .zero1
-    
+
     add al, 48
     stosb
     jmp .digit2
-    
+
 .zero1:
     mov bp, 0x01
-    
+
 .digit2:
     mov ax, dx
     mov bx, 1000
     xor dx, dx
     div bx              ; 0 000
-    
+
     cmp al, 0x00
     jz .ok2
 .nok2:
@@ -734,8 +734,8 @@ intToStr: ; divide by 10, remainder is digit, rest of number gets divided by 10 
     jnz .nok2
 .zero2:
     mov bp, 0x01
-    
-    
+
+
 .digit3:
     mov ax, dx
     mov bx, 100
@@ -749,26 +749,26 @@ intToStr: ; divide by 10, remainder is digit, rest of number gets divided by 10 
     stosb
     xor bp, bp
     jmp .digit4
-.ok3:   
+.ok3:
     cmp bp, 0x01
     jnz .nok3
 .zero3:
     mov bp, 0x01
 
-    
+
 .digit4:
     mov ax, dx
     mov bx, 10
     xor dx, dx
     div bx              ; 0 0
-    
+
     cmp al, 00h
     jz .ok4
 .nok4:
     add al, 48
     stosb
     jmp .digit5
-    
+
 .ok4:
     ; cmp byte [.status], 01h
     cmp bp, 0x01
@@ -793,8 +793,8 @@ intToStr: ; divide by 10, remainder is digit, rest of number gets divided by 10 
 ; ======================================================
 intToString32:
     pusha
-    
-    mov si, dx	; copy the string
+
+    mov si, dx  ; copy the string
     mov eax, ecx ; copy our integer
 
     test eax, eax ; check if the integer is zero
@@ -818,8 +818,8 @@ intToString32:
 
     cmp al, 0x00
     jne .else
-    cmp byte [.leadingZero], 0x01 ; we dont need leading zeros in the string, 
-    jne .else					  ; so we skip every zero until we find the first not-zero digit
+    cmp byte [.leadingZero], 0x01 ; we dont need leading zeros in the string,
+    jne .else                     ; so we skip every zero until we find the first not-zero digit
 
     mov eax, edx
     jmp .div10
@@ -827,7 +827,7 @@ intToString32:
     mov byte [si], al
     add byte [si], 48 ; convert digit to ascii
     inc si
-    mov byte [.leadingZero], 0x00 
+    mov byte [.leadingZero], 0x00
     mov eax, edx
 .div10:
     push eax
@@ -871,7 +871,7 @@ getTimeString:
     push cx
     mov al, ch
     call private_bcdToInt
-    
+
     mov bl, 10 ; convert the numbers from BCD to Integer and for Integer to string
     div bl
     add al, 48
@@ -879,13 +879,13 @@ getTimeString:
     mov al, ah
     add al, 48
     stosb
-    
+
     inc di
     pop cx
-    
+
     mov al, cl
     call private_bcdToInt
-    
+
     mov bl, 10
     div bl
     add al, 48
@@ -893,7 +893,7 @@ getTimeString:
     mov al, ah
     add al, 48
     stosb
-    
+
     popa
     mov dx, .timeStr
     iret
@@ -910,12 +910,12 @@ getDateString:
     pusha
     mov ah, 0x04
     int 0x1A ; get the date from bios
-    mov di, .dateStr 
+    mov di, .dateStr
     ; CH century
     ; CL year
     ; DH month
     ; DL day
-    
+
     push cx ; convert the digits from BCD to Integers and store them in the string
     push dx
     mov al, dl
@@ -927,9 +927,9 @@ getDateString:
     mov al, ah
     add al, 48
     stosb
-    
+
     inc di
-    
+
     pop dx
     mov al, dh
     call private_bcdToInt
@@ -940,9 +940,9 @@ getDateString:
     mov al, ah
     add al, 48
     stosb
-    
+
     inc di
-    
+
     pop cx
     push cx
     mov al, ch
@@ -954,7 +954,7 @@ getDateString:
     mov al, ah
     add al, 48
     stosb
-    
+
     pop cx
     mov al, cl
     call private_bcdToInt
@@ -965,24 +965,24 @@ getDateString:
     mov al, ah
     add al, 48
     stosb
-    
+
     popa
     mov dx, .dateStr
 
     iret
-    
+
 .dateStr db "00.00.0000", 0x00
 ; ======================================================
 ; al => BCD Byte
 ; ax <= Integer
 private_bcdToInt:
-    mov bl, al          
+    mov bl, al
     and ax, 0x0F
-    mov cx, ax          
-    shr bl, 4           
+    mov cx, ax
+    shr bl, 4
     mov al, 10
-    mul bl              
-    add ax, cx          
+    mul bl
+    add ax, cx
     ret
 bcdToInt:
     call private_bcdToInt
@@ -1006,44 +1006,44 @@ getSystemVersion:
 stringToInt:
     xor ecx, ecx ; result
     mov si, dx
-    
+
     xor bl, bl ; sign
-    
+
     cmp byte [si], '-'
     jne .loop1
-    
+
     inc si
     inc bl
-    
+
 .loop1: ; loop through all the characters, if they are digits -> result = result * 10; result = result + digit
     cmp byte [ds:si], 0x00
     je .done ; when \0, \n or \r occours we stop (succes)
 
     cmp byte [ds:si], 0x0D
     je .done
-    
+
     cmp byte [ds:si], 0x0A
     je .done
-    
+
     cmp byte [ds:si], '0'
     jb .invalidCharError ; any other character is an error
     cmp byte [ds:si], '9'
     ja .invalidCharError
-    
+
     shl ecx, 1
     mov eax, ecx
     shl ecx, 2
     add ecx, eax ; multiply by 10
-    
+
     movzx eax, byte [ds:si]
     sub eax, 48 ; get digit value from ascii value
-    
+
     add ecx, eax ; add the digit
     jc .overflowError ; check if we overflowed
-    
+
     inc si
     jmp .loop1
-    
+
 .invalidCharError:
     mov eax, -1
     xor ecx, ecx
@@ -1069,9 +1069,9 @@ stringToInt:
 decToHex:
     pusha
     pushf
-    
+
     ; every byte can be represented by 2 hexadecimal digits
-    
+
     mov ax, cx
     mov si, dx
     xor ah, ah
@@ -1089,10 +1089,10 @@ decToHex:
     mov byte [ds:si], al
     inc si
     mov byte [ds:si], 0x00 ; end string with \0
-    
+
     popf
     popa
-    
+
     iret
 .hexChar db "0123456789ABCDEF"
 ; ======================================================
@@ -1110,19 +1110,19 @@ private_hexToDec:
     mov cl, al
     cmp cl, '0'         ; anything below 0 is invalid (check ascii map)
     jb .invalidDigit
-    
+
     cmp cl, '9'         ; anything from 0-9 is a valid digit
     ja .checkAtoF       ; chars greater than 9 are letters (which can be valid)
-    
+
     sub cl, '0'         ; get the decimal value from the ascii char
     xor ax, ax          ; no error
     ret                 ; return
 .checkAtoF:             ; check uppercase letters
     cmp cl, 'A'         ; everyting below A is invalid
-    jb .invalidDigit    
+    jb .invalidDigit
     cmp cl, 'F'         ; everything above F may be lowercase letter
     ja .checkatof
-    
+
     sub cl, 'A'         ; get decimal value from ascii char
     xor ax, ax          ; no error
     ret                 ; return
@@ -1131,7 +1131,7 @@ private_hexToDec:
     jb .invalidDigit    ; everything else is invalid
     cmp cl, 'f'
     ja .invalidDigit
-    
+
     sub cl, 'a'         ; get decimal value
     clc                 ; no error
     ret                 ; return
@@ -1140,7 +1140,7 @@ private_hexToDec:
     stc                 ; an error occured
     ret                 ; return
 ; ======================================================
-    
+
 
 ; ======================================================
 ; converts the first two characters of the string into
@@ -1152,24 +1152,24 @@ hexToDec:
 ;    xor cx, cx          ; this is the result
 ;    mov al, byte [ds:si]   ; get the first char
 ;    inc si              ; move to the next char
-    
+
 ;    call private_hexToDec   ; try to convert the first char
 ;    cmp ax, -1              ; occured an error?
 ;    je .invalidDigit        ; if yes error out
-    
+
 ;    add bx, cx              ; else add the value
-    
+
 ;    shl bx, 4               ; multiply the result by 16 (since hexadecimal is base 16)
-    
+
 ;    mov al, byte [ds:si]       ; get the next char
 ;    call private_hexToDec   ; try to convert the second char
 ;    cmp ax, -1              ; occured an error?
 ;    je .invalidDigit        ; if yes error out
-    
+
 ;    add bx, cx              ; else add the value
 ;    mov cx, bx              ; copy the value to result register
 ;    xor ax, ax              ; no error
-    
+
 ;    iret                    ; return
 ;.invalidDigit:
 ;    xor cx, cx              ; clear the result
@@ -1179,11 +1179,11 @@ hexToDec:
     mov si, dx
     xor ax, ax
     xor bx, bx
-   mov al, byte [ds:si] 
+   mov al, byte [ds:si]
    inc si
-    
+
    ; check every possible case manually (TODO: make this less retarded)
-    
+
    cmp al, 48  ; digits 0-9
    je .num16
    cmp al, 49
@@ -1226,7 +1226,7 @@ hexToDec:
 .noc:
    mov ax, -1
    iret
-    
+
 .num16:
    sub ax, 48
    shl ax, 4
@@ -1271,7 +1271,7 @@ hexToDec:
    je .char161
    cmp al, 70
    je .char161
-    
+
    cmp cx, 2
    je .noc2
    mov cx, 2
@@ -1335,26 +1335,26 @@ hardwareInfo:
     mov dword [.vendorString], ebx
     mov dword [.vendorString+4], edx
     mov dword [.vendorString+8], ecx
-    
+
     mov eax, 0x80000000
     cpuid
     cmp eax, 0x80000004
     jnge .return
-    
+
     mov eax, 0x80000002
     cpuid
     mov dword [.modelString], eax
     mov dword [.modelString+4], ebx
     mov dword [.modelString+8], ecx
     mov dword [.modelString+12], edx
-    
+
     mov eax, 0x80000003
     cpuid
     mov dword [.modelString+16], eax
     mov dword [.modelString+20], ebx
     mov dword [.modelString+24], ecx
     mov dword [.modelString+28], edx
-    
+
     mov eax, 0x80000004
     cpuid
     mov dword [.modelString+32], eax
