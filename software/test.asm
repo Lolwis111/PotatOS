@@ -1,3 +1,5 @@
+; VERY BASIC TEST FOR 'TrimLeft'
+
 %include "defines.asm"
 
 [BITS 16]
@@ -6,37 +8,44 @@
 jmp start
 
 %include "functions.asm"
+%include "strings.asm"
+%include "language.asm"
 
-fileName db "TEST1   DIR", 0x00
-newLine db "\r\n", 0x00
+str1 db "            STRING 1", 0x00
+str2 db "  STRING 2", 0x00
+str3 db 0x0A, 0x0D, 0x0A, 0x0D, 0x0A, 0x0D, "STRING 3", 0x00
+str4 db "STRING 4", 0x00
 
 start:
     
-    loadfile fileName, directory
-    cmp ax, -1
-    je .error
+    print NEWLINE
     
-    mov si, directory
-.fileLoop:
-    cmp byte [si], 0x00
-    je .directoryDone
+    mov si, str1
+    call TrimLeft
     
-    mov di, fileName
-    mov cx, 11
-    rep movsb
+    print si
     
-    push si
-    print newLine
-    print fileName
-    pop si
+    print NEWLINE
     
-    add si, 21
-    jmp .fileLoop
-.directoryDone:
-    print newLine
-
+    mov si, str2
+    call TrimLeft
+    
+    print si
+    
+    print NEWLINE
+    
+    mov si, str3
+    call TrimLeft
+    
+    print si
+    
+    print NEWLINE
+    
+    mov si, str4
+    call TrimLeft
+    
+    print si
+    
+    print NEWLINE
+    
     EXIT EXIT_SUCCESS
-.error:
-    EXIT EXIT_FAILURE
-    
-directory db 0x00

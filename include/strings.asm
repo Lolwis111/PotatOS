@@ -7,11 +7,11 @@
 %ifndef _STRINGS_INC_
 %define _STRINGS_INC_
 
-; ==============================
+; ==========================================
 ; convert 'TEST.BIN' to 'TEST    BIN'
 ; si => human filename
 ; di <= FAT12 filename
-; ==============================
+; ==========================================
 AdjustFileName:
 	xor cx, cx
 .copy:
@@ -43,14 +43,14 @@ AdjustFileName:
 .error:
 	mov ax, -1
 	ret
-; ==============================
+; ==========================================
 
 
-; ==============================
+; ==========================================
 ; convert "TEST" to "TEST       "
 ; si => human directory name
 ; di <= FAT12 directory name
-; ==============================
+; ==========================================
 AdjustDirName:
 	xor cx, cx
 .copy:
@@ -77,13 +77,13 @@ AdjustDirName:
 .error:
 	mov ax, -1
 	ret
-; ==============================
+; ==========================================
 
 
-; ==============================
+; ==========================================
 ; convert string to uppercase letters
 ; SI => String
-; ==============================
+; ==========================================
 UpperCase:
 .loop1:
 	cmp byte [si], 00h
@@ -103,14 +103,14 @@ UpperCase:
 .noatoz:
 	inc si
 	jmp .loop1
-; ==============================
+; ==========================================
 
 
-; ==============================
+; ==========================================
 ; SI -> String
 ; AL -> Splitter
 ; CX <- length
-; ==============================
+; ==========================================
 StringLength:
 	push bx
 	push dx
@@ -119,7 +119,7 @@ StringLength:
 .charLoop:
 	cmp byte [si], al
 	je .ok
-	cmp byte [si], 00h
+	cmp byte [si], 0x00
 	je .noOk
 	inc si
 	inc cx
@@ -135,14 +135,14 @@ StringLength:
 	pop bx
 	xor cx, cx
 	ret
-; ==============================
+; ==========================================
 
 
-; ==============================
+; ==========================================
 ; looks for the very first space (to parse arguments)
 ; SI => String
 ; CX <= Index
-; ==============================
+; ==========================================
 fileNameLength:
 	push bx
 	push dx
@@ -169,21 +169,22 @@ fileNameLength:
 	ret
 	
 .noArgs		db "NO ARGUMENT", 0Dh, 0Ah, 00h
-; ==============================
+; ==========================================
 
 
-; =============================
+; ==========================================
 ; convert 'TEST    BIN' to
 ; 'TEST.BIN'
 ; SI <= FAT filename
 ; DI => human filename
-; =============================
+; ==========================================
 ReadjustFileName:
-    mov di, .newFileName
     pusha
+    
+    mov di, .newFileName
     mov cx, 8
 .scan: ; copy up to first space or 8 characters (whatever comes first)
-    cmp byte [si], 0x20
+    cmp byte [ds:si], 0x20
     je .return
     movsb
     loop .scan
@@ -195,9 +196,45 @@ ReadjustFileName:
     movsb       ; (extension)
     xor al, al  ; put \0 at the end
     stosb
+    
     popa
     ret
 .newFileName times 13 db 0x00
-; =============================
+; ==========================================
+
+
+; ==========================================
+; skip leading whitespaces
+; (spaces, \t, \n and \r)
+;
+; DS:SI => string
+; DS:SI <= trimmed string
+; ==========================================
+TrimLeft:
+	push ax
+	pushf
+	
+	cld
+.charLoop:
+	lodsb	; load a character
+	
+	; check if it is a whitespace (and if yes repeat this)
+	cmp al, 0x20 ; space
+	je .charLoop
+	cmp al, 0x08 ; tab
+	je .charLoop
+	cmp al, 0x0D ; \r
+	je .charLoop	
+	cmp al, 0x0A ; \n
+	je .charLoop
+	
+.return:    ; if the character is no whitespace we return
+	dec si  ; therefore we adjust si because lodsb increments si
+			; before we know if we actually need to skip or not
+	popf
+	pop ax
+	ret
+; ==========================================
+
 
 %endif
