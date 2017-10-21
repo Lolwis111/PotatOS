@@ -41,10 +41,10 @@
     int 0x21
 %endmacro
 
-%macro loadfile 2
+%macro loadfile 2 ; load file to BP:BX
     mov dx, %1
-	xor bx, bx
-	mov ebp, %2
+	xor bp, bp
+	mov bx, %2
 	mov ah, 0x05
 	int 0x21
 %endmacro 
@@ -70,8 +70,8 @@
 %endmacro
 
 %macro movecur 2
-    mov dl, %1
-    mov dh, %2
+    mov dl, %1 ; column (x)
+    mov dh, %2 ; row (y)
     mov ah, 0x0E
     int 0x21
 %endmacro
