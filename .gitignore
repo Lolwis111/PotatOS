@@ -29,3 +29,4 @@ Misc/strings.sys
 *.flp
 
 # do not include .builds file (only for local use)
+.builds
