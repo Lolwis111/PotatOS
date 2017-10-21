@@ -9,8 +9,8 @@
 
 ; ==========================================
 ; convert 'TEST.BIN' to 'TEST    BIN'
-; si => human filename
-; di <= FAT12 filename
+; DS:SI => human filename
+; ES:DI <= FAT12 filename
 ; ==========================================
 AdjustFileName:
 	xor cx, cx
@@ -30,7 +30,7 @@ AdjustFileName:
 	je .copyExtension
 	
 .addSpaces:
-	mov byte [di], ' '
+	mov byte [es:di], ' '
 	inc di
 	inc cx
 	cmp cx, 8
@@ -48,15 +48,15 @@ AdjustFileName:
 
 ; ==========================================
 ; convert "TEST" to "TEST       "
-; si => human directory name
-; di <= FAT12 directory name
+; DS:SI => human directory name
+; ES:DI <= FAT12 directory name
 ; ==========================================
 AdjustDirName:
 	xor cx, cx
 .copy:
 	lodsb
-	cmp al, 00h
-	je .extension
+	test al, al
+	jz .extension
 	
 	stosb
 	inc cx
@@ -67,7 +67,7 @@ AdjustDirName:
 	jl .addSpaces
 	
 .addSpaces:
-	mov byte [di], ' '
+	mov byte [es:di], ' '
 	inc di
 	inc cx
 	cmp cx, 11
@@ -82,19 +82,19 @@ AdjustDirName:
 
 ; ==========================================
 ; convert string to uppercase letters
-; SI => String
+; DS:SI => String
 ; ==========================================
 UpperCase:
 .loop1:
-	cmp byte [si], 00h
+	cmp byte [ds:si], 00h
 	je .return
 	
-	cmp byte [si], 'a'
+	cmp byte [ds:si], 'a'
 	jb .noatoz
-	cmp byte [si], 'z'
+	cmp byte [ds:si], 'z'
 	ja .noatoz
 	
-	sub byte [si], 20h
+	sub byte [ds:si], 20h
 	inc si
 	
 	jmp .loop1
@@ -107,7 +107,7 @@ UpperCase:
 
 
 ; ==========================================
-; SI -> String
+; DS:SI -> String
 ; AL -> Splitter
 ; CX <- length
 ; ==========================================
@@ -117,9 +117,9 @@ StringLength:
 	push bp
 	xor cx, cx
 .charLoop:
-	cmp byte [si], al
+	cmp byte [ds:si], al
 	je .ok
-	cmp byte [si], 0x00
+	cmp byte [ds:si], 0x00
 	je .noOk
 	inc si
 	inc cx
@@ -140,7 +140,7 @@ StringLength:
 
 ; ==========================================
 ; looks for the very first space (to parse arguments)
-; SI => String
+; DS:SI => String
 ; CX <= Index
 ; ==========================================
 fileNameLength:
@@ -175,8 +175,8 @@ fileNameLength:
 ; ==========================================
 ; convert 'TEST    BIN' to
 ; 'TEST.BIN'
-; SI <= FAT filename
-; DI => human filename
+; DS:SI <= FAT filename
+; ES:DI => human filename
 ; ==========================================
 ReadjustFileName:
     pusha
