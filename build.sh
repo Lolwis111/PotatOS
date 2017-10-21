@@ -64,11 +64,6 @@ if [ "$1" = "clean" ] ; then
     exit
 fi
 
-if [ "$1" == "experimental" ] ; then
-    echo "compiling experimental 32-bit components"
-    make -C experimental/
-fi
-
 echo "creating language.asm"
 
 if [ ! -e "./lang/$language" ] ; then
@@ -163,10 +158,7 @@ cp software/*.bin tmp-loop/system/ # copy programms
 echo "> copying resources"
 cp -r misc/* tmp-loop/ # copy resources
 mv tmp-loop/strings.sys tmp-loop/system/
-if [ "$1" == "experimental" ] ; then
-    echo "> installing 32-bit components"
-    cp experimental/*.bin tmp-loop/system/
-fi
+
 sleep 0.2 # wait a moment to make sure everything is written
 
 echo "> release image"
