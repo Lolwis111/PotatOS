@@ -11,6 +11,9 @@ stringToInt:
     
     call TrimLeft ; skip white spaces prefixing the string
     
+    cmp byte [ds:si], 0x00 ; if the first byte is \0 its not a valid integer
+    je .invalidCharError
+    
     xor bl, bl ; sign = positive
     
     cmp byte [ds:si], '-' ; check for minus sign

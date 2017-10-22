@@ -9,11 +9,11 @@ language="english" # language to create this in, check Lang/ for available langu
 LIST_FILE=false
 NASM_FLAGS=" -Ox -f bin " # just flags for assembler, make sure you keep '-f bin'
 
-if [ "`whoami`" != "root" ] ; then # check if script has root rights
-	echo "  You have to lunch this as root!"
-    echo "  (loopback mounting is a root-only service!)"
-	exit
-fi
+#if [ "`whoami`" != "root" ] ; then # check if script has root rights
+#	echo "  You have to lunch this as root!"
+#    echo "  (loopback mounting is a root-only service!)"
+#	exit
+#fi
 
 buildCounter=$(cat .builds)
 
@@ -62,6 +62,11 @@ cd ..
 if [ "$1" = "clean" ] ; then
     echo -e "\e[92mDone!\e[39m"
     exit
+fi
+
+if [ "$1" == "experimental" ] ; then
+    echo "compiling experimental 32-bit components"
+    make -C experimental/
 fi
 
 echo "creating language.asm"
@@ -149,16 +154,22 @@ mkdir tmp-loop/ || exit # create new mount point
 mount -o loop -t msdos $output_image_name tmp-loop/ || exit
 
 mkdir tmp-loop/system/
+mkdir tmp-loop/tests/
 
 cp loader/loader.sys tmp-loop/ # copy system
-cp README tmp-loop/system/readme.txt
+cp README tmp-loop/readme.txt
 cp driver/*.sys tmp-loop/system/ # copy the drivers
 cp software/*.bin tmp-loop/system/ # copy programms
+
+cp tests/*.bin tmp-loop/tests/
 
 echo "> copying resources"
 cp -r misc/* tmp-loop/ # copy resources
 mv tmp-loop/strings.sys tmp-loop/system/
-
+if [ "$1" == "experimental" ] ; then
+    echo "> installing 32-bit components"
+    cp experimental/*.bin tmp-loop/system/
+fi
 sleep 0.2 # wait a moment to make sure everything is written
 
 echo "> release image"

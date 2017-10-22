@@ -20,11 +20,22 @@ str9 db "123456789", 0x00
 str10 db "1234567890", 0x00
 str11 db "4294967297", 0x00
 
+str12 db "  123", 0x00
+str13 db "    1234", 0x00
+str14 db 0x0A, 0x0D, 0x0A, 0x0D, "12345", 0x00
+str15 db "          123456", 0x00
+str16 db 0x0A, 0x0A, 0x0A, 0x0D, 0x0D, "    ", 0x0A, 0x0D, 0x0A, "1234567", 0x00
+
+str17 db "a"
+str18 db "abc"
+str19 db "   abc"
+str20 db "   1a2b3c"
+str21 db 0x00
+
 msgOk db "No errors."
 newLine db "\r\n", 0x00
 
 start:
-
     print newLine
 
     strtol str0
@@ -73,6 +84,46 @@ start:
     
     strtol str11
     cmp eax, 1
+    jne err
+    
+    strtol str12
+    cmp ecx, 123
+    jne err
+    
+    strtol str13
+    cmp ecx, 1234
+    jne err
+    
+    strtol str14
+    cmp ecx, 12345
+    jne err
+    
+    strtol str15
+    cmp ecx, 123456
+    jne err
+    
+    strtol str16
+    cmp ecx, 1234567
+    jne err
+    
+    strtol str17
+    cmp eax, -1
+    jne err
+    
+    strtol str18
+    cmp eax, -1
+    jne err
+    
+    strtol str19
+    cmp eax, -1
+    jne err
+    
+    strtol str20
+    cmp eax, -1
+    jne err
+    
+    strtol str21
+    cmp eax, -1
     jne err
     
     print msgOk
