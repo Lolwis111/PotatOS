@@ -1,6 +1,7 @@
 BEGIN CLI_WELCOME
 Willkommen bei PotatOS!
 Geben sie 'help' ein um Hilfe zu erhalten!
+
 END
 
 BEGIN HELP="
@@ -13,21 +14,26 @@ BEGIN HELP="
   cls                - Leert den Bildschirm
   rename <org> <new> - Benennt eine Datei um
   del <datei>        - Loescht eine Datei
+\r
 END
 
 BEGIN SHUTDOWN
 Der Computer kann jetzt ausgeschaltet werden.
+
 END
 
 BEGIN NO_PROGRAM
 Diese Datei kann nicht ausgefuehrt werden!
+
 END
 
 BEGIN LOAD_ERROR="\nDatei konnte nicht geladen werden!
+
 END
 
 BEGIN LS_LABEL_1
 Dateiname    Groesse (Bytes)
+
 END
 
 BEGIN LS_LABEL_2
@@ -36,30 +42,37 @@ END
 
 BEGIN WRITE_PROTECTION_ERROR
 Diese Datei ist schreibgeschuetzt!
+
 END
 
 BEGIN FILE_NOT_FOUND_ERROR
 Die Datei wurde nicht gefunden!
+
 END
 
 BEGIN NOT_A_DIRECTORY_ERROR
 Das ist kein Verzeichnis!
+
 END
 
 BEGIN FILE_ALREADY_EXISTS_ERROR
 Eine Datei mit dem Namen existiert bereits!
+
 END
 
 BEGIN OUT_OF_SPACE_ERROR
 Es ist nicht genuegend Speicherplatz verfuegbar!
+
 END
 
 BEGIN SOFTWARE_ERROR
 Das Programm hat einen Fehler verursacht und wurde beendet!
+
 END
 
 BEGIN INVALID_FILE_ERROR
 Dieses Programm kann diese Datei nicht anzeigen!
+
 END
 
 BEGIN COLOR_HELP
@@ -72,8 +85,10 @@ Farbe wird durch zwei Ziffern angegeben
 5 Magenta   D Hellmagenta
 6 Braun     E Hellgelb
 7 Weiss     F Hellweiss
+
 END
 
 BEGIN DIV_NULL_ERROR
 Teilen durch null ist nicht erlaubt!
+
 END

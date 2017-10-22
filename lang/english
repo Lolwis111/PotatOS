@@ -1,6 +1,7 @@
 BEGIN CLI_WELCOME
 Welcome to PotatOS!
 Type 'help' to get help!
+
 END
 
 BEGIN HELP
@@ -13,22 +14,27 @@ BEGIN HELP
   cls                - Clears the screen
   rename <org> <new> - Rename a file
   del <datei>        - Delete a file
+\r
 END
 
 BEGIN SHUTDOWN
 The computer can be powered off savely now.
+
 END
 
 BEGIN NO_PROGRAM
 This file can not be executed!
+
 END
 
 BEGIN LOAD_ERROR
 File could not be loaded!
+
 END
 
 BEGIN LS_LABEL_1
 Filename     Size (bytes)
+
 END
 
 BEGIN LS_LABEL_2
@@ -37,30 +43,37 @@ END
 
 BEGIN WRITE_PROTECTION_ERROR
 This file is write protected!
+
 END
 
 BEGIN FILE_NOT_FOUND_ERROR
 File could not be found!
+
 END
 
 BEGIN NOT_A_DIRECTORY_ERROR
 This is not a directory!
+
 END
 
 BEGIN FILE_ALREADY_EXISTS_ERROR
 A file with the same name already exists!
+
 END
 
 BEGIN OUT_OF_SPACE_ERROR
 There is not enough disk space!
+
 END
 
 BEGIN SOFTWARE_ERROR
 The program failed an was terminated!
+
 END
 
 BEGIN INVALID_FILE_ERROR
 This program can not view this file!
+
 END
 
 BEGIN COLOR_HELP
@@ -73,8 +86,10 @@ Colors are represented by two digits
 5 Pink      D Lightpink
 6 Brown     E Lightyellow
 7 White     F Lightwhite
+
 END
 
 BEGIN DIV_NULL_ERROR
 Division by zero is invalid!
+
 END

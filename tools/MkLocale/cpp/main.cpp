@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "../header/language.h"
-#include "../header/Strings.h"
 
 #define MAX_CHAR_COUNT 4096 // strings.sys is limited to 4096 bytes
 
@@ -52,62 +51,65 @@ int main(int argc, char **argv)
 
     std::vector<SYS_STRING> strings;
 
-	std::vector<std::string> lines;
+    std::vector<std::string> lines;
 
-	while(std::getline(inFile, line)) // read in all the lines of the file
-	{
-		lines.push_back(line);
-	}
+    while(std::getline(inFile, line)) // read in all the lines of the file
+    {
+        lines.push_back(line);
+    }
 
-	int charSum = 0;
+    int charSum = 0;
 
-	bool inBlock = false; 	// indicates if we're reading a BEGIN...END
-							// block right now
-	std::string currentName("");
-	std::string currentString("\\r\\n");	
-			
-	for(size_t i = 0; i < lines.size(); i++) 
-	{
-		if(!inBlock)
-		{
-			// check if the line starts with BEGIN
-			if(lines[i].compare(0, 6, "BEGIN ") == 0)
-			{
-				inBlock = true; // if yes we found a block
-				currentName = lines[i].substr(6); // 
-				currentString = "\\r\\n";
-			}
-			// else: ignore lines which are not in BEGIN...END blocks
-		}
-		else if(inBlock)
-		{
-			if(lines[i].compare(0, 3, "END") == 0)
-			{
-				inBlock = false;
-				
-				struct SYS_STRING str;
-				str.size = currentString.length();
-				str.value = currentString;
-				str.name = currentName;
-				
-				charSum += str.size;
-				
-				strings.push_back(str);
-			}
-			else
-			{
-				currentString += lines[i];
-				currentString += "\\r\\n";
-			}
-		}
-	}
-	
-	struct SYS_STRING newLine; // hardcoded string: Newline
-	newLine.size = 2;
-	newLine.value = "\\r\\n";
-	newLine.name = "NEWLINE";
+    bool inBlock = false;   // indicates if we're reading a BEGIN...END
+                            // block right now
+    std::string currentName("");
+    std::string currentString("\\r\\n");    
+            
+    for(size_t i = 0; i < lines.size(); i++) 
+    {
+        if(!inBlock)
+        {
+            // check if the line starts with BEGIN
+            if(lines[i].compare(0, 6, "BEGIN ") == 0)
+            {
+                inBlock = true; // if yes we found a block
+                currentName = lines[i].substr(6); // 
+                currentString = "\\r\\n";
+            }
+            // else: ignore lines which are not in BEGIN...END blocks
+        }
+        else if(inBlock)
+        {
+            if(lines[i].compare(0, 3, "END") == 0)
+            {
+                inBlock = false;
+                
+                struct SYS_STRING str;
+                str.size = currentString.length() - 4; 
+                // remove the last 4 chars (which is the very last newline)
+                str.value = currentString.substr(0, str.size);
+                str.name = currentName;
+                
+                charSum += str.size + 1;
+                
+                strings.push_back(str);
+            }
+            else
+            {
+                currentString += lines[i];
+                currentString += "\\r\\n";
+            }
+        }
+    }
 
-	strings.push_back(newLine);
+    struct SYS_STRING newLine;
+    newLine.value = "\\r\\n";
+    newLine.size = newLine.value.length();
+    newLine.name = "NEWLINE";
+                
+    charSum += newLine.value.length() + 1;
+            
+    strings.push_back(newLine);
 
     inFile.close();
 
@@ -137,20 +139,20 @@ int main(int argc, char **argv)
 
     languageFile << "%ifndef _LANGUAGE_H_" << std::endl;
     languageFile << "%define _LANGUAGE_H_" << std::endl;
-
+    
     int offset = 0x8000;
 
     for(unsigned i = 0; i < strings.size(); i++)
     {
-		// define offset for that string in language.asm
-		
+        // define offset for that string in language.asm
+        
         languageFile << "  %define " << strings[i].name
-					 << " " << offset << std::endl;
-					 
-		// calculate offset of next string
+                     << " " << offset << std::endl;
+                     
+        // calculate offset of next string
         offset += strings[i].size + 1;
 
-		// write the string itself
+        // write the string itself
         const char *buffer = strings[i].value.c_str();
         stringsFile.write(buffer, strlen(buffer));
         // and zero terminate it

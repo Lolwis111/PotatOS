@@ -9,11 +9,11 @@ language="english" # language to create this in, check Lang/ for available langu
 LIST_FILE=false
 NASM_FLAGS=" -Ox -f bin " # just flags for assembler, make sure you keep '-f bin'
 
-#if [ "`whoami`" != "root" ] ; then # check if script has root rights
-#	echo "  You have to lunch this as root!"
-#    echo "  (loopback mounting is a root-only service!)"
-#	exit
-#fi
+if [ "`whoami`" != "root" ] ; then # check if script has root rights
+	echo "  You have to lunch this as root!"
+    echo "  (loopback mounting is a root-only service!)"
+	exit
+fi
 
 buildCounter=$(cat .builds)
 
@@ -151,7 +151,7 @@ rm -rf tmp-loop/ # delete old mount point
 
 mkdir tmp-loop/ || exit # create new mount point
 
-mount -o loop -t msdos $output_image_name tmp-loop/ || exit
+sudo mount -o loop -t msdos $output_image_name tmp-loop/ || exit
 
 mkdir tmp-loop/system/
 mkdir tmp-loop/tests/
@@ -176,8 +176,8 @@ echo "> release image"
 
 umount tmp-loop/ || exit # release floppy
 rm -rf tmp-loop/
-# adjust rights
 
+# adjust rights
 chmod a+rw $output_image_name
 
 echo -e "\e[92m> Done $(date +"%H:%M:%S")!\e[39m"
