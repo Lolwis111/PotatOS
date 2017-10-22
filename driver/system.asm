@@ -118,22 +118,23 @@ exitProgram:
     push ds ; save the segments
     push es
     
-    ; mov ax, 0x8000 ; we loaded command.bin at 0x8000:0x0000
-    ; mov ds, ax
-    ; xor si, si
-    ; mov es, si
-    ; mov di, 0x9000 ; so just copy it down into the program memory
-    ; mov cx, 2048
-    ; rep movsw
+    mov ax, 0x8000 ; we loaded command.bin at 0x8000:0x0000
+    mov ds, ax
+    xor si, si
+    mov es, si
+    mov di, 0x9000 ; so just copy it down into the program memory
+    mov cx, 2048
+    rep movsw
     
-    ; pop es ; restore the segments
-    ; pop ds
-    ; mov ax, -1
-    ; jmp SOFTWARE_BASE
+    pop es ; restore the segments
+    pop ds
+    mov ax, -1
+    jmp SOFTWARE_BASE
     
-    mov dx, .fileName   ; just start command.bin and go back to the terminal
-    mov di, -1
-    jmp startProgram
+    ; TODO: build algorithm to resolve file paths
+    ; mov dx, .fileName   ; just start command.bin and go back to the terminal
+    ; mov di, -1
+    ; jmp startProgram
     
 .fileName db "COMMAND BIN", 0x00
 ; ======================================================
@@ -146,12 +147,6 @@ exitProgram:
 startProgram:
     cmp di, -1
     je .noArgs
-
-    pusha
-    mov dh, '0'
-    mov dl, byte [0x1FFF]
-    call private_printChar
-    popa
     
     mov si, di
     mov di, .argumentTemp
@@ -170,11 +165,6 @@ startProgram:
 .noArgs:
     mov byte [.argumentTemp], -1
 .copyDone:
-    pusha
-    mov dh, '1'
-    mov dl, byte [0x1FFF]
-    call private_printChar
-    popa
     mov byte [di], 0x00
     mov si, dx              ; check that filename has .BIN extension
     cmp byte [si+8], 'B'
@@ -184,12 +174,6 @@ startProgram:
     cmp byte [si+10], 'N'
     jne .noExecutableError
     
-    pusha
-    mov dh, '2'
-    mov dl, byte [0x1FFF]
-    call private_printChar
-    popa
-    
     push si
     
     mov bx, SOFTWARE_BASE ; load the program into memory
@@ -198,14 +182,11 @@ startProgram:
     
     pop si
     
-    pusha
-    mov dh, '3'
-    mov dl, byte [0x1FFF]
-    call private_printChar
-    popa
+    cmp ax, 0   ; if the file can not be load its an error
+    jne .error
     
-    cmp ax, 0               ; check if that worked    
-    jne .trySystemDir 
+    ; cmp ax, 0           ; check if that worked    
+    ; jne .trySystemDir 
     
     add esp, 6  ; remove stack pointers created by interrupt instruction, we do not need this
     
@@ -217,58 +198,42 @@ startProgram:
     stc
     iret
     
-.trySystemDir:
-    pusha
-    mov dh, 'A'
-    mov dl, byte [0x1FFF]
-    call private_printChar
-    popa
-    ; if load file fails we try to load the file from the system/ directory
-    mov di, si
-    push ds
-    mov ax, 0x8000
-    mov ds, ax
-    xor si, si
-.fileLoop:
-    cmp byte [ds:si], 0x00
-    je .error
+; TODO: build algorithm to resolve paths
+; .trySystemDir:
+    ; ; if load file fails we try to load the file from the system/ directory
+    ; mov di, si
+    ; push ds
+    ; mov ax, 0x8000
+    ; mov ds, ax
+    ; xor si, si
+; .fileLoop:
+    ; cmp byte [ds:si], 0x00
+    ; je .error
     
-    push si
-    push di
-    mov cx, 11
-    rep cmpsb
-    je .fileFound
-    pop di
-    pop si
+    ; push si
+    ; push di
+    ; mov cx, 11
+    ; rep cmpsb
+    ; je .fileFound
+    ; pop di
+    ; pop si
     
-    add si, 32
-    jmp .fileLoop
-.fileFound:
-    pop di
-    pop si
-    pop ds
+    ; add si, 32
+    ; jmp .fileLoop
+; .fileFound:
+    ; pop di
+    ; pop si
+    ; pop ds
     
-    pusha
-    mov dh, 'B'
-    mov dl, byte [0x1FFF]
-    call private_printChar
-    popa
+    ; mov bx, SOFTWARE_BASE ; load the program into memory
+    ; xor bp, bp
+    ; call ReadFile.customDirectory
+    ; jc .error
+
+    ; add esp, 6  ; remove stack pointers created by interrupt instruction, we do not need this
     
-    mov bx, SOFTWARE_BASE ; load the program into memory
-    xor bp, bp
-    call ReadFile.customDirectory
-    jc .error
-    
-    pusha
-    mov dh, 'C'
-    mov dl, byte [0x1FFF]
-    call private_printChar
-    popa
-    
-    add esp, 6  ; remove stack pointers created by interrupt instruction, we do not need this
-    
-    mov ax, .argumentTemp
-    jmp SOFTWARE_BASE   ; start programm
+    ; mov ax, .argumentTemp
+    ; jmp SOFTWARE_BASE   ; start programm
     
 .error:
     stc

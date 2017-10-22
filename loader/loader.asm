@@ -45,7 +45,7 @@ msgError0 db 0x0D, 0x0A, "System directory", 0x00
 msgError1 db 0x0D, 0x0A, "strings.sys", 0x00
 msgError2 db 0x0D, 0x0A, "system.sys", 0x00
 msgError3 db 0x0D, 0x0A, "sysinit.sys", 0x00
-msgError4 db 0x0D, 0x0A, "command.bin"
+msgError4 db 0x0D, 0x0A, "command.bin", 0x00
 msgError  db " missing!", 0x00 
 
 msgHello  db 0x0D, 0x0A, "Loading files...", 0x0D, 0x0A, 0x00
@@ -98,21 +98,26 @@ start:
 	call ReadFile
 	jc .error3
     
+    mov bp, 0x8000      ; load command.bin at 0x8000:0x0000
+    xor bx, bx
+    mov si, Command
+    call ReadFile
+    jc .error4
+    
     ; copy the system directory to 0x8000:0x0000
-    push es
+    ; TODO: build algorithm to resolve paths
+    ; push es
+    ; call CountFiles
+    ; mov ax, 32
+    ; xor di, di
+    ; mul cx
+    ; mov si, DIRECTORY_OFFSET
+    ; mov cx, ax
+    ; mov ax, 0x8000
+    ; mov es, ax
+    ; rep movsb ; copy from ds:si -> es:di (0x0000:DIRECTORY_OFFSET -> 0x8000:0x0000)
     
-    call CountFiles
-    mov ax, 32
-    xor di, di
-    mul cx
-    mov si, DIRECTORY_OFFSET
-    mov cx, ax
-    
-    mov ax, 0x8000
-    mov es, ax
-    rep movsb ; copy from ds:si -> es:di (0x0000:DIRECTORY_OFFSET -> 0x8000:0x0000)
-    
-    pop es
+    ; pop es
     
 	jmp SOFTWARE_BASE ; jump to the loaded program (in this case its sysinit.sys)
 	
