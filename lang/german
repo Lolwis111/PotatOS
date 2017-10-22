@@ -1,17 +1,79 @@
-CLI_WELCOME="Willkommen bei PotatOS!\nGeben sie 'help' ein um Hilfe zu erhalten!"
-HELP="\n  ls [ext]           - Zeigt Dateien detailliert an\n  ll                 - Listet alle Dateien auf\n  help               - Zeigt die Hilfe an\n  date               - Zeigt das Datum an\n  time               - Zeigt die aktuelle Zeit an\n  info               - Zeigt Systeminformationen an\n  color <color>      - Farbe der Konsole wechseln (0=Hilfe)\n  cls                - Leert den Bildschirm\n  rename <org> <new> - Benennt eine Datei um\n  del <datei>        - Loescht eine Datei\n"
-SHUTDOWN="\nDer Computer kann jetzt ausgeschaltet werden.\n"
-NO_PROGRAM="\nDiese Datei kann nicht ausgefuehrt werden!\n"
-LOAD_ERROR="\nDatei konnte nicht geladen werden!\n"
-LS_LABEL_1="Dateiname    Groesse (Bytes)\n"
-LS_LABEL_2="\nGesamtgroesse (Bytes): "
-WRITE_PROTECTION_ERROR="\nDiese Datei ist schreibgeschuetzt!\n"
-FILE_NOT_FOUND_ERROR="\nDie Datei wurde nicht gefunden!\n"
-NOT_A_DIRECTORY_ERROR="\nDas ist kein Verzeichnis!\n"
-FILE_ALREADY_EXISTS_ERROR="\nEine Datei mit dem Namen existiert bereits!\n"
-OUT_OF_SPACE_ERROR="\nEs ist nicht genuegend Speicherplatz verfuegbar!\n"
-SOFTWARE_ERROR="\nDas Programm hat einen Fehler verursacht und wurde beendet!\n"
-INVALID_FILE_ERROR="\nDieses Programm kann diese Datei nicht anzeigen!\n"
-COLOR_HELP="\nFarbe wird durch zwei Ziffern angegeben\n0 Schwarz   8 Grau\n1 Blau      9 Hellgrau\n2 Gruen     A Hellgruen\n3 Cyan      B Hellcyan\n4 Rot       C Hellrot\n5 Magenta   D Hellmagenta\n6 Braun     E Hellgelb\n7 Weiss     F Hellweiss\n"
-DIV_NULL_ERROR="\nTeilen durch null ist nicht erlaubt!\n"
-NEWLINE="\r\n"
+BEGIN CLI_WELCOME
+Willkommen bei PotatOS!
+Geben sie 'help' ein um Hilfe zu erhalten!
+END
+
+BEGIN HELP="
+  ls [ext]           - Zeigt Dateien detailliert an
+  help               - Zeigt die Hilfe an
+  date               - Zeigt das Datum an
+  time               - Zeigt die aktuelle Zeit an
+  info               - Zeigt Systeminformationen an
+  color <color>      - Farbe der Konsole wechseln (0=Hilfe)
+  cls                - Leert den Bildschirm
+  rename <org> <new> - Benennt eine Datei um
+  del <datei>        - Loescht eine Datei
+END
+
+BEGIN SHUTDOWN
+Der Computer kann jetzt ausgeschaltet werden.
+END
+
+BEGIN NO_PROGRAM
+Diese Datei kann nicht ausgefuehrt werden!
+END
+
+BEGIN LOAD_ERROR="\nDatei konnte nicht geladen werden!
+END
+
+BEGIN LS_LABEL_1
+Dateiname    Groesse (Bytes)
+END
+
+BEGIN LS_LABEL_2
+Gesamtgroesse (Bytes): 
+END
+
+BEGIN WRITE_PROTECTION_ERROR
+Diese Datei ist schreibgeschuetzt!
+END
+
+BEGIN FILE_NOT_FOUND_ERROR
+Die Datei wurde nicht gefunden!
+END
+
+BEGIN NOT_A_DIRECTORY_ERROR
+Das ist kein Verzeichnis!
+END
+
+BEGIN FILE_ALREADY_EXISTS_ERROR
+Eine Datei mit dem Namen existiert bereits!
+END
+
+BEGIN OUT_OF_SPACE_ERROR
+Es ist nicht genuegend Speicherplatz verfuegbar!
+END
+
+BEGIN SOFTWARE_ERROR
+Das Programm hat einen Fehler verursacht und wurde beendet!
+END
+
+BEGIN INVALID_FILE_ERROR
+Dieses Programm kann diese Datei nicht anzeigen!
+END
+
+BEGIN COLOR_HELP
+Farbe wird durch zwei Ziffern angegeben
+0 Schwarz   8 Grau
+1 Blau      9 Hellgrau
+2 Gruen     A Hellgruen
+3 Cyan      B Hellcyan
+4 Rot       C Hellrot
+5 Magenta   D Hellmagenta
+6 Braun     E Hellgelb
+7 Weiss     F Hellweiss
+END
+
+BEGIN DIV_NULL_ERROR
+Teilen durch null ist nicht erlaubt!
+END

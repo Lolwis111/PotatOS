@@ -1,17 +1,80 @@
-CLI_WELCOME="Welcome to PotatOS!\nType 'help' to get help!"
-HELP="\n  ls [ext]           - Shows all files with details\n  ll                 - Lists all files\n  help               - Views the help\n  date               - Shows the date\n  time               - Shows the time\n  info               - View systeminformation\n  color <color>      - Change color (0=help)\n  cls                - Clears the screen\n  rename <org> <new> - Rename a file\n  del <datei>        - Delete a file\n"
-SHUTDOWN="\nThe computer can be powered off savely now.\n"
-NO_PROGRAM="\nThis file can not be executed!\n"
-LOAD_ERROR="\nFile could not be loaded!\n"
-LS_LABEL_1="Filename     Size (bytes)   \n"
-LS_LABEL_2="\noverall size (bytes): "
-WRITE_PROTECTION_ERROR="\nThis file is write protected!\n"
-FILE_NOT_FOUND_ERROR="\nFile could not be found!\n"
-NOT_A_DIRECTORY_ERROR="\nThis is not a directory!\n"
-FILE_ALREADY_EXISTS_ERROR="\nA file with the same name already exists!!\n"
-OUT_OF_SPACE_ERROR="\nThere is not enough disk space!\n"
-SOFTWARE_ERROR="\nThe program failed an was terminated!\n"
-INVALID_FILE_ERROR="\nThis program can not view this file!\n"
-COLOR_HELP="\n0 Black     8 Grey\n1 Blue      9 Lightblue\n2 Green     A Lightgreen\n3 Cyan      B Lightcyan\n4 Red       C Lightred\n5 Pink      D Lightpink\n6 Brown     E Lightyellow\n7 White     F Lightwhite\n"
-DIV_NULL_ERROR="\nDivision by zero is invalid!\n"
-NEWLINE="\r\n"
+BEGIN CLI_WELCOME
+Welcome to PotatOS!
+Type 'help' to get help!
+END
+
+BEGIN HELP
+  ls [ext]           - Shows all files with details
+  help               - Views the help
+  date               - Shows the date
+  time               - Shows the time
+  info               - View systeminformation
+  color <color>      - Change color (0=help)
+  cls                - Clears the screen
+  rename <org> <new> - Rename a file
+  del <datei>        - Delete a file
+END
+
+BEGIN SHUTDOWN
+The computer can be powered off savely now.
+END
+
+BEGIN NO_PROGRAM
+This file can not be executed!
+END
+
+BEGIN LOAD_ERROR
+File could not be loaded!
+END
+
+BEGIN LS_LABEL_1
+Filename     Size (bytes)
+END
+
+BEGIN LS_LABEL_2
+overall size (bytes): 
+END
+
+BEGIN WRITE_PROTECTION_ERROR
+This file is write protected!
+END
+
+BEGIN FILE_NOT_FOUND_ERROR
+File could not be found!
+END
+
+BEGIN NOT_A_DIRECTORY_ERROR
+This is not a directory!
+END
+
+BEGIN FILE_ALREADY_EXISTS_ERROR
+A file with the same name already exists!
+END
+
+BEGIN OUT_OF_SPACE_ERROR
+There is not enough disk space!
+END
+
+BEGIN SOFTWARE_ERROR
+The program failed an was terminated!
+END
+
+BEGIN INVALID_FILE_ERROR
+This program can not view this file!
+END
+
+BEGIN COLOR_HELP
+Colors are represented by two digits
+0 Black     8 Grey
+1 Blue      9 Lightblue
+2 Green     A Lightgreen
+3 Cyan      B Lightcyan
+4 Red       C Lightred
+5 Pink      D Lightpink
+6 Brown     E Lightyellow
+7 White     F Lightwhite
+END
+
+BEGIN DIV_NULL_ERROR
+Division by zero is invalid!
+END
