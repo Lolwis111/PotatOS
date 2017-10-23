@@ -138,6 +138,10 @@ change_directory:
     mov byte [.directoryName+11], 0x00
     
     mov si, argument
+    
+    cmp byte [si], '/' ; the command cd / changes to the root directory
+    je .loadRootDirectory
+    
     mov di, .directoryName
 .copyLoop:
     cmp byte [si], 0x00
@@ -155,6 +159,13 @@ change_directory:
     
     print NEWLINE
     
+    popa
+    jmp main
+.loadRootDirectory:
+    call LoadRoot
+    jc .error
+    
+    print NEWLINE
     popa
     jmp main
 .error:
@@ -178,40 +189,40 @@ change_directory:
 ; deletes a file
 ; ====================================================
 delete_file:
-	mov si, argument
-	mov di, rFileName
-	call AdjustFileName
-	cmp ax, -1
-	je .notFound
-	
+    mov si, argument
+    mov di, rFileName
+    call AdjustFileName
+    cmp ax, -1
+    je .notFound
+    
     mov si, rFileName
-	call check_invalid_filename
+    call check_invalid_filename
     jc .invalidFileName
-	
-	mov ah, 0x13
-	mov dx, rFileName
-	int 0x21
-	cmp ax, -1
-	je .notFound
-	
-	mov ah, 0x0A
-	mov dx, rFileName
-	int 0x21
-	
+    
+    mov ah, 0x13
+    mov dx, rFileName
+    int 0x21
+    cmp ax, -1
+    je .notFound
+    
+    mov ah, 0x0A
+    mov dx, rFileName
+    int 0x21
+    
 .return:
     print NEWLINE
-	jmp main
+    jmp main
 .invalidFileName:
-	print WRITE_PROTECTION_ERROR
-	jmp .return
+    print WRITE_PROTECTION_ERROR
+    jmp .return
 .notFound:
     print FILE_NOT_FOUND_ERROR
-	jmp .return
+    jmp .return
 ; ====================================================
-	
+    
 
 ; ====================================================
-; Benennt eine Datei um	
+; Benennt eine Datei um 
 ; ====================================================
 rename_file:
     mov di, .rArgument
@@ -219,83 +230,83 @@ rename_file:
     mov cx, 12
     rep stosw
 
-	mov si, argument
-	call fileNameLength
-	push cx
-	mov si, argument
-	mov di, fileName
-	rep movsb
-	
-	mov si, fileName
-	mov di, rFileName
-	call AdjustFileName
-	cmp ax, -1
-	je .notFound
-	
-	call check_invalid_filename
+    mov si, argument
+    call fileNameLength
+    push cx
+    mov si, argument
+    mov di, fileName
+    rep movsb
+    
+    mov si, fileName
+    mov di, rFileName
+    call AdjustFileName
+    cmp ax, -1
+    je .notFound
+    
+    call check_invalid_filename
     jc .invalidFileName
-	
-	pop cx
-	mov si, argument
-	add si, cx
-	mov di, fileName
-	inc si
+    
+    pop cx
+    mov si, argument
+    add si, cx
+    mov di, fileName
+    inc si
 .copyLoop:
-	cmp byte [si], 0x00
-	je .done
-	movsb
-	jmp .copyLoop
-	
+    cmp byte [si], 0x00
+    je .done
+    movsb
+    jmp .copyLoop
+    
 .done:
-	mov si, fileName
-	mov di, .rArgument
-	call AdjustFileName
-	cmp ax, -1
-	je .notFound
-	
-	mov ah, 0x13
-	mov dx, .rArgument
-	int 0x21
-	cmp ax, -1
-	jne .badFileName
-	
-	mov ah, 0x11
-	int 0x21
-	mov di, bp
+    mov si, fileName
+    mov di, .rArgument
+    call AdjustFileName
+    cmp ax, -1
+    je .notFound
+    
+    mov ah, 0x13
+    mov dx, .rArgument
+    int 0x21
+    cmp ax, -1
+    jne .badFileName
+    
+    mov ah, 0x11
+    int 0x21
+    mov di, bp
 .fileLoop:
-	push cx
-	mov si, rFileName
-	mov cx, 11
-	push di
-	rep cmpsb
-	pop di
-	je .Found
-	pop cx
-	add di, 32
-	loop .fileLoop
+    push cx
+    mov si, rFileName
+    mov cx, 11
+    push di
+    rep cmpsb
+    pop di
+    je .Found
+    pop cx
+    add di, 32
+    loop .fileLoop
     
 .notFound:
     print FILE_NOT_FOUND_ERROR
-	jmp .return
+    jmp .return
     
 .badFileName:
     print FILE_ALREADY_EXISTS_ERROR
-	jmp .return
+    jmp .return
     
 .invalidFileName:
     print WRITE_PROTECTION_ERROR
-	jmp .return
+    jmp .return
     
 .Found:
-	pop cx
-	mov si, .rArgument
-	mov cx, 11
-	rep movsb
-	mov ah, 0x12
-	int 0x21
+    pop cx
+    mov si, .rArgument
+    mov cx, 11
+    rep movsb
+    mov ah, 0x12
+    int 0x21
 .return:
-	print NEWLINE
-	jmp main
+    print NEWLINE
+    jmp main
 .rArgument times 13 db 0x00
 ; ====================================================
 
@@ -308,28 +319,28 @@ check_invalid_filename:
     pusha
     
     mov bp, si
-	mov di, .invalidFiles
-	mov cx, 11
-	rep cmpsb
-	je .invalid
-	
+    mov di, .invalidFiles
+    mov cx, 11
+    rep cmpsb
+    je .invalid
+    
     mov si, bp
-	mov di, .invalidFiles+11
-	mov cx, 11
-	rep cmpsb
-	je .invalid
+    mov di, .invalidFiles+11
+    mov cx, 11
+    rep cmpsb
+    je .invalid
 
     mov si, bp
-	mov di, .invalidFiles+22
-	mov cx, 11
-	rep cmpsb
-	je .invalid
-	
+    mov di, .invalidFiles+22
+    mov cx, 11
+    rep cmpsb
+    je .invalid
+    
     mov si, bp
-	mov di, .invalidFiles+33
-	mov cx, 11
-	rep cmpsb
-	je .invalid
+    mov di, .invalidFiles+33
+    mov cx, 11
+    rep cmpsb
+    je .invalid
     
     popa
     clc
@@ -338,7 +349,9 @@ check_invalid_filename:
     popa
     stc
     ret
-.invalidFiles db "MAIN    SYSIRQ     SYSSYSTEM  SYSLOADER  SYS" ; this are the most important files that are hardcoded not delete- or renameable
+; this are the most important files that are hardcoded not 
+; delete- or renameable
+.invalidFiles db "MAIN    SYSIRQ     SYSSYSTEM  SYSLOADER  SYS"
 ; ====================================================
 
 
@@ -348,41 +361,41 @@ check_invalid_filename:
 look_extern:
     print NEWLINE
 
-	mov al, '.'
-	mov si, command
-	call StringLength
+    mov al, '.'
+    mov si, command
+    call StringLength
 
-	cmp cx, 0x00
-	je .noExt
-	
-	mov si, command
-	add si, cx
-	mov di, .programExt
-	mov cx, 4
-	rep cmpsb
-	jne .eError
-	jmp .extOk
-	
-.programExt	db ".BIN"
+    cmp cx, 0x00
+    je .noExt
+    
+    mov si, command
+    add si, cx
+    mov di, .programExt
+    mov cx, 4
+    rep cmpsb
+    jne .eError
+    jmp .extOk
+    
+.programExt db ".BIN"
     
 .noExt: ; if there is no extension add .bin and try loading that
-	xor al, al
-	mov si, command
-	call StringLength
-	
-	mov si, command
-	add si, cx
-	mov byte [si], '.'
-	mov byte [si+1], 'B'
-	mov byte [si+2], 'I'
-	mov byte [si+3], 'N'
-	
+    xor al, al
+    mov si, command
+    call StringLength
+    
+    mov si, command
+    add si, cx
+    mov byte [si], '.'
+    mov byte [si+1], 'B'
+    mov byte [si+2], 'I'
+    mov byte [si+3], 'N'
+    
 .extOk:
-	mov si, command
-	mov di, rFileName
-	call AdjustFileName
-	cmp ax, -1
-	je .error
+    mov si, command
+    mov di, rFileName
+    call AdjustFileName
+    cmp ax, -1
+    je .error
 
     mov di, argument
     mov dx, rFileName
@@ -395,9 +408,9 @@ look_extern:
 db "#ERROR"
 .error: ; generell error
     print LOAD_ERROR
-	jmp main
-db "#EERROR"	
+    jmp main
+db "#EERROR"    
 .eError: ; not a bin file error
     print NO_PROGRAM
-	jmp main
+    jmp main
 ; ====================================================
