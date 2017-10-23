@@ -1,6 +1,6 @@
 ; ===========================================================
-; ReadFile()
-;       reads a file from the current directory
+; ReadDirectory()
+;       reads a directory from the current directory
 ;       into the memory
 ;       SI <= directory name
 ;       carry flag for error indication

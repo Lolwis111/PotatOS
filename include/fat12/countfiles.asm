@@ -1,7 +1,7 @@
 ; ==================================================
 ; CountFiles()
-;       counts how many files there are
-;       in the loaded directory
+;       counts how many files/directories there
+;       are in the loaded directory
 ; ==================================================
 CountFiles:
     pusha
