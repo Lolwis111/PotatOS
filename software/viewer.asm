@@ -15,12 +15,6 @@ jmp start
 %include "language.asm"
 %include "functions.asm"
 
-%ifdef german
-    msgFile db "\r\nDatei:", 0x00
-%elif english
-    msgFile db "\r\nFile:", 0x00
-%endif
-
 input       times 12 db 0
 fileName    times 12 db 0
 hack        db 0x00
@@ -49,7 +43,7 @@ start:
 
 ; =====================================================================
 .noArgument:
-    print msgFile ; get filename from user
+    print FILE_PROMPT ; get filename from user
     readline input, 11
     
     mov si, input           ; convert to uppercase

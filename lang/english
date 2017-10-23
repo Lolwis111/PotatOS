@@ -89,6 +89,10 @@ Colors are represented by two digits
 
 END
 
+BEGIN FILE_PROMPT
+Filename: 
+END
+
 BEGIN DIV_NULL_ERROR
 Division by zero is invalid!
 

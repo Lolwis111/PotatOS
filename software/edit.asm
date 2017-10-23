@@ -38,7 +38,7 @@ start:
     jmp init
     
 .noArgument:
-    print msgFile, COLOR ; get filename from the user
+    print FILE_PROMPT, COLOR ; get filename from the user
     
     readline input, 11
     
@@ -90,12 +90,6 @@ lblTop      db 177
             
 linesToSkip dw 0x00
 fileLenght  dw 0x00
-
-%ifdef german
-    msgFile     db "\r\nDatei:", 0x00
-%elif english
-    msgFile     db "\r\nFile:", 0x00
-%endif
 
 newLine     db "\r\n", 0x00
 input       times 12 db 0

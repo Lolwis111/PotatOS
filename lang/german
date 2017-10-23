@@ -88,6 +88,10 @@ Farbe wird durch zwei Ziffern angegeben
 
 END
 
+BEGIN FILE_PROMPT
+Dateiname: 
+END
+
 BEGIN DIV_NULL_ERROR
 Teilen durch null ist nicht erlaubt!
 
