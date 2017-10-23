@@ -15,9 +15,6 @@ if [ "`whoami`" != "root" ] ; then # check if script has root rights
 	exit
 fi
 
-buildCounter=$(cat .builds)
-
-echo "${buildCounter} builds since 6th October 2017"
 # cleaning process:
 rm -f $output_image_name  # delete old image
 
@@ -64,11 +61,6 @@ if [ "$1" = "clean" ] ; then
     exit
 fi
 
-if [ "$1" == "experimental" ] ; then
-    echo "compiling experimental 32-bit components"
-    make -C experimental/
-fi
-
 echo "creating language.asm"
 
 if [ ! -e "./lang/$language" ] ; then
@@ -95,6 +87,7 @@ if [ $LIST_FILE = true ] ; then
     list=" -l boot/boot.lst "
 fi
 nasm $NASM_FLAGS $list -i $include_system -o boot/boot.bin boot/boot.asm || exit
+
 if [ $LIST_FILE = true ] ; then
     list=" -l loader/loader.lst "
 fi
@@ -137,6 +130,7 @@ do
     nasm $NASM_FLAGS $list -i $include_system $i -o `basename $i .asm`.bin || exit
     echo -ne "." # print a dot on success for each driver
 done
+
 cd ..
 
 echo "" # newLine
@@ -157,7 +151,7 @@ mkdir tmp-loop/system/
 mkdir tmp-loop/tests/
 
 cp loader/loader.sys tmp-loop/ # copy system
-cp README tmp-loop/readme.txt
+cp README tmp-loop/system/readme.txt
 cp driver/*.sys tmp-loop/system/ # copy the drivers
 cp software/*.bin tmp-loop/system/ # copy programms
 
@@ -166,10 +160,7 @@ cp tests/*.bin tmp-loop/tests/
 echo "> copying resources"
 cp -r misc/* tmp-loop/ # copy resources
 mv tmp-loop/strings.sys tmp-loop/system/
-if [ "$1" == "experimental" ] ; then
-    echo "> installing 32-bit components"
-    cp experimental/*.bin tmp-loop/system/
-fi
+
 sleep 0.2 # wait a moment to make sure everything is written
 
 echo "> release image"
@@ -181,8 +172,5 @@ rm -rf tmp-loop/
 chmod a+rw $output_image_name
 
 echo -e "\e[92m> Done $(date +"%H:%M:%S")!\e[39m"
-
-((buildCounter++))
-echo ${buildCounter} > .builds
 
 exit
