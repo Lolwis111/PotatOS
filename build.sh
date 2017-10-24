@@ -1,22 +1,23 @@
 #!/bin/bash
-build_home=$PWD  # copy working directory
-include_system="$build_home/include/" # globaly available include files
-include_software="$build_home/software/include/" # program internal include files
-include_driver="$build_home/driver/include/" # os internal include files
+build_home=$(pwd)  # copy working directory
+include_system="${build_home}/include/" # globaly available include files
+include_software="${build_home}/software/include/" # program internal include files
+include_driver="${build_home}/driver/include/" # os internal include files
 output_image_name="potatos.img" # output file name
 language="english" # language to create this in, check Lang/ for available languages
+language_string_list="lang/stringlist"
 
 LIST_FILE=false
 NASM_FLAGS=" -Ox -f bin " # just flags for assembler, make sure you keep '-f bin'
 
 if [ "`whoami`" != "root" ] ; then # check if script has root rights
-	echo "  You have to lunch this as root!"
+    echo "  You have to lunch this as root!"
     echo "  (loopback mounting is a root-only service!)"
-	exit
+    exit
 fi
 
 # cleaning process:
-rm -f $output_image_name  # delete old image
+rm -f ${output_image_name}  # delete old image
 
 cd misc # delete old strings.sys
 
@@ -69,12 +70,19 @@ if [ ! -e "./lang/$language" ] ; then
     exit
 fi
 
-./tools/MkLocale/bin/mklocale $language $build_home || exit
+./tools/MkLocale/bin/mklocale ${language} ${build_home} ${language_string_list}
+
+if [ ! -e "./include/language.asm" ];
+then
+    echo -e "\e[91mError while generating language.asm!\e[39m"
+    
+    exit
+fi
 
 if [ ! -e $output_image_name ]
 then
-	echo "> create floppy image"
-	mkdosfs -C $output_image_name 1440 || exit
+    echo "> create floppy image"
+    mkdosfs -C $output_image_name 1440 || exit
 fi
 if [ $LIST_FILE = true ] ; then
     echo "create listing files"
@@ -101,7 +109,7 @@ do
     if [ $LIST_FILE = true ] ; then
         list=" -l `basename $i .asm`.lst "
     fi
-	nasm $NASM_FLAGS $list -d "$language" -i $include_system -i $include_software $i -o `basename $i .asm`.bin || exit
+    nasm $NASM_FLAGS $list -d "$language" -i $include_system -i $include_software $i -o `basename $i .asm`.bin || exit
     echo -ne "." # print a dot on success for each program
 done
 

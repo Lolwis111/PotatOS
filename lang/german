@@ -4,7 +4,7 @@ Geben sie 'help' ein um Hilfe zu erhalten!
 
 END
 
-BEGIN HELP="
+BEGIN HELP
   ls [ext]           - Zeigt Dateien detailliert an
   help               - Zeigt die Hilfe an
   date               - Zeigt das Datum an
@@ -27,7 +27,8 @@ Diese Datei kann nicht ausgefuehrt werden!
 
 END
 
-BEGIN LOAD_ERROR="\nDatei konnte nicht geladen werden!
+BEGIN LOAD_ERROR
+Datei konnte nicht geladen werden!
 
 END
 

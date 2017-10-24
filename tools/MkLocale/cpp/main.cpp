@@ -5,49 +5,79 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 #include "../header/language.h"
+#include "../header/find_string.h"
 
 #define MAX_CHAR_COUNT 4096 // strings.sys is limited to 4096 bytes
 
 int main(int argc, char **argv)
 {
-    if(argc < 3) // there have to be two arguments
+    if(argc < 4) // there have to be two arguments
     {
-        std::cout << "Not enough arguments given!" << std::endl;
+        std::cerr << "Not enough arguments given!" << std::endl;
 
-        return 0;
+        return 1;
     }
 
     if(argv[1] == NULL) // first argument describes the langauge
     {
-        std::cout << "Language can't be NULL!" << std::endl;
+        std::cerr << "Language can't be NULL!" << std::endl;
 
-        return 0;
+        return 1;
     }
 
     if(argv[2] == NULL) // the second one is the current pwd
     {
-        std::cout << "PotatOS-Root can't be NULL!" << std::endl;
+        std::cerr << "PotatOS-Root can't be NULL!" << std::endl;
+        
+        return 1;
+    }
+    
+    if(argv[3] == NULL) // the third one is a list defining which
+    {                   // strings have to be there
+        std::cerr << "Stringlist can't be NULL!" << std::endl;
+        
+        return 1;
     }
 
     std::string argument(argv[1]);
     std::string posRoot(argv[2]);
+    std::string stringList(argv[3]);
 
     std::string fileName = posRoot + "/lang/" + argument; // build the path
+    std::string stringListPath = posRoot + "/" + stringList; // build second path
 
     struct stat buffer;
     if(stat(fileName.c_str(), &buffer) != 0) // check if the language exists
     {
-
         // if no -> its an error
         std::cerr << "Language " << fileName << " was not found!" << std::endl;
 
-        return 0;
+        return 1;
     }
 
-    std::ifstream inFile(fileName.c_str());
+    if(stat(stringListPath.c_str(), &buffer) != 0) // check if stringlist file exists
+    {
+        // if no its an error
+        std::cerr << "Stringlist file was not found!" << std::endl;
+        
+        return 1;
+    }
+
+    std::ifstream stringListFile(stringListPath.c_str());
+    std::vector<std::string> stringListVector;
     std::string line;
+
+    while(std::getline(stringListFile, line)) // each line is one string(name)
+    {
+        if(line.size() > 0) stringListVector.push_back(line);
+    }
+
+    stringListFile.close();
+
+    std::ifstream inFile(fileName.c_str());
 
     std::vector<SYS_STRING> strings;
 
@@ -112,6 +142,16 @@ int main(int argc, char **argv)
     strings.push_back(newLine);
 
     inFile.close();
+    
+    for(size_t i = 0; i < stringListVector.size(); i++)
+    {
+        if(std::find_if(strings.begin(), strings.end(), find_string(stringListVector[i])) == strings.end())
+        {
+            std::cerr << "String '" << stringListVector[i] << "' missing!" << std::endl;
+            
+            return 1;
+        }
+    }
 
     if(charSum > MAX_CHAR_COUNT) // check if we reached size limit
     {
@@ -119,7 +159,7 @@ int main(int argc, char **argv)
                   << MAX_CHAR_COUNT << " exceeded by " 
                   << (charSum - MAX_CHAR_COUNT) << " Bytes";
 
-        return -1;
+        return 1;
     }
 
     fileName = posRoot + "/include/language.asm"; // build path to output file
