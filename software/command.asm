@@ -71,6 +71,9 @@ main:
     strcmp command, cmdDEL
     je delete_file ; command_file
     
+    strcmp command, cmdPWD
+    je print_working_directory ; command_file
+    
     strcmp command, cmdRETURN
     je print_return_code ; command_util
     

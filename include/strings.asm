@@ -207,8 +207,8 @@ ReadjustFileName:
 ; skip leading whitespaces
 ; (spaces, \t, \n and \r)
 ;
-; DS:SI => string
-; DS:SI <= trimmed string
+; DS:SI <= string
+; DS:SI => trimmed string
 ; ==========================================
 TrimLeft:
 	push ax
@@ -237,4 +237,42 @@ TrimLeft:
 ; ==========================================
 
 
+; ==========================================
+; append string si to string di
+;
+; DS:SI <= string 1
+; ES:DI <= string 2
+; AL <= end on this char
+; CX => number bytes appended
+; ==========================================
+AppendString:
+    pushf
+    push ax
+    push si
+    push di
+    
+    cld
+.gotoEndOfSILoop:
+    cmp byte [es:di], al
+    je .endFound
+    inc di
+    jmp .gotoEndOfSILoop
+.endFound:
+    xor cx, cx
+.copyLoop:
+    lodsb
+    test al, al
+    jz .copyDone
+    stosb
+    inc cx
+    jmp .copyLoop
+.copyDone:
+    stosb
+    
+    pop di
+    pop si
+    pop ax
+    popf
+    ret
+; ==========================================
 %endif

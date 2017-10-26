@@ -120,6 +120,19 @@ view_dir:
 ; ====================================================
 
 
+; ====================================================
+print_working_directory:
+    print NEWLINE
+
+    print CURRENT_PATH
+    
+    print NEWLINE
+    
+    jmp main
+; ====================================================
+
+
+
 %include "bpb.asm"
 %include "floppy/readsectors.asm"
 %include "floppy/lba.asm"
@@ -130,6 +143,10 @@ view_dir:
 ; ====================================================
 change_directory:
     pusha
+    push es
+    
+    xor ax, ax
+    mov es, ax
     
     mov cx, 6
     mov di, .directoryName
@@ -139,14 +156,24 @@ change_directory:
     
     mov si, argument
     
+    mov byte [.directoryDoubleDot], 0x00
+    
     cmp byte [si], '/' ; the command cd / changes to the root directory
     je .loadRootDirectory
     
+    cmp byte [si], '.'
+    jne .normalDir
+    cmp byte [si+1], '.'
+    jne .normalDir
+    
+    mov byte [.directoryDoubleDot], 0x01
+    
+.normalDir:
     mov di, .directoryName
 .copyLoop:
-    cmp byte [si], 0x00
-    je .done
-    
+    cmp byte [si], 0x00 ; copy the name from the argument to .directoryName
+    je .done            ; (.directoryName is filled with spaces so we basically
+                        ; do padding)
     mov al, byte [si]
     mov byte [di], al
     inc si
@@ -154,34 +181,71 @@ change_directory:
     jmp .copyLoop
 .done:
     mov si, .directoryName
-    call ReadDirectory
+    call ReadDirectory ; try to read a directory with given name
     jc .error
     
+    cmp byte [.directoryDoubleDot], 0x00
+    je .addToPath
+    
+.removeFromPath: ; remove the last 12 chars (every directory name is padded to
+                 ; 11 chars + trailing slash)
+    sub word [CURRENT_PATH_LENGTH], 12
+    mov di, CURRENT_PATH
+    add di, word [CURRENT_PATH_LENGTH]
+    mov cx, 6
+    xor ax, ax
+    rep stosw ; copy 12 chars
+    
+    jmp .okay
+ 
+.addToPath: ; append the directory name
+    mov di, CURRENT_PATH
+    add di, word [CURRENT_PATH_LENGTH]
+    mov si, .directoryName
+    mov byte [si+11], '/'
+    mov byte [si+12], 0x00
+    call AppendString
+    
+    add word [CURRENT_PATH_LENGTH], 12 ; we added 12 chars
+    
+.okay:
     print NEWLINE
     
-    popa
-    jmp main
+    jmp .return
 .loadRootDirectory:
-    call LoadRoot
+    call LoadRoot ; load the root directory
     jc .error
     
+    mov di, CURRENT_PATH ; override the path with zeroes
+    mov cx, 256
+    xor ax, ax
+    rep stosw
+    
+    mov word [CURRENT_PATH_LENGTH], 0x01 ; root is just pwd /
+    mov byte [CURRENT_PATH], '/'
+    
     print NEWLINE
-    popa
-    jmp main
+    
+    jmp .return
 .error:
     cmp ax, FILE_NOT_FOUND
     je .fileNotFound
     cmp ax, NOT_A_DIRECTORY
     je .notADirectory
-    jmp main
+    jmp .return
 .fileNotFound:
-    print FILE_NOT_FOUND_ERROR
-    jmp main
+    print DIRECTORY_NOT_FOUND_ERROR
+    jmp .return
 .notADirectory:
     print NOT_A_DIRECTORY_ERROR
+    jmp .return
+.return:
+    pop es
+    popa
     jmp main
 .directoryName times 11 db 0x20
-                        db 0x00
+                        db 0x00, 0x00
+.directoryDoubleDot db 0x00
 ; ====================================================
 
 
@@ -405,11 +469,9 @@ look_extern:
     cmp ax, 0x01
     je .eError
     jmp .error
-db "#ERROR"
 .error: ; generell error
     print LOAD_ERROR
-    jmp main
-db "#EERROR"    
+    jmp main    
 .eError: ; not a bin file error
     print NO_PROGRAM
     jmp main

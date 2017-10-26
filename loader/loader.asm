@@ -104,6 +104,29 @@ start:
     call ReadFile
     jc .error4
     
+    xor ax, ax ; override path with zeroes
+    mov di, CURRENT_PATH
+    mov cx, 256
+    rep stosw
+    
+    mov word [CURRENT_PATH_LENGTH], 0x01 ; copy system directory to path
+    mov byte [CURRENT_PATH], '/'
+    mov si, SystemDir
+    mov di, CURRENT_PATH+1
+.copyLoop:
+    lodsb
+    test al, al
+    jz .done
+    stosb
+    inc word [CURRENT_PATH_LENGTH]
+    jmp .copyLoop
+.done:
+    mov al, '/'
+    stosb
+    inc word [CURRENT_PATH_LENGTH]
+    xor al, al
+    stosb
+    
     ; copy the system directory to 0x8000:0x0000
     ; TODO: build algorithm to resolve paths
     ; push es

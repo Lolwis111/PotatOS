@@ -19,6 +19,8 @@ cmdCLEAR	db "CLS", 0x00      ; clear cli
 cmdRENAME	db "RENAME", 0x00   ; renaming files
 cmdDEL		db "DEL", 0x00      ; deleting files
 
+cmdPWD      db "PWD", 0x00      ; print working directory
+
 cmdRETURN   db "RETURN?", 0x00  ; print return value of last command/program
 
 %ifdef _DEBUG

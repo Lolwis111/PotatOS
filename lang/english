@@ -51,6 +51,11 @@ File could not be found!
 
 END
 
+BEGIN DIRECTORY_NOT_FOUND_ERROR
+This directory was not found!
+
+END
+
 BEGIN NOT_A_DIRECTORY_ERROR
 This is not a directory!
 

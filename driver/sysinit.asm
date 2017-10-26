@@ -39,11 +39,11 @@ start:
     mov cx, 0x01    ; load the bootloader (because we sneaked in some config there lmao)
     xor ax, ax
     mov es, ax
-    mov ebx, 0x7C00
+    mov ebx, 0x7000
     call ReadSectors
     
     ; get the three config bytes
-    mov esi, 0x7DFB
+    mov esi, 0x71FB
     mov al, byte [es:esi+2]
     mov byte [0x1FFE], al   ; set kbSwitch
     
