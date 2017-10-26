@@ -157,16 +157,34 @@ sudo mount -o loop -t msdos $output_image_name tmp-loop/ || exit
 
 mkdir tmp-loop/system/
 mkdir tmp-loop/tests/
+mkdir tmp-loop/images/
+
+mkdir tmp-loop/testdir1/ # create some random directories for testing purposes
+mkdir tmp-loop/testdir1/TEST1/
+mkdir tmp-loop/testdir1/TEST1/ABC/
+mkdir tmp-loop/testdir1/TEST1/DEF/
+mkdir tmp-loop/testdir1/TEST2/
+mkdir tmp-loop/testdir1/TEST3/
+mkdir tmp-loop/testdir1/TEST3/DIR12
+mkdir tmp-loop/testdir1/TEST3/TEST13
+mkdir tmp-loop/testdir1/TEST4/
 
 cp loader/loader.sys tmp-loop/ # copy system
 cp README tmp-loop/system/readme.txt
 cp driver/*.sys tmp-loop/system/ # copy the drivers
 cp software/*.bin tmp-loop/system/ # copy programms
 
+# viewer + images are in an extra directory
+mv tmp-loop/system/viewer.bin tmp-loop/images/viewer.bin
+
 cp tests/*.bin tmp-loop/tests/
 
 echo "> copying resources"
 cp -r misc/* tmp-loop/ # copy resources
+
+# move the images
+mv tmp-loop/*.llp tmp-loop/images/
+
 mv tmp-loop/strings.sys tmp-loop/system/
 
 sleep 0.2 # wait a moment to make sure everything is written
