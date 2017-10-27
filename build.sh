@@ -171,6 +171,7 @@ mkdir tmp-loop/testdir1/TEST4/
 
 cp loader/loader.sys tmp-loop/ # copy system
 cp README tmp-loop/system/readme.txt
+cp LICENSE tmp-loop/system/license.txt
 cp driver/*.sys tmp-loop/system/ # copy the drivers
 cp software/*.bin tmp-loop/system/ # copy programms
 
