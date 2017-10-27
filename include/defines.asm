@@ -59,7 +59,7 @@
     %define SYSTEM_SYS      0x1000
     %define STRINGS_SYS     0x8000
     %define SOFTWARE_BASE   0x9000
-    
+
     %define CURRENT_PATH_LENGTH 0x7C00
     %define CURRENT_PATH    0x7C02
 
