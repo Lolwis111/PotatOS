@@ -164,8 +164,13 @@ change_directory:
     je .loadRootDirectory
     
     cmp byte [ds:si], '.'       ; ignore directory . here
+    jne .notSingleDot
     cmp byte [ds:si+1], 0x00
+    jne .notSingleDot
+    print NEWLINE
+    jmp .return
     
+.notSingleDot:
     cmp byte [ds:si], '.'       ; handle directory .. a little different
     jne .normalDir
     cmp byte [ds:si+1], '.'
