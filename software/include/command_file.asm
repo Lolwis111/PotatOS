@@ -144,9 +144,11 @@ print_working_directory:
 change_directory:
     pusha
     push es
+    push ds
     
     xor ax, ax
     mov es, ax
+    mov ds, ax
     
     mov cx, 6
     mov di, .directoryName
@@ -158,12 +160,15 @@ change_directory:
     
     mov byte [.directoryDoubleDot], 0x00
     
-    cmp byte [si], '/' ; the command cd / changes to the root directory
+    cmp byte [ds:si], '/' ; the command cd / changes to the root directory
     je .loadRootDirectory
     
-    cmp byte [si], '.'
+    cmp byte [ds:si], '.'       ; ignore directory . here
+    cmp byte [ds:si+1], 0x00
+    
+    cmp byte [ds:si], '.'       ; handle directory .. a little different
     jne .normalDir
-    cmp byte [si+1], '.'
+    cmp byte [ds:si+1], '.'
     jne .normalDir
     
     mov byte [.directoryDoubleDot], 0x01
@@ -171,11 +176,11 @@ change_directory:
 .normalDir:
     mov di, .directoryName
 .copyLoop:
-    cmp byte [si], 0x00 ; copy the name from the argument to .directoryName
+    cmp byte [ds:si], 0x00 ; copy the name from the argument to .directoryName
     je .done            ; (.directoryName is filled with spaces so we basically
                         ; do padding)
-    mov al, byte [si]
-    mov byte [di], al
+    mov al, byte [ds:si]
+    mov byte [es:di], al
     inc si
     inc di
     jmp .copyLoop
@@ -184,30 +189,43 @@ change_directory:
     call ReadDirectory ; try to read a directory with given name
     jc .error
     
-    cmp byte [.directoryDoubleDot], 0x00
-    je .addToPath
+    cmp byte [.directoryDoubleDot], 0x00 ; when .. is entered we have to 
+    je .addToPath ; remove chars from the path
     
-.removeFromPath: ; remove the last 12 chars (every directory name is padded to
-                 ; 11 chars + trailing slash)
-    sub word [CURRENT_PATH_LENGTH], 12
-    mov di, CURRENT_PATH
-    add di, word [CURRENT_PATH_LENGTH]
-    mov cx, 6
-    xor ax, ax
-    rep stosw ; copy 12 chars
-    
+    mov si, CURRENT_PATH
+    add si, word [CURRENT_PATH_LENGTH]
+    dec si
+    mov byte [ds:si], 0x00
+    dec word [CURRENT_PATH_LENGTH]
+.removeLoop:
+    cmp byte [ds:si], '/' ; delte the trailing directory (/TEST/ABC/ -> /TEST/)
+    je .removeDone
+    mov byte [ds:si], 0x00
+    dec si
+    dec word [CURRENT_PATH_LENGTH]
+    jmp .removeLoop
+.removeDone:
     jmp .okay
  
-.addToPath: ; append the directory name
+.addToPath:
+    mov si, .directoryName ; trim trailing spaces
+    call TrimRight
+    
+    mov si, .directoryName ; calculate length
+    call StringLength2
+    
+    mov si, .directoryName ; append /
+    add si, cx
+    mov byte [ds:si], '/'
+    mov byte [ds:si+1], 0x00
+    inc cx
+    
+    add word [CURRENT_PATH_LENGTH], cx ; update length
+    
     mov di, CURRENT_PATH
-    add di, word [CURRENT_PATH_LENGTH]
     mov si, .directoryName
-    mov byte [si+11], '/'
-    mov byte [si+12], 0x00
-    call AppendString
-    
-    add word [CURRENT_PATH_LENGTH], 12 ; we added 12 chars
-    
+    call AppendString ; append the directory name to the path
+
 .okay:
     print NEWLINE
     
@@ -240,6 +258,7 @@ change_directory:
     print NOT_A_DIRECTORY_ERROR
     jmp .return
 .return:
+    pop ds
     pop es
     popa
     jmp main

@@ -107,6 +107,35 @@ UpperCase:
 
 
 ; ==========================================
+; DS:SI <= string
+; CX => length
+; ==========================================
+StringLength2:
+    pushf
+    push si
+    push ax
+    
+    xor cx, cx
+    cld
+.charLoop:
+    lodsw
+    test al, al
+    jz .end1
+    test ah, ah
+    jz .end2
+    add cx, 2
+    jmp .charLoop
+.end2:
+    inc cx    
+.end1:
+    pop ax
+    pop si
+    popf
+	ret
+; ==========================================
+
+
+; ==========================================
 ; DS:SI -> String
 ; AL -> Splitter
 ; CX <- length
@@ -238,7 +267,58 @@ TrimLeft:
 
 
 ; ==========================================
-; append string si to string di
+; remove trailing whitespaces
+; (spaces, \t, \n and \r)
+; DS:SI <= String
+; DS:SI => trimmed string
+; ==========================================
+TrimRight:
+    pushf
+    push si
+    push ax
+    
+    cld ; clear direction flag to move forwards
+.gotoEnd:
+    lodsb
+    test al, al
+    jz .endFound
+    jmp .gotoEnd
+
+.endFound:
+    dec si
+    dec si
+.trim:
+    mov al, byte [ds:si]
+    
+    ; the first non-whitespace ends this loop
+    cmp al, 0x20 ; check space
+    je .remove
+    
+    cmp al, 0x08 ; check tab
+    je .remove
+    
+    cmp al, 0x0D ; check \r
+    je .remove
+    
+    cmp al, 0x0A ; check \n
+    je .remove
+    
+    jmp .return
+.remove:
+    mov byte [ds:si], 0x00 ; override trailing whitespaces with \0
+    dec si
+    jmp .trim
+    
+.return:
+    pop ax
+    pop si
+    popf
+    ret
+; ==========================================
+
+
+; ==========================================
+; append string 1 to string 2
 ;
 ; DS:SI <= string 1
 ; ES:DI <= string 2

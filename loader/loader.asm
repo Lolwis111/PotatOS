@@ -17,12 +17,14 @@ jmp start
 %include "fat12/readfile.asm" ; loading file from disk
 %include "fat12/readdirectory.asm" ; loading directory from disk
 %include "fat12/countfiles.asm" ; count files in system directory
+%include "strings.asm"
 
 Sysinit   db "SYSINIT SYS", 0x00 ; reads config and sets up system
 Driver    db "SYSTEM  SYS", 0x00 ; API for int0x21
 Strings   db "STRINGS SYS", 0x00 ; contains language specific strings that devs can use
 Command   db "COMMAND BIN", 0x00
 SystemDir db "SYSTEM     ", 0x00 ; system directory
+Path      db "/SYSTEM/", 0x00
 
 ; ====================================================================================
 ; Prints a string from si using BIOS interrupts as int0x21 is not setup
@@ -109,23 +111,10 @@ start:
     mov cx, 256
     rep stosw
     
-    mov word [CURRENT_PATH_LENGTH], 0x01 ; copy system directory to path
-    mov byte [CURRENT_PATH], '/'
-    mov si, SystemDir
-    mov di, CURRENT_PATH+1
-.copyLoop:
-    lodsb
-    test al, al
-    jz .done
-    stosb
-    inc word [CURRENT_PATH_LENGTH]
-    jmp .copyLoop
-.done:
-    mov al, '/'
-    stosb
-    inc word [CURRENT_PATH_LENGTH]
-    xor al, al
-    stosb
+    mov word [CURRENT_PATH_LENGTH], 0x08
+    mov di, CURRENT_PATH
+    mov si, Path
+    call AppendString
     
     ; copy the system directory to 0x8000:0x0000
     ; TODO: build algorithm to resolve paths
