@@ -33,15 +33,15 @@
     @    PotatOS is 16 Bit.                      @    
     @    PotatOS was created by Levin Palm       @    
     @                                            @    
-    @   'sudo ./build.sh compiles it all         @
-    @   'sudo ./build.sh clean' cleans            @    
-   @@    old binarys and file         .           @   
-   @@    ./run.sh executes PotatOS in             @    
-   @@    QEMU                                     @   
+    @   'sudo ./build.sh' compiles it all        @
+    @   'sudo ./build.sh clean' cleans           @    
+   @@    old binarys and file         .          @   
+   @@    ./run.sh executes PotatOS in            @    
+   @@    QEMU                                    @   
    @@    All rights reserved                     @@   
    @@    Use this at your own risk!              @@   
    @@    I recommend to test this in a           @@   
-   @@    virtual maschine!                       @@   
+   @@    virtual machine!                        @@   
    @@   PotatOS ist love - PotatOS is life       @@ 
     @@                                           @@   
     @@                                           @@   
@@ -51,7 +51,7 @@
       @@        - dosfstools                     @    
       @@@       - qemu                           @    
        @@@      - EasyBMP                        @    
-        @@@@    (see Tools/LLP/EasyBMP/          @    
+        @@@@       (see Tools/LLP/EasyBMP/)      @    
           @@@          (C) 2017                 @@     
            @@@@                              @@@      
              @@@@@                        @@@@        
