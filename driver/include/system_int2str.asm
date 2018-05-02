@@ -118,9 +118,12 @@ intToString16:
 ; digits + \0-termination)
 ; ======================================================
 intToString32:
+    call private_intToString32
+    iret
+private_intToString32:
     pusha
     
-    mov si, dx
+    mov edi, edx
     mov eax, ecx
 
     test eax, eax
@@ -131,8 +134,8 @@ intToString32:
 
     not eax
     inc eax
-    mov byte [si], '-'
-    inc si
+    mov byte [edi], '-'
+    inc edi
 
 .start:
     mov byte [.leadingZero], 0x01
@@ -150,9 +153,9 @@ intToString32:
     mov eax, edx
     jmp .div10
 .else:
-    mov byte [si], al
-    add byte [si], 48
-    inc si
+    mov byte [edi], al
+    add byte [edi], 48
+    inc edi
     mov byte [.leadingZero], 0x00
     mov eax, edx
 .div10:
@@ -168,16 +171,18 @@ intToString32:
     pop eax
     jmp .loop1
 .return:
-    mov byte [si], 0x00
+    mov byte [edi], 0x00
     pop eax
+    
     popa
-    iret
+    ret
 .zero:
-    mov byte [si], '0'
-    inc si
-    mov byte [si], 0x00
+    mov byte [edi], '0'
+    inc esi
+    mov byte [edi], 0x00
+    
     popa
-    iret
+    ret
 .leadingZero db 0x01
 .divisor dd 1000000000
 ; ======================================================

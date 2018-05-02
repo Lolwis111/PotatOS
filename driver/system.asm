@@ -81,9 +81,11 @@ main:
     cmp ah, 0x17        ; start a process
     je startProgram
     
-    ; all new 32-bit ready string-int operation
-    cmp ah, 0xAA
+    cmp ah, 0xAA        ; all new 32-bit ready string-int operation
     je intToString32
+    
+    cmp ah, 0xFF        ; debug function, just prints the values of registers eax, ebx, ecx and edx
+    je addressDebug
     
     iret
 
@@ -104,7 +106,32 @@ main:
 
 col db 0x00
 row db 0x06
+
+addressDebug:
+    pushad
     
+    ; ==================================
+    ; print edx
+    mov ecx, edx
+    mov edx, .string
+    call private_intToString32
+    
+    mov bl, 0x07
+    mov edx, .string
+    call private_printString
+    
+    ; newline
+    mov bl, 0x07
+    mov edx, .newLine
+    call private_printString
+    ; ==================================
+    
+    popad
+    iret
+.values dd 0x00000000, 0x00000000, 0x00000000, 0x00000000
+.string: times 20 db 0x00
+.newLine db 0x0D, 0x0A, 0x00
+
 ; ======================================================
 ; exits the current program and jumps back to cli
 ; ======================================================

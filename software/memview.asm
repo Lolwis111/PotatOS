@@ -42,6 +42,7 @@ inputStr    db 0x0D
 inputStr2   db 0x0D
             db "Segment(0000-FFFF):", 0x00
 
+
 %ifdef german
 
     helpStr     db 0x0D

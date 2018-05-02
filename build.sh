@@ -141,6 +141,8 @@ done
 
 cd ..
 
+make -C csoftware/ # compile c programms
+
 echo "" # newLine
 echo "> installing bootloader"
 
@@ -158,6 +160,7 @@ sudo mount -o loop -t msdos $output_image_name tmp-loop/ || exit
 mkdir tmp-loop/system/
 mkdir tmp-loop/tests/
 mkdir tmp-loop/images/
+mkdir tmp-loop/c-tests/
 
 mkdir tmp-loop/testdir1/ # create some random directories for testing purposes
 mkdir tmp-loop/testdir1/TEST1/
@@ -174,6 +177,7 @@ cp README tmp-loop/system/readme.txt
 cp LICENSE tmp-loop/system/license.txt
 cp driver/*.sys tmp-loop/system/ # copy the drivers
 cp software/*.bin tmp-loop/system/ # copy programms
+cp csoftware/*.bin tmp-loop/c-tests/ # copy the c software
 
 # viewer + images are in an extra directory
 mv tmp-loop/system/viewer.bin tmp-loop/images/viewer.bin

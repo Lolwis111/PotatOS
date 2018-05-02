@@ -1,3 +1,46 @@
+; ===========================================================
+; WriteFile()
+;       writes memory block into file in current directory
+;       SI <= filename
+;       BP:BX <= source block
+;       ECX <= length of source block
+;       carry flag for error indication
+; ===========================================================
+WriteFile:
+    pushf
+    pusha
+    
+    mov word [data.fileName], si
+    mov word [data.address], bp
+    mov word [data.address+2], bx
+    mov dword [data.fileSize], ecx
+    
+    mov ax, cx
+    shr ecx, 16
+    mov dx, cx
+    ; calculate how many sectors we will need
+    div word [BytesPerSector]
+    
+    ; AX sectors needed. if DX (remainder) is not zero we have to add one sector
+    test dx, dx
+    jz .sizeOK
+    inc ax
+.sizeOK:
+
+.clusterLoop:
+    
+    
+    
+    popa
+    popf
+    ret
+data:
+    .fileName dw 0x0000
+    .address dw 0x0000, 0x0000
+    .fileSize dd 0x00000000
+    .clusterChain times 128 dw 0x0000
+    .clusterChainLength db 0x00
+
 ;=======================================
 ;WriteFile()
 ;   Schreibt eine Datei
@@ -7,7 +50,7 @@
 ;   CX => Byteanzahl
 ;   AX <= 0=OK, 1=Error,2=Datei existiert bereits
 ;=======================================
-WriteFile:
+;WriteFile:
     push es
     pusha
 

@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-Wall -O3 -fexpensive-optimizations
+CFLAGS=-Wall -O2
 LFLAGS=
 
 all: bmp color main link

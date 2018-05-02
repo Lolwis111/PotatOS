@@ -27,4 +27,6 @@
 %define KEY_PAGEUP 0x49
 %define KEY_PAGEDOWN 0x51
 
+%define KEY_SPACE 0x39
+
 %endif

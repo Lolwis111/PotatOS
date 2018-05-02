@@ -133,7 +133,7 @@ printFiles:
     mov al, byte [es:si+11]     ; copy attributes
     mov byte [.attributes], al
     
-    call ReadjustFileName
+    ;call ReadjustFileName
     add si, 11
     
     test byte [.attributes], 00010000b ; check if it is a directory
