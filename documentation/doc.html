@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+    
+        <title>Dokumentation</title>
+        
+    </head>
+    
+    <body>
+        
+        <link rel="stylesheet" type="text/css" href="./doc.css">
+    
+        <h1>memory map</h1>
+    
+        <table border="1">
+            <tr>
+                <th>address</th>
+                <th>size</th>
+                <th>usage</th>
+                <th>description</th>
+            </tr>
+            <tr>
+                <td>0x00000</td>
+                <td>1024 Byte</td>
+                <td>unusable</td>
+                <td>interupt vector table</td>
+            </tr>
+            <tr>
+                <td>0x01000</td>
+                <td>4096 Byte</td>
+                <td>unusable</td>
+                <td>
+                    system.sys gets loaded here. It provides all the
+                    system calls and should therefor not be overriden.
+                </td>
+            </tr>
+            <tr>
+                <td>0x02000</td>
+                <td>8 KiByte</td>
+                <td>unusable</td>
+                <td>
+                    directory cache. A copy of the current working
+                    directory gets loaded here for quick access.
+                    Gets overriden everytime a the directory is 
+                    changed.
+                </td>
+            </tr>
+            <tr>
+                <td>0x04000</td>
+                <td>8 KiByte</td>
+                <td>unusable</td>
+                <td>
+                    The file allocation table of the current drive
+                    gets loaded here. Is required to allow for file
+                    and directories to be read.
+                </td>
+            </tr>
+            <tr>
+                <td>0x06000</td>
+                <td>1 Byte</td>
+                <td>read only</td>
+                <td>
+                    This byte represents the current color attribute.
+                    Can be used to print to the terminal in system
+                    color.
+                </td>
+            </tr>
+            <tr>
+                <td>0x06001</td>
+                <td>1 Byte</td>
+                <td>reserved</td>
+                <td>
+                    Was used for settings. Might be used for
+                    kernel functions in the future.
+                </td>
+            </tr>
+            <tr>
+                <td>0x06002</td>
+                <td>2 Byte</td>
+                <td>read only</td>
+                <td>
+                    This word contains the return code of the last
+                    execution.
+                </td>
+            </tr>
+            <tr>
+                <td>0x06004</td>
+                <td>2 Byte</td>
+                <td>read only</td>
+                <td>
+                    This word saves the current length of the path.
+                </td>
+            </tr>
+            <tr>
+                <td>0x06006</td>
+                <td>1 KiByte</td>
+                <td>read only</td>
+                <td>
+                    The current path is saved here.
+                </td>
+            </tr>
+            <tr>
+                <td>0x06406</td>
+                <td>7164 Byte</td>
+                <td>unusable</td>
+                <td>This is the kernel stack.</td>
+            </tr>
+            <tr>
+                <td>0x08000</td>
+                <td>4 KiByte</td>
+                <td>read only</td>
+                <td>
+                    strings.sys gets loaded here to allow for language
+                    specific error messages etc. Can be accessed by
+                    language.asm.
+                </td>
+            </tr>
+            <tr>
+                <td>0x09000</td>
+                <td>476 KiByte</td>
+                <td>free for use</td>
+                <td>
+                    A user programm gets loaded at address 0x09000.
+                    The programm has then guaranteed access to the
+                    space from 0x9000 up to 0x80000 without
+                    destroying the kernel.
+                </td>
+            </tr>
+            <tr>
+                <td>0x80000</td>
+                <td>4 KiByte</td>
+                <td>unusable</td>
+                <td>
+                    The kernel keeps a copy of command.bin
+                    for quick access here.
+                </td>
+            </tr>
+            <tr>
+                <td>0xB8000</td>
+                <td>4 KByte</td>
+                <td>special usage</td>
+                <td>
+                    Represents the videobuffer for text mode.
+                    Everything written to this area is displayed
+                    on the screen. The format is:<br>
+                    [ even byte  |   odd byte  ]<br>
+                    [ ascii char | color attr. ]
+                </td>
+            </tr>
+            <tr>
+                <td>0xB8FA0</td>
+                <td>???</td>
+                <td>undefined</td>
+                <td>
+                    Could be available for use. But BIOSes might put
+                    CMOS data or mappings here. If A20 Gate is enabled,
+                    this could range up to 0xFFFFF. Probe and use
+                    at your own risk.
+                </td>
+            </tr>
+        </table>
+        
+        <br>
+        
+        <div id="memoryMap">
+            <div class="unusable memoryBlock">Kernel</div>
+            <div class="readonly memoryBlock">Settings</div>
+            <div class="unusable memoryBlock">Stack</div>
+            <div class="readonly memoryBlock">strings.sys<br>(Languages)</div>
+            <div class="free memoryBlock">user space memory</div>
+            <div class="unusable memoryBlock">copy of command.bin</div>
+            <div class="special memoryBlock">text framebuffer</div>
+            <div class="special memoryBlock">BIOS data, might be usable</div>
+        </div>
+        
+        <br>
+        <br>
+    
+        <h1>Systemcalls</h1>
+    
+        <p>
+            To call the kernel and execute a function, one must load the
+            function number into the AH register and call interupt 0x21.
+        </p>
+        <p>
+            For example, the system call to exit the programm could look like
+            this (Intel Assembler Style):
+        </p>
+        <code style="font-family: monospace;">
+            mov bx, 0x0000  ; return code 0 indicates no error<br>
+            mov ax, 0x0000  ; function 0 is exit<br>
+            int 0x21        ; call the kernel<br>
+        </code>
+        <br>
+        <table border="1">
+            <tr>
+                <th>Register</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td>AH</td>
+                <td>function number</td>
+            </tr>
+            <tr>
+                <td>(E)BX, (E)CX, (E)DX</td>
+                <td>parameters</td>
+            </tr>
+            <tr>
+                <td>(E)SI, (E)DI, (E)BP</td>
+                <td>parameters</td>
+            </tr>
+            <tr>
+                <td>(E)AX</td>
+                <td>return value</td>
+            </tr>
+        </table>
+        
+        <br>
+        
+        <table border="1">
+            <tr>
+                <th>function number</th>
+                <th>name</th>
+                <th>parameters</th>
+                <th>returns</th>
+                <th>description</th>
+            </tr>
+            
+            <tr>
+                <td>0x00</td>
+                <td>exit</td>
+                <td>BX = Exitcode</td>
+                <td>nothing</td>
+                <td>terminates process and starts command.bin (back to shell)</td>
+            </tr>
+            
+            <tr>
+                <td>0x01</td>
+                <td>print</td>
+                <td>
+                    ES:EDX = pointer to string<br>
+                    BL = color
+                </td>
+                <td>nothing</td>
+                <td>
+                    Prints the \0 terminated string from ES:EDX with 
+                    color BL at the current cursor positon
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x02</td>
+                <td>strcmp</td>
+                <td>
+                    ES:ESI = pointer to first string<br>
+                    DS:EDI = pointer to second string
+                </td>
+                <td>AL = boolean</td>
+                <td>
+                    Compares the two \0 terminated strings
+                    If they are equal AL = 0
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x03</td>
+                <td>shortToString</td>
+                <td>
+                    EDX = pointer to string buffer<br>
+                    CX = short to convert
+                </td>
+                <td>nothing</td>
+                <td>
+                    Converts the integer from cx into a string and saves
+                    it in the buffer. The string has leading zeros
+                    if the integer has less than 5 digits.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x04</td>
+                <td>readline</td>
+                <td>
+                    ES:EDX = pointer to string buffer<br>
+                    CX = length of buffer
+                </td>
+                <td>CX = number of chars read </td>
+                <td>
+                    Reads a string from the keyboard and
+                    saves it in the buffer.
+                </td>
+            </tr>
+
+            <tr>
+                <td>0x05</td>
+                <td>loadfile</td>
+                <td>
+                    EDX = pointer to filename string<br>
+                    BP:EBX = pointer to destination buffer
+                </td>
+                <td>
+                    ECX = filesize<br>
+                    AX = errorcode
+                </td>
+                <td>
+                    Loads the file with the filename in DX into the memory
+                    at address BP:EBX and saves the filesize reported from the
+                    filesystem in ECX.
+                </td>
+            </tr>
+
+            <tr>
+                <td>0x06</td>
+                <td>getTimeString</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    EDX = pointer to string with time
+                </td>
+                <td>
+                    Returns a pointer to string with the current time in EDX.
+                </td>
+            </tr>
+
+            <tr>
+                <td>0x07</td>
+                <td>getDateString</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    EDX = pointer to string with time
+                </td>
+                <td>
+                    Returns a pointer to string with the current date in EDX.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x08</td>
+                <td>getVersion</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    AH = Majorversion<br>
+                    AL = Minorversion
+                </td>
+                <td>
+                    Returns the version in AX.
+                </td>
+            </tr>
+
+            <tr>
+                <td>0x09</td>
+                <td>stringToInt</td>
+                <td>
+                    DS:EDX = pointer to string
+                </td>
+                <td>
+                    ECX = converted integer<br>
+                    AX = errorcode<br>
+                    carryflag
+                </td>
+                <td>
+                    Tries to convert the string in DS:EDX into an 
+                    integer in ECX. If an error occours, the errorcode 
+                    is in AX, ECX = 0 and the carry flag is set.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x0A</td>
+                <td>deletefile</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    nothing
+                </td>
+                <td>
+                    Function currently not implemented.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x0B</td>
+                <td>random</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    ECX = random integer
+                </td>
+                <td>
+                    Calculates a pseudorandom number and
+                    returns it in ECX.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x0B</td>
+                <td>getCPUInfo</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    AX = string pointer to CPU vendor<br>
+                    BX = string pointer to CPU model
+                </td>
+                <td>
+                    Returns stringpointer to CPU vendor in AX.
+                    Returns stringpointer to CPU model in BX.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x0D</td>
+                <td>hexstrToByte</td>
+                <td>
+                    EDX = pointer to hexstring
+                </td>
+                <td>
+                    CL = converted byte
+                </td>
+                <td>
+                    Assumes that EDX points to a string and interprets
+                    the first two characters as hexadecimal digits.
+                    These two digits get converted into a byte.
+                    Warning: No error detection!
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x0E</td>
+                <td>setCursorPosition</td>
+                <td>
+                    DH = rownumber<br>
+                    DL = columnnumber
+                </td>
+                <td>
+                    nothing
+                </td>
+                <td>
+                    Moves the cursor to the position DH:DL.
+                    If DH:DL are bigger than the screen would allow,
+                    they get clamped to the biggest possible value.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x0F</td>
+                <td>getCursorPosition</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    DH = rownumber<br>
+                    DL = columnnumber
+                </td>
+                <td>
+                    Returns the current cursor position.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x10</td>
+                <td>printChar</td>
+                <td>
+                    DH = character to print<br>
+                    DL = color to print in
+                </td>
+                <td>
+                    DH = rownumber<br>
+                    DL = columnnumber
+                </td>
+                <td>
+                    Prints a single character in DH with the
+                    color from DL to the current cursor position.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x11</td>
+                <td>loadroot</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    CX = number of files in root dir
+                </td>
+                <td>
+                    Loads the root directory from the current
+                    drive into the directory cache.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x12</td>
+                <td>saveroot</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    nothing
+                </td>
+                <td>
+                    Currently not implemented
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x13</td>
+                <td>findfile</td>
+                <td>
+                    DX = pointer to filename string
+                </td>
+                <td>
+                    AX = index of file in directory
+                </td>
+                <td>
+                    Returns the index of the file in the directory in AX.
+                    If the file was not found, AX = -1.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x14</td>
+                <td>writefile</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    nothing
+                </td>
+                <td>
+                    Currently not implemented
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x15</td>
+                <td>byteToHexstr</td>
+                <td>
+                    CL = integer byte
+                </td>
+                <td>
+                    DX = pointer to 3 character string with hexdecimals
+                </td>
+                <td>
+                    Converts the byte in CL into a hexstring that is \0 terminated.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x16</td>
+                <td>bcdToInt</td>
+                <td>
+                    AL = byte in BCD
+                </td>
+                <td>
+                    AX = integer
+                </td>
+                <td>
+                    Converts the binary coded decimal in AL into an integer in AX.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0x17</td>
+                <td>execute</td>
+                <td>
+                    DX = pointer to filename string
+                    ES:DI = pointer to argument string
+                </td>
+                <td>
+                    nothing
+                </td>
+                <td>
+                    Tries to launch the programm with the given filename
+                    and passes the given argument string to it.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0xAA</td>
+                <td>intToString</td>
+                <td>
+                    EDX = pointer to string buffer
+                    ECX = integer to convert
+                </td>
+                <td>
+                    nothing
+                </td>
+                <td>
+                    Converts the integer from ecx into a string and saves
+                    it in the buffer.
+                </td>
+            </tr>
+            
+            <tr>
+                <td>0xFF</td>
+                <td>debug1</td>
+                <td>
+                    EDX = any value
+                </td>
+                <td>
+                    nothing
+                </td>
+                <td>
+                    Prints the value in EDX interpreted as integer to the current 
+                    cursor position.
+                </td>
+            </tr>
+            
+        </table>
+            
+    </body>
+    
+</html>
