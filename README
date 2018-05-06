@@ -44,8 +44,8 @@
    @@    virtual machine!                        @@   
    @@   PotatOS ist love - PotatOS is life       @@ 
     @@                                           @@   
-    @@                                           @@   
     @@        Tools:                             @@   
+    @@          - make                           @@   
     @@@         - Netwide Assembler              @@   
      @@         - GNU C++ Compiler               @@   
       @@        - dosfstools                     @    
