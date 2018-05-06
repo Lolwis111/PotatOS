@@ -23,32 +23,7 @@ readLine:
     inc word [.counter]     ; increment counter
     cmp word [.counter], cx ; if max_chars is reached, do not accept more chars
     jg .kbLoop
-    
-    cmp byte [SYSTEM_KB_STATUS], 0 ; check if y and z should be switched
-    je .store
-    
-    cmp al, 'z' ; if yes => switch
-    je .y
-    cmp al, 'y'
-    je .z
-    cmp al, 'Z'
-    je .Y
-    cmp al, 'Y'
-    je .Z
-    
-    jmp .store ; save the char in the dest string
-    
-.y:
-    mov al, 'y'
-    jmp .store
-.Y:
-    mov al, 'Y'
-    jmp .store
-.z:
-    mov al, 'z'
-    jmp .store
-.Z:
-    mov al, 'Z'
+
 .store: ; saves the char in dest string and prints it on the screen
         ; also refreshes all relevant addresses
     stosb               ; save char

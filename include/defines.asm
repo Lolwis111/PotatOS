@@ -64,7 +64,6 @@
     %define CURRENT_PATH    0x7C02
 
     %define SYSTEM_COLOR 0x1FFF     ; byte indicating which color is used at the moment
-    %define SYSTEM_KB_STATUS 0x1FFE ; byte indicating if y and z should be switched
     %define ERROR_CODE 0x1FFC       ; return code of the last executed command/programm
     
     ; FILESYSTEM
