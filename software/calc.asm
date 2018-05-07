@@ -83,12 +83,16 @@ resultMemory dd 0x00000000
 ; ==========================================
 cls:
     pusha
+    push gs
+    mov ax, 0xB800
     xor bx, bx
+    mov gs, ax
     mov cx, SCREEN_BUFFER_SIZE
 .loop1:
     mov word [gs:bx], dx
     add bx, 2
     loop .loop1
+    pop gs
     popa
     
     movecur 0, 0
@@ -158,100 +162,7 @@ main:
 ; ===============================================
 
 
-; ==============================================
-readA:
-    print lblA, NUM_COLOR
-
-    readline inputString, 9
-
-    mov si, inputString
-    call UpperCase
-    strcmp inputString, cmdANS
-    je .ans
-
-    mov si, inputString
-    mov di, cmdMEM
-    cmpsd
-    je .loadMem
-    
-    strtol inputString    
-    cmp eax, -1
-    je .ret
-    ret
-.ans:
-    mov ecx, dword [result]
-    xor eax, eax
-    ret
-.loadMem:
-    xor ebx, ebx
-    mov bl, byte [inputString+3]
-    
-    cmp ebx, 'A'
-    jb .ret
-    cmp ebx, 'F'
-    ja .ret
-    
-    sub ebx, 'A'
-    
-    xor eax, eax
-    mov ecx, dword [resultMemory+ebx*4]
-    ret
-.ret:
-    xor ecx, ecx
-    mov eax, -1
-    ret
-; ==============================================
-
-
-; ===============================================
-readNumbers:
-    call readA
-    cmp eax, -1
-    je .ret
-    
-    mov dword [numberA], ecx
-    
-    print lblB, NUM_COLOR
-    
-    readline inputString, 9
-
-    mov si, inputString
-    call UpperCase
-    strcmp inputString, cmdANS
-    je .ans
-
-    mov si, inputString
-    mov di, cmdMEM
-    cmpsd
-    je .loadMem
-    
-    strtol inputString
-    cmp eax, -1 
-    je .ret
-.ok:
-    mov dword [numberB], ecx
-    ret
-.ans:
-    mov ecx, dword [result]
-    jmp .ok
-.loadMem:
-    xor ebx, ebx
-    mov bl, byte [inputString+3]
-    
-    cmp ebx, 'A'
-    jb .ret
-    cmp ebx, 'F'
-    ja .ret
-    
-    sub ebx, 'A'
-    
-    mov ecx, dword [resultMemory+ebx*4]
-    jmp .ok
-.ret:
-    xor ecx, ecx
-    mov eax, -1
-    ret
-; ===============================================
+%include "include/calc_input.asm"
 
 
 ; ===============================================
@@ -367,102 +278,7 @@ mul_numbers:
 ; ===============================================   
 
 
-; ===============================================
-dec_to_bin:
-    call readA
-    cmp ax, -1
-    je main
-
-    mov eax, ecx
-    mov cx, 32
-    mov edi, .bitString+35
-.bitLoop:
-    push cx
-    xor edx, edx
-    mov ebx, 2
-    div ebx
-    push eax
-
-    add dx, 48
-    mov byte [di], dl
-    dec di
-
-    pop eax
-    pop cx
-    loop .bitLoop
-
-    print .bitString, STD_COLOR
-
-    jmp main
-.bitString db "\r\n00000000000000000000000000000000", 0x00
-; ===============================================
-
-
-; ===============================================
-dec_to_hex:
-    call readA
-    cmp ax, -1
-    je main
-
-    mov eax, ecx
-    mov cx, 8
-    mov di, .hexString+11
-.charLoop:
-    push cx
-    
-    xor edx, edx
-    mov ebx, 16
-    div ebx
-    push eax
-
-    mov si, .hexChars
-    add si, dx
-    mov al, byte [si]
-    mov byte [di], al
-    dec di
-
-    pop eax
-    
-    pop cx
-    loop .charLoop
-
-    print .hexString, STD_COLOR
-
-    jmp main
-.hexString db "\r\n00000000", 0x00
-.hexChars db "0123456789ABCDEF"
-; ===============================================
-
-
-; ===============================================
-dec_to_oct:
-    call readA
-    cmp ax, -1
-    je main
-
-    mov eax, ecx
-    mov cx, 12
-    mov di, .octString+15
-.charLoop:
-    push cx
-    xor edx, edx
-    mov ebx, 8
-    div ebx
-    push eax
-
-    add dx, 48
-    mov byte [di], dl
-    dec di
-
-    pop eax
-    pop cx
-    loop .charLoop
-
-    print .octString, STD_COLOR
-
-    jmp main
-.octString db "\r\n000000000000", 0x00
-; ===============================================
+%include "include/calc_converter.asm"
 
 
 ; ===============================================
