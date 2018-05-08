@@ -81,6 +81,12 @@ main:
     cmp ah, 0x17        ; start a process
     je startProgram
     
+    cmp ah, 0x18        ; reinitialize the timer
+    je sleepInit
+
+    cmp ah, 0x19        ; sleep for ebx*10 milliseconds
+    je sleep
+
     cmp ah, 0xAA        ; all new 32-bit ready string-int operation
     je intToString32
     
@@ -103,6 +109,7 @@ main:
 %include "system_datetime.asm"
 %include "system_userIO.asm"
 %include "system_environment.asm"
+%include "system_sleep.asm"
 
 col db 0x00
 row db 0x06
@@ -180,10 +187,10 @@ startProgram:
 
     mov cx, 64
 .copyArgs:                  ; copy argument to a location that wont be overriden by the new program
-    mov al, byte [si]
+    mov al, byte [esi]
     test al, al
     jz .copyDone
-    mov byte [di], al
+    mov byte [edi], al
     inc si
     inc di
     dec cx
@@ -192,13 +199,13 @@ startProgram:
 .noArgs:
     mov byte [.argumentTemp], -1
 .copyDone:
-    mov byte [di], 0x00
+    mov byte [edi], 0x00
     mov si, dx              ; check that filename has .BIN extension
-    cmp byte [si+8], 'B'
+    cmp byte [esi+8], 'B'
     jne .noExecutableError
-    cmp byte [si+9], 'I'
+    cmp byte [esi+9], 'I'
     jne .noExecutableError
-    cmp byte [si+10], 'N'
+    cmp byte [esi+10], 'N'
     jne .noExecutableError
     
     push si
@@ -224,43 +231,6 @@ startProgram:
     mov ax, 0x01
     stc
     iret
-    
-; TODO: build algorithm to resolve paths
-; .trySystemDir:
-    ; ; if load file fails we try to load the file from the system/ directory
-    ; mov di, si
-    ; push ds
-    ; mov ax, 0x8000
-    ; mov ds, ax
-    ; xor si, si
-; .fileLoop:
-    ; cmp byte [ds:si], 0x00
-    ; je .error
-    
-    ; push si
-    ; push di
-    ; mov cx, 11
-    ; rep cmpsb
-    ; je .fileFound
-    ; pop di
-    ; pop si
-    
-    ; add si, 32
-    ; jmp .fileLoop
-; .fileFound:
-    ; pop di
-    ; pop si
-    ; pop ds
-    
-    ; mov bx, SOFTWARE_BASE ; load the program into memory
-    ; xor bp, bp
-    ; call ReadFile.customDirectory
-    ; jc .error
-
-    ; add esp, 6  ; remove stack pointers created by interrupt instruction, we do not need this
-    
-    ; mov ax, .argumentTemp
-    ; jmp SOFTWARE_BASE   ; start programm
     
 .error:
     stc

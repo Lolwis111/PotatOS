@@ -584,7 +584,37 @@
                     and passes the given argument string to it.
                 </td>
             </tr>
+
+            <tr>
+                <td>0x18</td>
+                <td>initSleep</td>
+                <td>
+                    none
+                </td>
+                <td>
+                    nothing
+                </td>
+                <td>
+                    Initalizes the programmable interupt timer.
+                    Gets called by sysinit.sys to allow for sleep() to work
+                </td>
+            </tr>
             
+            <tr>
+                <td>0x19</td>
+                <td>sleep</td>
+                <td>
+                    EBX = time to sleep (in blocks of 10ms)
+                </td>
+                <td>
+                    nothing
+                </td>
+                <td>
+                    Sleeps for the given amount of time.<br>
+                    To sleep for one second, one would call sleep(100)
+                </td>
+            </tr>
+
             <tr>
                 <td>0xAA</td>
                 <td>intToString</td>
