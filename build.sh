@@ -141,7 +141,10 @@ done
 
 cd ..
 
-make -C csoftware/ # compile c programms
+echo ""
+echo "> building c software"
+
+make -C csoftware/ || exit # compile c programms
 
 echo "" # newLine
 echo "> installing bootloader"
