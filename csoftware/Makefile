@@ -1,7 +1,7 @@
 #!/usr/bin/make
 .SUFFIXES:
-SRC = float.c
-TAR = float.bin
+SRC = ctest.c
+TAR = ctest.bin
 
 CFLAGS = -m32 -c -Os -march=i686 -ffreestanding -Wall -Werror
 LFLAGS = -m elf_i386 -static -Tlinker.ld -nostdlib --nmagic
