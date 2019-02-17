@@ -43,10 +43,10 @@
 
 %macro loadfile 2 ; load file to BP:BX
     mov dx, %1
-	xor bp, bp
-	mov bx, %2
-	mov ah, 0x05
-	int 0x21
+    xor bp, bp
+    mov bx, %2
+    mov ah, 0x05
+    int 0x21
 %endmacro 
 
 %macro ltostr 2 ; converts arg2 to string in arg1
@@ -73,6 +73,12 @@
     mov dl, %1 ; column (x)
     mov dh, %2 ; row (y)
     mov ah, 0x0E
+    int 0x21
+%endmacro
+
+%macro sleep 1
+    mov ebx, %1
+    mov ah, 0x19
     int 0x21
 %endmacro
 

@@ -1,0 +1,30 @@
+creating language.asm
+> create floppy image
+mkfs.fat 4.1 (2017-01-24)
+> building bootloader
+> building programms
+....include/fileman_printFiles.asm:117: error: symbol `printFiles.copFileSizeString' undefined
+include/fileman_printFiles.asm:118: error: label `printFiles.itsADirectory2' changed during code generation [-w+error=label-redef-late]
+include/fileman_printFiles.asm:121: error: label `printFiles.copyFileSizeStringOK' changed during code generation [-w+error=label-redef-late]
+include/fileman_printFiles.asm:140: error: label `printFiles.skipEntry' changed during code generation [-w+error=label-redef-late]
+include/fileman_printFiles.asm:144: error: label `printFiles.endOfDir' changed during code generation [-w+error=label-redef-late]
+include/fileman_printFiles.asm:149: error: label `printFiles.attributes' changed during code generation [-w+error=label-redef-late]
+fileman.asm:27: error: label `fileName' changed during code generation [-w+error=label-redef-late]
+fileman.asm:28: error: label `fileSizeString' changed during code generation [-w+error=label-redef-late]
+fileman.asm:29: error: label `fileEntryLine' changed during code generation [-w+error=label-redef-late]
+fileman.asm:31: error: label `selectedIndex' changed during code generation [-w+error=label-redef-late]
+fileman.asm:32: error: label `fileCount' changed during code generation [-w+error=label-redef-late]
+fileman.asm:33: error: label `entriesToSkip' changed during code generation [-w+error=label-redef-late]
+fileman.asm:39: error: label `countFiles' changed during code generation [-w+error=label-redef-late]
+fileman.asm:44: error: label `countFiles.loop' changed during code generation [-w+error=label-redef-late]
+fileman.asm:50: error: label `countFiles.skip' changed during code generation [-w+error=label-redef-late]
+fileman.asm:53: error: label `countFiles.end' changed during code generation [-w+error=label-redef-late]
+fileman.asm:59: error: label `start' changed during code generation [-w+error=label-redef-late]
+fileman.asm:82: error: label `main' changed during code generation [-w+error=label-redef-late]
+fileman.asm:98: error: label `main.scrollOK' changed during code generation [-w+error=label-redef-late]
+fileman.asm:106: error: label `main.scrollUp' changed during code generation [-w+error=label-redef-late]
+fileman.asm:112: error: label `main.moveUp' changed during code generation [-w+error=label-redef-late]
+fileman.asm:120: error: label `main.scrollDown' changed during code generation [-w+error=label-redef-late]
+fileman.asm:134: error: label `main.moveDown' changed during code generation [-w+error=label-redef-late]
+fileman.asm:141: error: label `exit' changed during code generation [-w+error=label-redef-late]
+fileman.asm:150: error: label `backup' changed during code generation [-w+error=label-redef-late]

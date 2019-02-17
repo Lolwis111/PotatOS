@@ -5,11 +5,11 @@
 
     ; SCREEN
     
-	%define SCREEN_WIDTH 80
-	%define SCREEN_HEIGHT 25
+    %define SCREEN_WIDTH 80
+    %define SCREEN_HEIGHT 25
     %define SCREEN_BUFFER_SIZE (SCREEN_HEIGHT * SCREEN_WIDTH)
     
-	%define VIDEO_MEMORY_SEGMENT 0xB800
+    %define VIDEO_MEMORY_SEGMENT 0xB800
     %define VIDEO_GRAPHICS_SEGMENT 0xA000
     %define VIDEO_TEXT_SEGMENT VIDEO_MEMORY_SEGMENT
     
@@ -18,9 +18,9 @@
     %define TRUE 0x01
     %define FALSE 0x00
     %define _HIGH_MEM_ FALSE
-	
-    %define RESULT_OK		0x01
-	%define RESULT_CANCEL	0x00
+    
+    %define RESULT_OK        0x01
+    %define RESULT_CANCEL    0x00
     
     %define EXIT_SUCCESS 0x00
     %define EXIT_FAILURE 0x01
@@ -33,26 +33,26 @@
     
     ; COLORS
         
-	%define BLACK			0x00
-	%define BLUE			0x01
-	%define GREEN			0x02
-	%define CYAN			0x03
-	%define RED				0x04
-	%define MAGENTA			0x05
-	%define BROWN			0x06
-	%define WHITE			0x07
-	%define GREY			0x08
-	%define BRIGHT_BLUE		0x09
-	%define BRIGHT_GREEN 	0x0A
-	%define BRIGHT_CYAN		0x0B
-	%define BRIGHT_RED		0x0C
-	%define BRIGHT_MAGENTA	0x0D
-	%define BRIGHT_YELLOW	0x0E
-	%define BRIGHT_WHITE	0x0F
-	
-	%define createColor(foreground, background) ((background*16)+foreground)
-	%define cursorPos(x, y) ((y * (SCREEN_WIDTH * 2)) + (x * 2))
-	
+    %define BLACK            0x00
+    %define BLUE            0x01
+    %define GREEN            0x02
+    %define CYAN            0x03
+    %define RED                0x04
+    %define MAGENTA            0x05
+    %define BROWN            0x06
+    %define WHITE            0x07
+    %define GREY            0x08
+    %define BRIGHT_BLUE        0x09
+    %define BRIGHT_GREEN     0x0A
+    %define BRIGHT_CYAN        0x0B
+    %define BRIGHT_RED        0x0C
+    %define BRIGHT_MAGENTA    0x0D
+    %define BRIGHT_YELLOW    0x0E
+    %define BRIGHT_WHITE    0x0F
+    
+    %define createColor(foreground, background) ((background*16)+foreground)
+    %define cursorPos(x, y) ((y * (SCREEN_WIDTH * 2)) + (x * 2))
+    
     ; ADDRESSES
     
     %define LOADER_SYS      0x500

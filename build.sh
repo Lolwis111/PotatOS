@@ -1,4 +1,5 @@
 #!/bin/bash
+
 build_home=$(pwd)  # copy working directory
 include_system="${build_home}/include/" # globaly available include files
 include_software="${build_home}/software/include/" # program internal include files
@@ -158,8 +159,10 @@ rm -rf tmp-loop/ # delete old mount point
 
 mkdir tmp-loop/ || exit # create new mount point
 
+# mount the floopy image
 sudo mount -o loop -t msdos $output_image_name tmp-loop/ || exit
 
+# build the folder structure
 mkdir tmp-loop/system/
 mkdir tmp-loop/tests/
 mkdir tmp-loop/images/

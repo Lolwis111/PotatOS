@@ -28,12 +28,12 @@ clear_screen:
 change_color:
 	cmp byte [argument], 0x00
 	je .color_help
-	
+
 	mov al, byte [argument+1]
 	cmp byte [argument], al
     
     print NEWLINE
-    
+
 	je main
 
 	mov ah, 0x0D
@@ -51,14 +51,13 @@ change_color:
     print NEWLINE
 	
 	jmp main
-	
 .error:
     print .errorStr
 	jmp main
 	
 .color_help:
     print COLOR_HELP
-	jmp main
+    jmp main
 
 .errorStr db "\r\nError\r\n", 0x00
 .color db "00000", 0x00

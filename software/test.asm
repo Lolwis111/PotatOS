@@ -7,11 +7,16 @@ jmp start
 
 %include "functions.asm"
 %include "language.asm"
+%include "strings.asm"
+
+fname db "Hallo   txt"
 
 start:
-    mov ebx, 1000
-    mov ah, 0x19
-    int 0x21
+    
+    mov si, fname
+    call ReadjustFileName
+
+    print di
 
     print NEWLINE
 

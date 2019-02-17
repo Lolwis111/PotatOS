@@ -1,16 +1,17 @@
 #!/usr/bin/make
 .SUFFIXES:
-SRC = ctest.c
-TAR = ctest.bin
+TAR = ctest.bin print.bin test.bin
 
-CFLAGS = -m32 -c -Os -march=i686 -ffreestanding -Wall -Werror
+CFLAGS = -m32 -Os -march=i686 -ffreestanding -fno-stack-protector -Wall -Werror
 LFLAGS = -m elf_i386 -static -Tlinker.ld -nostdlib --nmagic
 
 %.o: %.c
-	$(CC) $(CFLAGS)  $^ -o $@
+	$(CC) -c $(CFLAGS) $^ -o $@;\
+        $(CC) -S $(CFLAGS) $^ -o $@.asm;\
 
 %.elf: %.o
-	$(LD) $(LFLAGS) -o $@ $^
+	$(LD) $(LFLAGS) -o $@ $^;\
+        objdump -d -Mi8086,intel -S $^ > $@.lst
 
 %.bin: %.elf
 	objcopy -O binary $^ $@

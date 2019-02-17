@@ -13,36 +13,36 @@
 ; ES:DI <= FAT12 filename
 ; ==========================================
 AdjustFileName:
-	xor cx, cx
+    xor cx, cx
 .copy:
-	lodsb
-	cmp al, '.'
-	je .extension
-	cmp al, 00h
-	je .error
-	
-	stosb
-	inc cx
-	jmp .copy
-	
+    lodsb
+    cmp al, '.'
+    je .extension
+    cmp al, 00h
+    je .error
+    
+    stosb
+    inc cx
+    jmp .copy
+    
 .extension:
-	cmp cx, 8
-	je .copyExtension
-	
+    cmp cx, 8
+    je .copyExtension
+    
 .addSpaces:
-	mov byte [es:di], ' '
-	inc di
-	inc cx
-	cmp cx, 8
-	jl .addSpaces
+    mov byte [es:di], ' '
+    inc di
+    inc cx
+    cmp cx, 8
+    jl .addSpaces
 .copyExtension:
-	movsb
-	movsw
-	xor ax, ax
-	ret
+    movsb
+    movsw
+    xor ax, ax
+    ret
 .error:
-	mov ax, -1
-	ret
+    mov ax, -1
+    ret
 ; ==========================================
 
 
@@ -52,31 +52,31 @@ AdjustFileName:
 ; ES:DI <= FAT12 directory name
 ; ==========================================
 AdjustDirName:
-	xor cx, cx
+    xor cx, cx
 .copy:
-	lodsb
-	test al, al
-	jz .extension
-	
-	stosb
-	inc cx
-	jmp .copy
-	
+    lodsb
+    test al, al
+    jz .extension
+    
+    stosb
+    inc cx
+    jmp .copy
+    
 .extension:
-	cmp cx, 11
-	jl .addSpaces
-	
+    cmp cx, 11
+    jl .addSpaces
+    
 .addSpaces:
-	mov byte [es:di], ' '
-	inc di
-	inc cx
-	cmp cx, 11
-	jl .addSpaces
-	xor ax, ax
-	ret
+    mov byte [es:di], ' '
+    inc di
+    inc cx
+    cmp cx, 11
+    jl .addSpaces
+    xor ax, ax
+    ret
 .error:
-	mov ax, -1
-	ret
+    mov ax, -1
+    ret
 ; ==========================================
 
 
@@ -86,23 +86,23 @@ AdjustDirName:
 ; ==========================================
 UpperCase:
 .loop1:
-	cmp byte [ds:si], 00h
-	je .return
-	
-	cmp byte [ds:si], 'a'
-	jb .noatoz
-	cmp byte [ds:si], 'z'
-	ja .noatoz
-	
-	sub byte [ds:si], 20h
-	inc si
-	
-	jmp .loop1
+    cmp byte [ds:si], 00h
+    je .return
+    
+    cmp byte [ds:si], 'a'
+    jb .noatoz
+    cmp byte [ds:si], 'z'
+    ja .noatoz
+    
+    sub byte [ds:si], 20h
+    inc si
+    
+    jmp .loop1
 .return:
-	ret
+    ret
 .noatoz:
-	inc si
-	jmp .loop1
+    inc si
+    jmp .loop1
 ; ==========================================
 
 
@@ -131,7 +131,7 @@ StringLength2:
     pop ax
     pop si
     popf
-	ret
+    ret
 ; ==========================================
 
 
@@ -141,29 +141,29 @@ StringLength2:
 ; CX <- length
 ; ==========================================
 StringLength:
-	push bx
-	push dx
-	push bp
-	xor cx, cx
+    push bx
+    push dx
+    push bp
+    xor cx, cx
 .charLoop:
-	cmp byte [ds:si], al
-	je .ok
-	cmp byte [ds:si], 0x00
-	je .noOk
-	inc si
-	inc cx
-	jmp .charLoop
+    cmp byte [ds:si], al
+    je .ok
+    cmp byte [ds:si], 0x00
+    je .noOk
+    inc si
+    inc cx
+    jmp .charLoop
 .ok:
-	pop bp
-	pop dx
-	pop bx
-	ret
+    pop bp
+    pop dx
+    pop bx
+    ret
 .noOk:
-	pop bp
-	pop dx
-	pop bx
-	xor cx, cx
-	ret
+    pop bp
+    pop dx
+    pop bx
+    xor cx, cx
+    ret
 ; ==========================================
 
 
@@ -173,31 +173,31 @@ StringLength:
 ; CX <= Index
 ; ==========================================
 fileNameLength:
-	push bx
-	push dx
-	push bp
-	xor cx, cx
+    push bx
+    push dx
+    push bp
+    xor cx, cx
 .loop1:
-	lodsb
-	or al, al
-	jz .error
-	cmp al, ' '
-	je .done
-	inc cx
-	jmp .loop1
+    lodsb
+    or al, al
+    jz .error
+    cmp al, ' '
+    je .done
+    inc cx
+    jmp .loop1
 .done:
-	pop bp
-	pop dx
-	pop bx
-	ret
+    pop bp
+    pop dx
+    pop bx
+    ret
 .error:
-	pop bp
-	pop dx
-	pop bx
-	mov cx, -1
-	ret
-	
-.noArgs		db "NO ARGUMENT", 0Dh, 0Ah, 00h
+    pop bp
+    pop dx
+    pop bx
+    mov cx, -1
+    ret
+    
+.noArgs        db "NO ARGUMENT", 0Dh, 0Ah, 00h
 ; ==========================================
 
 
@@ -227,6 +227,7 @@ ReadjustFileName:
     stosb
     
     popa
+    mov di, .newFileName
     ret
 .newFileName times 13 db 0x00
 ; ==========================================
@@ -240,29 +241,29 @@ ReadjustFileName:
 ; DS:SI => trimmed string
 ; ==========================================
 TrimLeft:
-	push ax
-	pushf
-	
-	cld
+    push ax
+    pushf
+    
+    cld
 .charLoop:
-	lodsb	; load a character
-	
-	; check if it is a whitespace (and if yes repeat this)
-	cmp al, 0x20 ; space
-	je .charLoop
-	cmp al, 0x08 ; tab
-	je .charLoop
-	cmp al, 0x0D ; \r
-	je .charLoop	
-	cmp al, 0x0A ; \n
-	je .charLoop
-	
+    lodsb    ; load a character
+    
+    ; check if it is a whitespace (and if yes repeat this)
+    cmp al, 0x20 ; space
+    je .charLoop
+    cmp al, 0x08 ; tab
+    je .charLoop
+    cmp al, 0x0D ; \r
+    je .charLoop    
+    cmp al, 0x0A ; \n
+    je .charLoop
+    
 .return:    ; if the character is no whitespace we return
-	dec si  ; therefore we adjust si because lodsb increments si
-			; before we know if we actually need to skip or not
-	popf
-	pop ax
-	ret
+    dec si  ; therefore we adjust si because lodsb increments si
+            ; before we know if we actually need to skip or not
+    popf
+    pop ax
+    ret
 ; ==========================================
 
 

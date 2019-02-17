@@ -61,3 +61,50 @@ drawBorder:
 
     ret
 ; ================================================
+
+; ================================================
+clearContentBox:
+    mov di, cursorPos(1, 1)
+    mov cx, SCREEN_HEIGHT-2
+.loopY:
+    push cx
+    mov cx, SCREEN_WIDTH-2
+    .loopX:
+        mov byte [gs:di], 0x20
+        mov byte [gs:di+1], TEXT_COLOR
+        add di, 2
+        loop .loopX
+    add di, 4
+    pop cx
+    loop .loopY
+    ret
+; ================================================
+
+; ================================================
+; cl Color
+; bx Index
+; ================================================
+drawCursor:
+    push di
+    
+    mov di, cursorPos(1, 1)
+    
+    xor dx, dx
+    mov ax, (SCREEN_WIDTH*2)
+    movzx bx, byte [selectedIndex]
+    mul bx
+    add di, ax
+    
+    inc di
+    
+    mov cx, 60
+.loop:
+    mov byte [gs:di], SELECTION_COLOR
+    add di, 2
+    dec cx
+    jnz .loop
+    
+    pop di
+    ret
+; ================================================
+ 

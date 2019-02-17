@@ -132,3 +132,53 @@ printString:
     popa
     ret
 ; ================================================
+
+
+; ================================================
+; save a copy of the diretory as to not mess
+; up the console
+; ================================================
+backupDir:
+    push ds
+    push es
+    mov ax, DIRECTORY_SEGMENT
+    mov ds, ax
+    mov ax, backup
+    shl ax, 4
+    mov es, ax
+
+    xor di, di
+    xor si, si
+    mov cx, 0x0500
+    rep movsd
+
+
+    pop es
+    pop ds
+    ret
+; ================================================
+
+
+; ================================================
+; copy the directory back to the original location
+; ================================================
+restoreDir:
+    push ds
+    push es
+    mov ax, DIRECTORY_SEGMENT
+    mov es, ax
+    mov ax, backup
+    shl ax, 4
+    mov ds, ax
+
+    xor di, di
+    xor si, si
+    mov cx, 0x0500
+    rep movsd
+
+
+    pop es
+    pop ds
+    ret
+; ================================================
+

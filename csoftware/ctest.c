@@ -23,7 +23,7 @@ asm(".code16gcc\n");
 
 asm("jmp $0, $main");
 
-float inline degreeToRadians(float x)
+float degreeToRadians(float x)
 {
     return x * (180.0f / 3.14159265f);
 }
@@ -33,7 +33,7 @@ float radianToDegree(float x)
    return x * (180.0f / 3.14159265f);
 }
 
-int inline abs(int x)
+int abs(int x)
 {
     if(x < 0)
         return -x;
