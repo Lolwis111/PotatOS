@@ -2,7 +2,7 @@
 ; shows the help string
 ; ====================================================
 view_help:
-    print HELP
+    PRINT HELP
     
     jmp main
 ; ====================================================
@@ -10,13 +10,13 @@ view_help:
 
 ; ====================================================  
 show_version:
-    print NEWLINE
+    PRINT NEWLINE
     
-    print NEWLINE
+    PRINT NEWLINE
     
-    print .lblName
+    PRINT .lblName
     
-    print .lblVersion
+    PRINT .lblVersion
     
     mov ah, 0x08
     int 0x21
@@ -43,20 +43,20 @@ show_version:
     mov ah, 0x10
     int 0x21
     
-    print NEWLINE
+    PRINT NEWLINE
 
     mov ah, 0x0C
     int 0x21
     push bx
-    print ax
+    PRINT ax
 
-    print NEWLINE
+    PRINT NEWLINE
 
     pop bx
 
-    print bx
+    PRINT bx
     
-    print NEWLINE
+    PRINT NEWLINE
     
     jmp main
 
@@ -67,14 +67,14 @@ show_version:
 
 
 ; ====================================================
-print_return_code:
-    print NEWLINE   ; prints the return code of the last executed command
+PRINT_return_code:
+    PRINT NEWLINE   ; prints the return code of the last executed command
     
-    itostr .errCodeStr, word [ERROR_CODE]
+    ITOSTR .errCodeStr, word [ERROR_CODE]
     
-    print .errCodeStr
+    PRINT .errCodeStr
     
-    print NEWLINE
+    PRINT NEWLINE
 
     jmp main
 .errCodeStr db "00000", 0x00

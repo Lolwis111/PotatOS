@@ -33,7 +33,7 @@ start:
     mov di, fileName
     call AdjustFileName
     
-    loadfile fileName, 0x9500 ; load the file
+    LOADFILE fileName, 0x9500 ; load the file
     cmp ax, -1
     je .error
     
@@ -43,8 +43,8 @@ start:
 
 ; =====================================================================
 .noArgument:
-    print FILE_PROMPT ; get filename from user
-    readline input, 11
+    PRINT FILE_PROMPT ; get filename from user
+    READLINE input, 11
     
     mov si, input           ; convert to uppercase
     call UpperCase
@@ -55,13 +55,13 @@ start:
     cmp ax, -1
     je .error
     
-    loadfile fileName, 0x9500 ; load the file
+    LOADFILE fileName, 0x9500 ; load the file
     cmp ax, -1
     je .error
     jmp init
     
 .error:
-    print FILE_NOT_FOUND_ERROR  ; print an error message
+    PRINT FILE_NOT_FOUND_ERROR  ; print an error message
 
     EXIT EXIT_FAILURE
 ; =====================================================================
@@ -93,7 +93,7 @@ exitV:
 
 ; =====================================================================
 exitInvalid:
-    print INVALID_FILE_ERROR
+    PRINT INVALID_FILE_ERROR
 
     EXIT EXIT_SUCCESS
 ; =====================================================================

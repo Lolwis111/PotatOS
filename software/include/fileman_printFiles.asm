@@ -1,3 +1,4 @@
+%include "fat12/file.asm"
 ; ================================================
 printFiles:
     ; save registers
@@ -36,79 +37,82 @@ printFiles:
     push si
     push cx
     push di
+
+    ; copy the entry into a local buffer
+    ; for convience 
+    mov di, .currentEntry
+    mov cx, 16
+    rep movsw
     
     ; fill the fileEntry line with spaces
-    mov cx, 30
+    mov cx, 37
     mov ax, 0x2020
-    mov di, fileEntryLine
+    mov di, .fileEntryLine
     rep stosw
 
     ; copy the attributes from the entry
-    mov al, byte [es:si+11]
+    mov al, byte [.currentEntry+11]
     mov byte [.attributes], al
-    
-    ; adjust filename so it is not that ugly
-    ; call ReadjustFileName
-    ; add si, 11
-    
+
     ; test if the entry is another directory
-    test byte [.attributes], 00010000b ; check if it is a directory
+    test byte [.attributes], 00010000b
+    ; if no, go to the file section
     jz .itsAFile
-
 .itsADirectory:
-    push di
-
-    mov cx, 11
-    mov al, '.'
-    repnz scasb     ; try to find the dot
-    jcxz .popDIDir ; if no dot is found its ok
-    
-    cmp byte [di], 0x20 ; if there are chars after dot its ok too
-    jne .popDIDir
-    
-    mov byte [di-1], 0x20 ; but else we delete the dot
-    
-.popDIDir:
-    pop di
-.itsAFile:
-    push si
-    
-    ;mov si, di
-    mov di, fileEntryLine
+    ; directory names just get copied
+    mov si, .currentEntry
+    mov di, .fileEntryLine
     mov cx, 11
     rep movsb
+    jmp .copyFileNameDone
+.itsAFile: 
+    ; adjust filename so it is not that ugly
+    mov si, .currentEntry
+    call ReadjustFileName
+    ; copy the filename into the fileentry
+    mov si, di 
+    mov di, .fileEntryLine
+.copyFileNameLoop:
+    lodsb
+    test al, al
+    jz .copyFileNameDone
+    stosb
+    jmp .copyFileNameLoop
 .copyFileNameDone:
-    pop si
-    
+    ; jum here when the copy is done
     pop di    
     
-    mov al, byte [es:si] ; copy the attributes
-    mov byte [.attributes], al
-    
-    ltostr fileSizeString, dword [es:si+17]
+    ; convert the filesize to a string
+    LTOSTR fileSizeString, dword [.currentEntry+28]
     
     push si
     push di
     
-    mov ax, word [es:si+13]
-    push word [es:si+11]
+    ; convert the date into a human readable format
+    mov ax, word [.currentEntry+24]
+    call fat12_convertDate
+    mov di, .fileEntryLine+33
+    mov cx, 5
+    rep movsw
     
-    call convertDate
-    mov di, fileEntryLine+33
-    mov cx, 10
-    rep movsb
-    
-    pop ax
-    call convertTime
-    mov di, fileEntryLine+44
+    ; convert the time into a human readable format
+    mov ax, word [.currentEntry+22]
+    call fat12_convertTime
+    mov di, .fileEntryLine+44
     mov cx, 8
     rep movsb
+
+    mov byte [.fileEntryLine+53], 0x20
+    mov bl, byte [.attributes]
+    call fat12_parseAttributes
+    mov cx, 7
+    mov di, .fileEntryLine+54
+    rep movsb
     
-    ; buggy, better not use this for now
-    ;test byte [.attributes], 00010000b ; check if it is a directory
-    ;jnz .itsADirectory2
+    test byte [.attributes], 00010000b ; check if it is a directory
+    jnz .itsADirectory2
     
-    mov di, fileEntryLine+20
+    mov di, .fileEntryLine+20
     mov si, fileSizeString
 .copyFileSizeString:
     lodsb
@@ -116,14 +120,16 @@ printFiles:
     jz .copyFileSizeStringOK
     stosb
     jmp .copyFileSizeString
-;.itsADirectory2:
-;    mov dword [fileEntryLine+20], '<DIR'
-;    mov byte [fileEntryLine+24], '>'
+.itsADirectory2:
+    ; directories dont really have a size,
+    ; so we print <DIR> instead
+    mov dword [.fileEntryLine+20], '<DIR'
+    mov byte [.fileEntryLine+24], '>'
 .copyFileSizeStringOK:
     pop di
         
     mov ah, TEXT_COLOR
-    mov si, fileEntryLine
+    mov si, .fileEntryLine
     call printString
     
     pop si
@@ -147,5 +153,8 @@ printFiles:
     pop es
     popa
     ret
+.fileEntryLine times 74 db 0x20
+                        db 0x00
+.currentEntry times 32 db 0x00
 .attributes db 0x00
 ; ================================================  

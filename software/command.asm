@@ -13,11 +13,14 @@ jmp start   ; goto start
 %include "strings.asm"
 %include "common.asm"
 %include "screen.asm"
+%include "fat12/file.asm"
 
 %include "include/command_datetime.asm"
 %include "include/command_util.asm"
 %include "include/command_screen.asm"
 %include "include/command_file.asm"
+%include "include/command_fileInfo.asm"
+%include "include/command_viewDirectory.asm"
 
 fileName times 13 db 0x00 ; filename, 'human' format (DUMMY.BIN)
 rFileName times 11 db 0x20
@@ -26,57 +29,60 @@ rFileName times 11 db 0x20
 
 ready db "CMD> ", 0x00
 
-start:  ; just print a newline so old ready is 100% sure on its own line
-    print NEWLINE
+start:  ; just PRINT a newline so old ready is 100% sure on its own line
+    PRINT NEWLINE
     
 main:
     call clearBuffer ; clear all the buffers
     
-    print ready ; print CMD>
+    PRINT ready ; print CMD>
     
-    readline inputBuffer, 64 ; read user input
+    READLINE inputBuffer, 64 ; read user input
     
     mov si, inputBuffer ; convert it to all upper case letters
     call UpperCase
     
     call parseCommands ; parse the command (extract arguments)
 
-    strcmp command, cmdLS
-    je view_dir ; command_file
+    STRCMP command, cmdLS
+    je viewDirectory ; command_file
 
-    strcmp command, cmdCD
+    STRCMP command, cmdCD
     je change_directory ; command_file
     
-    strcmp command, cmdHELP
+    STRCMP command, cmdHELP
     je view_help ; command_util
     
-    strcmp command, cmdTIME
+    STRCMP command, cmdTIME
     je show_time ; command_datetime
     
-    strcmp command, cmdDATE
+    STRCMP command, cmdDATE
     je show_date ; command_datetime
     
-    strcmp command, cmdINFO
+    STRCMP command, cmdINFO
     je show_version ; command_util
 
-    strcmp command, cmdCOLOR
+    STRCMP command, cmdCOLOR
     je change_color ; command_screen
     
-    strcmp command, cmdCLEAR
+    STRCMP command, cmdCLEAR
     je clear_screen ; command_screen
     
-    strcmp command, cmdRENAME
+    STRCMP command, cmdRENAME
     je rename_file ; command_file
 
-    strcmp command, cmdDEL
+    STRCMP command, cmdDEL
     je delete_file ; command_file
     
-    strcmp command, cmdPWD
-    je print_working_directory ; command_file
+    STRCMP command, cmdPWD
+    je PRINT_working_directory ; command_file
     
-    strcmp command, cmdRETURN
-    je print_return_code ; command_util
-    
+    STRCMP command, cmdRETURN
+    je PRINT_return_code ; command_util
+
+    STRCMP command, cmdFILE
+    je PRINT_file_info
+
     jmp look_extern
     
     ; jmp main

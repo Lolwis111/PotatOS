@@ -22,7 +22,7 @@ dec_to_bin:
     pop cx
     loop .bitLoop
 
-    print .bitString, STD_COLOR
+    PRINT .bitString, STD_COLOR
 
     jmp main
 .bitString db "\r\n00000000000000000000000000000000", 0x00
@@ -57,7 +57,7 @@ dec_to_hex:
     pop cx
     loop .charLoop
 
-    print .hexString, STD_COLOR
+    PRINT .hexString, STD_COLOR
 
     jmp main
 .hexString db "\r\n00000000", 0x00
@@ -89,7 +89,7 @@ dec_to_oct:
     pop cx
     loop .charLoop
 
-    print .octString, STD_COLOR
+    PRINT .octString, STD_COLOR
 
     jmp main
 .octString db "\r\n000000000000", 0x00

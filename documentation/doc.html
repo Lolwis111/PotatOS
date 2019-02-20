@@ -226,6 +226,7 @@
                 <th>parameters</th>
                 <th>returns</th>
                 <th>description</th>
+                <th>macro</th>
             </tr>
             
             <tr>
@@ -234,6 +235,7 @@
                 <td>BX = Exitcode</td>
                 <td>nothing</td>
                 <td>terminates process and starts command.bin (back to shell)</td>
+                <td>EXIT [retcode]</td>
             </tr>
             
             <tr>
@@ -248,6 +250,10 @@
                     Prints the \0 terminated string from ES:EDX with 
                     color BL at the current cursor positon
                 </td>
+                <td>
+                    PRINT [string]<br>
+                    PRINT [string], [color]
+                <td>
             </tr>
             
             <tr>
@@ -262,6 +268,7 @@
                     Compares the two \0 terminated strings
                     If they are equal AL = 0
                 </td>
+                <td>STRCMP [str1], [str2]</td>
             </tr>
             
             <tr>
@@ -277,6 +284,7 @@
                     it in the buffer. The string has leading zeros
                     if the integer has less than 5 digits.
                 </td>
+                <td>STOSTR [buffer], [short]</td>
             </tr>
             
             <tr>
@@ -291,6 +299,7 @@
                     Reads a string from the keyboard and
                     saves it in the buffer.
                 </td>
+                <td>READLINE [buffer], [maxlength]</td>
             </tr>
 
             <tr>
@@ -309,6 +318,10 @@
                     at address BP:EBX and saves the filesize reported from the
                     filesystem in ECX.
                 </td>
+                <td>
+                    LOADFILE [filename], [address]<br>
+                    LOADFILE [filename], [address], [segment]
+                </td>
             </tr>
 
             <tr>
@@ -323,6 +336,7 @@
                 <td>
                     Returns a pointer to string with the current time in EDX.
                 </td>
+                <td>TIME</td>
             </tr>
 
             <tr>
@@ -337,6 +351,7 @@
                 <td>
                     Returns a pointer to string with the current date in EDX.
                 </td>
+                <td>DATE</td>
             </tr>
             
             <tr>
@@ -352,6 +367,7 @@
                 <td>
                     Returns the version in AX.
                 </td>
+                <td>VERSION</td>
             </tr>
 
             <tr>
@@ -370,6 +386,7 @@
                     integer in ECX. If an error occours, the errorcode 
                     is in AX, ECX = 0 and the carry flag is set.
                 </td>
+                <td>STRTOL [string]</td>
             </tr>
             
             <tr>
@@ -399,6 +416,7 @@
                     Calculates a pseudorandom number and
                     returns it in ECX.
                 </td>
+                <td>RANDOM</td>
             </tr>
             
             <tr>
@@ -432,6 +450,7 @@
                     These two digits get converted into a byte.
                     Warning: No error detection!
                 </td>
+                <td>HEXTOSTR [str]</td>
             </tr>
             
             <tr>
@@ -449,6 +468,7 @@
                     If DH:DL are bigger than the screen would allow,
                     they get clamped to the biggest possible value.
                 </td>
+                <td>MOVECUR [x], [y]</td>
             </tr>
             
             <tr>
@@ -464,6 +484,7 @@
                 <td>
                     Returns the current cursor position.
                 </td>
+                <td>READCUR</td>
             </tr>
             
             <tr>
@@ -474,12 +495,15 @@
                     DL = color to print in
                 </td>
                 <td>
-                    DH = rownumber<br>
-                    DL = columnnumber
+                    none
                 </td>
                 <td>
                     Prints a single character in DH with the
                     color from DL to the current cursor position.
+                </td>
+                <td>
+                    PRINTCHAR [char]<br>
+                    PRINTCHAR [char], [color]
                 </td>
             </tr>
             
@@ -525,6 +549,7 @@
                     Returns the index of the file in the directory in AX.
                     If the file was not found, AX = -1.
                 </td>
+                <td>FINDFILE [filename]</td>
             </tr>
             
             <tr>
@@ -553,6 +578,7 @@
                 <td>
                     Converts the byte in CL into a hexstring that is \0 terminated.
                 </td>
+                <td>ITOHEX [byte]</td>
             </tr>
             
             <tr>
@@ -567,6 +593,7 @@
                 <td>
                     Converts the binary coded decimal in AL into an integer in AX.
                 </td>
+                <td>BCDTOINT [byte]</td>
             </tr>
             
             <tr>
@@ -583,6 +610,7 @@
                     Tries to launch the programm with the given filename
                     and passes the given argument string to it.
                 </td>
+                <td>EXECUTE [filename], [arguments]</td>
             </tr>
 
             <tr>
@@ -613,6 +641,7 @@
                     Sleeps for the given amount of time.<br>
                     To sleep for one second, one would call sleep(100)
                 </td>
+                <td>SLEEP [time]</td>
             </tr>
 
             <tr>
@@ -629,6 +658,10 @@
                     Converts the integer from ecx into a string and saves
                     it in the buffer.
                 </td>
+                <td>
+                    ITOSTR [str], [integer]<br>
+                    LTOSTR [str], [integer
+                </td>
             </tr>
             
             <tr>
@@ -644,6 +677,7 @@
                     Prints the value in EDX interpreted as integer to the current 
                     cursor position.
                 </td>
+                <td>DEBUG1 [value]</td>
             </tr>
             
         </table>

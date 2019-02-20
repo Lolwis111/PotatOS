@@ -25,70 +25,70 @@ spacer db "|", 0x00
 
 start:
     
-    print NEWLINE
+    PRINT NEWLINE
     
     mov si, str1
     call TrimLeft
     
-    print si
+    PRINT si
     
-    print NEWLINE
+    PRINT NEWLINE
     
     mov si, str2
     call TrimLeft
     
-    print si
+    PRINT si
     
-    print NEWLINE
+    PRINT NEWLINE
     
     mov si, str3
     call TrimLeft
     
-    print si
+    PRINT si
     
-    print NEWLINE
+    PRINT NEWLINE
     
     mov si, str4
     call TrimLeft
     
-    print si
+    PRINT si
     
-    print NEWLINE
+    PRINT NEWLINE
     
     mov si, str5
     call TrimRight
     
-    print si
+    PRINT si
     
-    print spacer
+    PRINT spacer
     
-    print NEWLINE
+    PRINT NEWLINE
     
     mov si, str6
     call TrimRight
     
-    print si
+    PRINT si
     
-    print spacer
+    PRINT spacer
     
-    print NEWLINE
+    PRINT NEWLINE
     
     mov si, str7
     call TrimRight
     
-    print si
+    PRINT si
     
-    print spacer
+    PRINT spacer
     
-    print NEWLINE
+    PRINT NEWLINE
     
     mov si, str8
     call TrimRight
     
-    print si
+    PRINT si
     
-    print spacer
+    PRINT spacer
     
-    print NEWLINE
+    PRINT NEWLINE
     
     EXIT EXIT_SUCCESS

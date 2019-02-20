@@ -36,99 +36,99 @@ msgOk db "No errors."
 newLine db "\r\n", 0x00
 
 start:
-    print newLine
+    PRINT newLine
 
-    strtol str0
+    STRTOL str0
     cmp ecx, 0
     jne err
 
-    strtol str1
+    STRTOL str1
     cmp ecx, 1
     jne err
     
-    strtol str2
+    STRTOL str2
     cmp ecx, 12
     jne err
     
-    strtol str3
+    STRTOL str3
     cmp ecx, 123
     jne err
     
-    strtol str4
+    STRTOL str4
     cmp ecx, 1234
     jne err
     
-    strtol str5
+    STRTOL str5
     cmp ecx, 12345
     jne err
     
-    strtol str6
+    STRTOL str6
     cmp ecx, 123456
     jne err
     
-    strtol str7
+    STRTOL str7
     cmp ecx, 1234567
     jne err
     
-    strtol str8
+    STRTOL str8
     cmp ecx, 12345678
     jne err
     
-    strtol str9
+    STRTOL str9
     cmp ecx, 123456789
     jne err
     
-    strtol str10
+    STRTOL str10
     cmp ecx, 1234567890
     jne err
     
-    strtol str11
+    STRTOL str11
     cmp eax, 1
     jne err
     
-    strtol str12
+    STRTOL str12
     cmp ecx, 123
     jne err
     
-    strtol str13
+    STRTOL str13
     cmp ecx, 1234
     jne err
     
-    strtol str14
+    STRTOL str14
     cmp ecx, 12345
     jne err
     
-    strtol str15
+    STRTOL str15
     cmp ecx, 123456
     jne err
     
-    strtol str16
+    STRTOL str16
     cmp ecx, 1234567
     jne err
     
-    strtol str17
+    STRTOL str17
     cmp eax, -1
     jne err
     
-    strtol str18
+    STRTOL str18
     cmp eax, -1
     jne err
     
-    strtol str19
+    STRTOL str19
     cmp eax, -1
     jne err
     
-    strtol str20
+    STRTOL str20
     cmp eax, -1
     jne err
     
-    strtol str21
+    STRTOL str21
     cmp eax, -1
     jne err
     
-    print msgOk
+    PRINT msgOk
     
-    EXIT 0
+    EXIT EXIT_SUCCESS
     
 err:
-    EXIT 1
+    EXIT EXIT_FAILURE

@@ -1,18 +1,28 @@
 %ifndef _FUNCTIONS_ASM_
 %define _FUNCTIONS_ASM_
+%macro PRINTCHAR 2
+    mov dh, byte %1
+    mov dl, byte %2
+    mov ah, 0x10
+    int 0x21
+%endmacro
 
-%macro print 2
+%macro PRINTCHAR 1
+    PRINTCHAR %1, [SYSTEM_COLOR]
+%endmacro
+
+%macro PRINT 2
     mov dx, %1
     mov bl, byte %2
     mov ah, 0x01
     int 0x21
 %endmacro
 
-%macro print 1
-    print %1, [SYSTEM_COLOR]
+%macro PRINT 1
+    PRINT %1, [SYSTEM_COLOR]
 %endmacro
 
-%macro readline 2
+%macro READLINE 2
     mov dx, %1
     mov cx, %2
     mov ah, 0x04
@@ -25,7 +35,7 @@
     int 0x21
 %endmacro
 
-%macro strcmp 2
+%macro STRCMP 2
     mov di, %1
     mov si, %2
     mov ah, 0x02
@@ -33,7 +43,7 @@
     test al, al
 %endmacro
 
-%macro loadfile 3
+%macro LOADFILE 3
     mov dx, %1
     mov bx, %2
     mov ebp, %3
@@ -41,7 +51,7 @@
     int 0x21
 %endmacro
 
-%macro loadfile 2 ; load file to BP:BX
+%macro LOADFILE 2 ; load file to BP:BX
     mov dx, %1
     xor bp, bp
     mov bx, %2
@@ -49,36 +59,111 @@
     int 0x21
 %endmacro 
 
-%macro ltostr 2 ; converts arg2 to string in arg1
+%macro LOADDIRECTORY 1
+    mov dx, %1
+    mov ah, 0x1A
+    int 0x21
+%endmacro
+
+%macro LTOSTR 2 ; converts arg2 to string in arg1
     mov ecx, %2
     mov dx, %1
     mov ah, 0xAA
     int 0x21
 %endmacro
 
-%macro itostr 2 ; converts arg2 to string in arg1
+%macro ITOSTR 2 ; converts arg2 to string in arg1
     movzx ecx, %2
     mov dx, %1
     mov ah, 0xAA
     int 0x21
 %endmacro
 
-%macro strtol 1 ; converts arg1 string to long
+%macro STRTOL 1 ; converts arg1 string to long
     mov ah, 0x09
     mov dx, %1
     int 0x21
 %endmacro
 
-%macro movecur 2
+%macro STOSTR 2
+    mov edx, %1
+    mov cx, %2
+    mov ah, 0x03
+    int 0x21
+%endmacro
+
+%macro TIME 0
+    mov ah, 0x06
+    int 0x21
+%endmacro
+
+%macro DATE 0
+    mov ah, 0x07
+    int 0x21
+%endmacro
+
+%macro VERSION 0
+    mov ah, 0x08
+    int 0x21
+%endmacro
+
+%macro HEXTOSTR 1
+    mov dx, %1
+    mov ah, 0x0D
+    int 0x21
+%endmacro
+
+%macro ITOHEX 1
+    mov ah, 0x15
+    mov cl, %1
+    int 0x21
+%endmacro
+
+%macro BCDTOINT 1
+    mov ah, 0x16
+    mov al, %1
+    int 0x21
+%endmacro
+
+%macro MOVECUR 2
     mov dl, %1 ; column (x)
     mov dh, %2 ; row (y)
     mov ah, 0x0E
     int 0x21
 %endmacro
 
-%macro sleep 1
+%macro EXECUTE 2
+    mov dx, %1
+    mov di, %2
+    mov ah, 0x17
+    int 0x21
+%endmacro
+
+%macro READCUR 0
+    mov ah, 0x0F
+    int 0x21
+%endmacro
+
+%macro FINDFILE 1
+    mov ah, 0x13
+    mov dx, %1
+    int 0x21
+%endmacro
+
+%macro SLEEP 1
     mov ebx, %1
     mov ah, 0x19
+    int 0x21
+%endmacro
+
+%macro RANDOM 0
+    mov ah, 0x0B
+    int 0x21
+%endmacro
+
+%macro DEBUG1 1
+    mov ah, 0xFF
+    mov edx, %1
     int 0x21
 %endmacro
 

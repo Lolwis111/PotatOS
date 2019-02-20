@@ -29,7 +29,7 @@ start:
     mov di, fileName
     call AdjustFileName
     
-    loadfile fileName, FILE_OFFSET ; load file
+    LOADFILE fileName, FILE_OFFSET ; load file
     
     mov word [fileLenght], cx
     cmp ax, -1
@@ -38,9 +38,9 @@ start:
     jmp init
     
 .noArgument:
-    print FILE_PROMPT, COLOR ; get filename from the user
+    PRINT FILE_PROMPT, COLOR ; get filename from the user
     
-    readline input, 11
+    READLINE input, 11
     
     mov si, input ; make filename uppercase
     call UpperCase
@@ -51,7 +51,7 @@ start:
     cmp ax, -1
     je .error
     
-    loadfile fileName, FILE_OFFSET ; try loading the file
+    LOADFILE fileName, FILE_OFFSET ; try loading the file
     mov word [fileLenght], cx
     cmp ax, -1
     je .error
@@ -59,9 +59,9 @@ start:
     jmp init
     
 .error:
-    print newLine, COLOR
+    PRINT newLine, COLOR
     
-    print FILE_NOT_FOUND_ERROR, COLOR ; print an error
+    PRINT FILE_NOT_FOUND_ERROR, COLOR ; print an error
     
     mov bx, EXIT_FAILURE
     jmp exit
@@ -98,31 +98,29 @@ fileName    times 12 db 0
 
 
 ; ===============================================
-; print titlebar and statusbar
+; PRINT titlebar and statusbar
 ; ===============================================
 setUpScreen:
-    movecur 0, 0
+    MOVECUR 0, 0
     
-    print lblTop, COLOR
+    PRINT lblTop, COLOR
     
-    movecur 0, 23
+    MOVECUR 0, 23
     
-    print lblBottom, COLOR
+    PRINT lblBottom, COLOR
     
     ret
 ; ===============================================
 
 
 ; ===============================================
-; print a single char without advancing the
+; PRINT a single char without advancing the
 ; cursor position
 ; >DL X
 ; >DH Y
 ; ===============================================
-printChar:
-
+PrintChar:
     pusha
-    
     push ax
     mov ax, dx
     movzx bx, dl
@@ -133,9 +131,7 @@ printChar:
     add bx, ax
     pop ax
     mov word [gs:bx], ax
-    
     popa
-    
     ret
 ; ===============================================
 
@@ -152,7 +148,7 @@ clearScreen:
     add bx, 2
     loop .loop1
     
-    movecur 0, 0
+    MOVECUR 0, 0
     
     popa
     
@@ -161,22 +157,22 @@ clearScreen:
 
     
 ; ===============================================
-; print the position in the statusbar
+; PRINT the position in the statusbar
 ; ===============================================
 renderPosition:
-    movecur 73, 23
+    MOVECUR 73, 23
     
-    mov ah, 0x03
-    mov dx, .positionString
-    mov cx, word [linesToSkip]
-    int 0x21
+    mov dword [.positionString], 0x00000000
+    mov word [.positionString+4], 0x0000
+
+    STOSTR .positionString, word [linesToSkip]
     
-    print .positionString, COLOR
+    PRINT .positionString, COLOR
     
-    movecur 0, 2
+    MOVECUR 0, 2
     
     ret
-.positionString db "00000", 0x00
+.positionString times 6 db 0x00
 ; ===============================================
 
 
@@ -200,7 +196,7 @@ clearTextArea:
 
 
 ; ===============================================
-; print content of file
+; PRINT content of file
 ; ===============================================
 renderText:    
     call clearTextArea
@@ -257,7 +253,7 @@ renderText:
 
     mov dx, bx
     mov ah, COLOR
-    call printChar
+    call PrintChar
     inc bl
     
     cmp bl, 79
@@ -287,11 +283,11 @@ init:
     call clearScreen
     call setUpScreen
     
-    movecur 1, 0
+    MOVECUR 1, 0
     
-    print fileName, COLOR
+    PRINT fileName, COLOR
     
-    movecur 2, 0
+    MOVECUR 2, 0
     
     call renderText
     call renderPosition
@@ -299,7 +295,7 @@ init:
     jmp main
     
 .error:
-    print FILE_NOT_FOUND_ERROR
+    PRINT FILE_NOT_FOUND_ERROR
     
     mov bx, EXIT_FAILURE
     jmp exit
@@ -331,13 +327,11 @@ main:
     jmp main
     
 .scrollDown:
-
     inc word [linesToSkip]
 
     jmp main
 
 .scrollUp:
-
     cmp word [linesToSkip], 0x00
     je main
     

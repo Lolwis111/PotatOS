@@ -54,12 +54,12 @@ stringToInt:
     jmp .loop1
     
 .invalidCharError:
-    mov eax, -1
+    mov eax, INVALID_ARGUMENT_ERROR 
     xor ecx, ecx
     stc
     iret
 .overflowError:
-    mov eax, 1
+    mov eax, OVERFLOW_ERROR
     xor ecx, ecx
     stc
     iret
@@ -68,7 +68,7 @@ stringToInt:
     je .ret
     neg ecx
 .ret:
-    xor eax, eax
+    mov eax, NO_ERROR
     clc
     iret
 ; ======================================================

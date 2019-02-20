@@ -23,6 +23,8 @@ cmdPWD      db "PWD", 0x00      ; print working directory
 
 cmdRETURN   db "RETURN?", 0x00  ; print return value of last command/program
 
+cmdFILE db "FILE", 0x00
+
 %ifdef _DEBUG
 cmdDUMP     db "DUMP", 0x00     ; debug: print all the buffers
 %endif

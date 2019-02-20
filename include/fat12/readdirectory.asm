@@ -106,7 +106,7 @@ ReadDirectory:
     call LoadRoot
     pop es
     popa
-    xor ax, ax
+    mov ax, NO_ERROR
     clc
     ret
 .notADirectory:
@@ -114,13 +114,13 @@ ReadDirectory:
     pop si
     pop es
     popa
-    mov ax, NOT_A_DIRECTORY
+    mov ax, NOT_A_DIRECTORY_ERROR
     stc
     ret
 .fileNotFound:
     pop es
     popa
-    mov ax, FILE_NOT_FOUND
+    mov ax, FILE_NOT_FOUND_ERROR
     stc
     ret
 .cluster dw 0x0000 ; cluster we are currently working with

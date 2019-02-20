@@ -8,34 +8,41 @@
 ;=======================================
 FindFile:
     pusha
+    push ds
     push es
-    
+    xor ax, ax
+    mov es, ax
+
     mov di, .fileName ; copy the filename
     mov cx, 11
     rep movsb
     
     mov ax, DIRECTORY_SEGMENT
-    mov es, ax
+    mov ds, ax
     mov word [.index], 0x00 ; zero out index
     xor si, si
     
     cld
 .fileLoop:
-    cmp byte [es:si], 0x00 ; if the directory ends we have not found the file
+    cmp byte [ds:si], 0x00 ; if the directory ends we have not found the file
     je .fileNotFound
+    cmp byte [ds:si], 0xE5
+    je .skip
 
     push si
     mov cx, 11
     mov di, .fileName
-    rep cmpsb
+    repe cmpsb
     je .fileFound ; if the name matches we found the file
     pop si
+
+.skip:
     add si, 32 ; jump to the next entry
     inc word [.index] ; increment index
-    jmp .fileLoop
-    
+    jmp .fileLoop 
 .fileNotFound:
     pop es
+    pop ds
     popa
     mov ax, -1
     stc
@@ -43,10 +50,11 @@ FindFile:
 .fileFound:
     pop si
     pop es
+    pop ds
     popa
     mov ax, word [.index]
     clc
     ret
 .index dw 0x0000
-.fileName times 12 db 0x00
+.fileName times 11 db 0x00
 ;=======================================

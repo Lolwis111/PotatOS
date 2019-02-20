@@ -7,26 +7,26 @@ jmp start
 
 ; ==============================================
 decToHex:
-	pusha
-	
-	xor ah, ah
+    pusha
 
-	mov bl, 16
-	div bl
+    xor ah, ah
+
+    mov bl, 16
+    div bl
 	
-	mov bx, .hexChar
-	add bl, al
-	mov al, byte [bx]
-	mov byte [si], al
-	inc si
+    mov bx, .hexChar
+    add bl, al
+    mov al, byte [bx]
+    mov byte [si], al
+    inc si
     
-	mov bx, .hexChar
-	add bl, ah
-	mov al, byte [bx]
-	mov byte [si], al
+    mov bx, .hexChar
+    add bl, ah
+    mov al, byte [bx]
+    mov byte [si], al
 	
-	popa
-	ret
+    popa
+    ret
 .hexChar db "0123456789ABCDEF"
 ; ==============================================
 
@@ -39,13 +39,13 @@ color db 0x00
 
 ; ==============================================
 start:
-	; this is a '16 by 16 loop', which will work
-	; itslef through all the 256 color combinations that
-	; there are
-	; we have 16 foreground colors and 16 background colors
-	; that we can combine in any way we want to
-	; this prints the code in the colors thats it
-	; represents, use this as a guide or something
+    ; this is a '16 by 16 loop', which will work
+    ; itslef through all the 256 color combinations that
+    ; there are
+    ; we have 16 foreground colors and 16 background colors
+    ; that we can combine in any way we want to
+    ; this prints the code in the colors thats it
+    ; represents, use this as a guide or something
     mov cx, 16
     .loopY:
         push cx
@@ -55,16 +55,13 @@ start:
             mov al, byte [color]
             mov si, str1
             call decToHex
-            print str1, byte [color]
+            PRINT str1, byte [color]
             inc byte [color]
-            print space
+            PRINT space
             pop cx
             loop .loopX
-        print NEWLINE
+        PRINT NEWLINE
         pop cx
         loop .loopY
-
-    xor ax, ax
-    xor bx, bx
-    int 0x21
+    EXIT EXIT_SUCCESS
 ; ==============================================

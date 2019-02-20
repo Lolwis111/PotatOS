@@ -15,8 +15,8 @@
     
     ; GENEREL
     
-    %define TRUE 0x01
-    %define FALSE 0x00
+    %define TRUE 0
+    %define FALSE -1
     %define _HIGH_MEM_ FALSE
     
     %define RESULT_OK        0x01
@@ -27,9 +27,11 @@
     
     ; ERRORS
     
-    %define NO_ERROR        0x00
-    %define FILE_NOT_FOUND  0x01
-    %define NOT_A_DIRECTORY 0x02
+    %define NO_ERROR                0x00
+    %define FILE_NOT_FOUND_ERROR    0x01
+    %define NOT_A_DIRECTORY_ERROR   0x02
+    %define OVERFLOW_ERROR          0x03
+    %define INVALID_ARGUMENT_ERROR  0x04
     
     ; COLORS
         

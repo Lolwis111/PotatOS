@@ -18,6 +18,19 @@ loadFile:
 
 
 ; ======================================================
+private_loadDirectory:
+    xor ax, ax
+    mov si, dx
+    call ReadDirectory
+    ret
+loadDirectory:
+    call private_loadDirectory
+    iret
+; ======================================================
+
+
+
+; ======================================================
 ; DX <= file
 ; CX <= size in byte
 ; BX:BP <= buffer

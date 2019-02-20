@@ -27,7 +27,7 @@ change_directory:
     cmp byte [ds:si+1], 0x00
     jne .notSingleDot
     
-    print NEWLINE
+    PRINT NEWLINE
     
     jmp .return
     
@@ -90,7 +90,7 @@ change_directory:
     call AppendString ; append the directory name to the path
 
 .okay:
-    print NEWLINE
+    PRINT NEWLINE
     
     jmp .return
 .loadRootDirectory:
@@ -105,20 +105,20 @@ change_directory:
     mov word [CURRENT_PATH_LENGTH], 0x01 ; root is just pwd /
     mov byte [CURRENT_PATH], '/'
     
-    print NEWLINE
+    PRINT NEWLINE
     
     jmp .return
 .error:
-    cmp ax, FILE_NOT_FOUND
+    cmp ax, FILE_NOT_FOUND_ERROR
     je .fileNotFound
-    cmp ax, NOT_A_DIRECTORY
+    cmp ax, NOT_A_DIRECTORY_ERROR
     je .notADirectory
     jmp .return
 .fileNotFound:
-    print DIRECTORY_NOT_FOUND_ERROR
+    PRINT DIRECTORY_NOT_FOUND_ERROR
     jmp .return
 .notADirectory:
-    print NOT_A_DIRECTORY_ERROR
+    PRINT NOT_A_DIRECTORY_ERROR
     jmp .return
 .return:
     pop ds

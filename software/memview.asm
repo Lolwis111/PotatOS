@@ -157,8 +157,9 @@ editByte:
     shl dl, 2
     sub dl, cl
     add dl, 5
-    mov ah, 0x0E
-    int 0x21
+    MOVECUR dl, dh
+    ; mov ah, 0x0E
+    ; int 0x21
 
     call hideCursor
     ; mov ch, 32
@@ -167,7 +168,7 @@ editByte:
     ; int 0x10
 
     mov byte [0x1FFF], createColor(WHITE, BLACK)
-    readline .hex, 2
+    READLINE .hex, 2
     cmp cx, 0
     je .backup
     cmp cx, 2
@@ -182,9 +183,10 @@ editByte:
     add bx, 2
     mov byte [gs:bx], al
 
-    mov ah, 0x0D
-    mov dx, .hex
-    int 0x21
+    ;mov ah, 0x0D
+    ;mov dx, .hex
+    ;int 0x21
+    HEXTOSTR .hex
     cmp ax, -1
     je .checkASCII
 
@@ -192,7 +194,7 @@ editByte:
     mov byte [fs:di], cl
 
 .return:
-    movecur 0, 0
+    MOVECUR 0, 0
 
     call showCursor
 
@@ -231,7 +233,7 @@ start:
     mov byte [readOnly], 0x01
 
 .ok:                            ; (directly jump here if no args given)
-    movecur 0, 0
+    MOVECUR 0, 0
 
     mov al, byte [0x1FFF]       ; save color
     mov byte [color], al
@@ -392,15 +394,18 @@ main:
     mov word [.adr], dx     ; copy value
     mov word [.nOffset], 0x0000
 
-    mov ah, 0x0D
-    mov dx, word [.adr]
-    int 0x21    ; convert the first two hexchars to decimal
+    HEXTOSTR word [.adr]
+    ;mov ah, 0x0D
+    ;mov dx, word [.adr]
+    ;int 0x21    ; convert the first two hexchars to decimal
 
     mov byte [.nOffset+1], cl ; put them in the upper half
 
-    mov ah, 0x0D ; convert the lower two hexchars
-    mov dx, word [.adr+2]
-    int 0x21
+    HEXTOSTR word [.adr+2]
+
+    ;mov ah, 0x0D ; convert the lower two hexchars
+    ;mov dx, word [.adr+2]
+    ;int 0x21
 
     add byte [.nOffset], cl ; put them in the lower half
 
@@ -425,14 +430,16 @@ main:
     mov word [.adr], dx
     mov word [.nOffset], 0x0000
 
-    mov ah, 0x0D
-    mov dx, word [.adr]
-    int 0x21
+    HEXTOSTR word [.adr]
+    ;mov ah, 0x0D
+    ;mov dx, word [.adr]
+    ;int 0x21
 
     mov byte [.nOffset+1], cl
-    mov ah, 0x0D
-    mov dx, word [.adr+2]
-    int 0x21
+    HEXTOSTR word [.adr+2]
+    ;mov ah, 0x0D
+    ;mov dx, word [.adr+2]
+    ;int 0x21
     add byte [.nOffset], cl
 
     mov cx, word [.nOffset]

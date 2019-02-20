@@ -10,14 +10,13 @@ jmp start
 %include "strings.asm"
 %include "keys.asm"
 %include "language.asm"
-
 %include "bpb.asm"
 
 %define BORDER_COLOR createColor(BLUE, BLACK)
 %define TEXT_COLOR createColor(MAGENTA, BLACK)
 %define SELECTION_COLOR createColor(BLACK, WHITE)
 
-titleString      db "FILEMAN", 0x00
+titleString db "FILEMAN", 0x00
 
 %include "include/fileman_util.asm"
 %include "include/fileman_gui.asm"
@@ -26,15 +25,15 @@ titleString      db "FILEMAN", 0x00
 
 fileName times 13 db 0x00
 fileSizeString times 11 db 0x00
-fileEntryLine times 60 db 0x20
-                       db 0x00
 selectedIndex db 0x00
 fileCount db 0x00
 entriesToSkip db 0x00
 ; ================================================
 
 
-
+; ================================================
+; Counts how many files there are in the
+; currently loaded directory
 ; ================================================
 countFiles:
     xor ax, ax
@@ -57,18 +56,26 @@ countFiles:
 
 ; ================================================
 start:
+    ; save segments and original directory
+    call backupSegments
     call backupDir
+
+    
     mov ax, VIDEO_TEXT_SEGMENT   ; set gs to point to the video memory
     mov gs, ax
 
+    ; clear the screen
     mov dl, 0x20
     mov dh, BORDER_COLOR
     call clearScreen
     
+    ; draw the gui
     call drawBorder
     
+    ; count the files
     call countFiles
     
+    ; render the content
     call clearContentBox
     call printFiles
     
@@ -80,18 +87,22 @@ start:
     
 ; ================================================
 main:
+    ; read char
     xor ax, ax
     int 0x16
     
+    ; scroll up and down
     cmp ah, KEY_UP
     je .scrollUp
     
     cmp ah, KEY_DOWN
     je .scrollDown
     
+    ; exit
     cmp ah, KEY_ESCAPE
     je exit
     
+    ; try to launch the file
     cmp ah, KEY_ENTER
     je launch_file
     
@@ -143,6 +154,7 @@ exit:
     mov dh, byte [SYSTEM_COLOR]
     call clearScreen
     call restoreDir
+    call restoreSegments
 
     EXIT EXIT_SUCCESS
 ; ================================================

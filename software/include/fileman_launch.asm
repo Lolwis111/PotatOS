@@ -1,13 +1,16 @@
 
 ; ================================================
 launch_file:
-    movzx ax, byte [selectedIndex]  ; calculate which file we want to load from the selectedIndex
+    ; calculate which file we want to load from the selectedIndex
+    ; ADDR = (selectedIndex + entriesToSkip) * 32
+    movzx ax, byte [selectedIndex]
     movzx bx, byte [entriesToSkip]
     xor dx, dx
     add ax, bx
-    mov bx, 32
+    ; mov bx, 32
     mov si, DIRECTORY_OFFSET
-    mul bx
+    ; mul bx
+    shl ax, 5 ; multiply by 32=2^5
     add si, ax
     
     mov cx, 11 ; copy the file name
@@ -30,7 +33,7 @@ launch_file:
 
 .error:
     ; TODO: print an error message
-    print .err1, TEXT_COLOR
+    PRINT .err1, TEXT_COLOR
     jmp main
 .err1 db "!", 0x00
 .noBin:
@@ -49,11 +52,11 @@ launch_file:
     
 .noTXT:
     cmp byte [.fileName+8], 'L'
-    jne main
+    jne .nonExecutable
     cmp byte [.fileName+9], 'L'
-    jne main
+    jne .nonExecutable
     cmp byte [.fileName+10], 'P'
-    jne main
+    jne .nonExecutable
     
     mov si, .fileName
     call ReadjustFileName
@@ -62,6 +65,8 @@ launch_file:
     
 .launch:
     call clearScreen
+    call restoreDir
+    call restoreSegments
 
     mov ah, 0x17
     int 0x21
@@ -69,15 +74,21 @@ launch_file:
     cmp ax, 0x00
     jne .error
     jmp main
-    
+.nonExecutable:
+    mov si, NO_PROGRAM 
+    call drawBox
+    jmp main.scrollOK
 .loadDirectory:
-    loadfile .fileName, DIRECTORY_OFFSET
-    cmp ax, -1
-    je .error
+    ; LOADFILE .fileName, DIRECTORY_OFFSET
+    LOADDIRECTORY .fileName
+    cmp ax, NO_ERROR
+    jne .error
     
     mov byte [entriesToSkip], 0x00
     mov byte [selectedIndex], 0x00
     
+    call countFiles
+
     jmp main.scrollOK
     
 .fileName times 12 db 0x00

@@ -87,6 +87,9 @@ main:
     cmp ah, 0x19        ; sleep for ebx*10 milliseconds
     je sleep
 
+    cmp ah, 0x1A        ; read a directory
+    je loadDirectory
+
     cmp ah, 0xAA        ; all new 32-bit ready string-int operation
     je intToString32
     
@@ -129,15 +132,14 @@ addressDebug:
     
     ; newline
     mov bl, 0x07
-    mov edx, .newLine
+    mov edx, NEWLINE
     call private_printString
     ; ==================================
     
     popad
     iret
-.values dd 0x00000000, 0x00000000, 0x00000000, 0x00000000
+; .values dd 0x00000000, 0x00000000, 0x00000000, 0x00000000
 .string: times 20 db 0x00
-.newLine db 0x0D, 0x0A, 0x00
 
 ; ======================================================
 ; exits the current program and jumps back to cli
@@ -257,11 +259,11 @@ compareString:
     jnz .Loop
 
     popa
-    xor al, al
+    mov al, TRUE
     iret
 .NotEqual:
     popa
-    mov al, 0x01
+    mov al, FALSE
     iret
 ; ======================================================
 

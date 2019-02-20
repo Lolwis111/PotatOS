@@ -5,15 +5,19 @@ Geben sie 'help' ein um Hilfe zu erhalten!
 END
 
 BEGIN HELP
-  ls [ext]           - Zeigt Dateien detailliert an
+  ls [erw]           - Zeigt Dateien detailliert an
   help               - Zeigt die Hilfe an
   date               - Zeigt das Datum an
   time               - Zeigt die aktuelle Zeit an
   info               - Zeigt Systeminformationen an
-  color <color>      - Farbe der Konsole wechseln (0=Hilfe)
+  color <farbe>      - Farbe der Konsole wechseln (0=Hilfe)
   cls                - Leert den Bildschirm
   rename <org> <new> - Benennt eine Datei um
   del <datei>        - Loescht eine Datei
+  cd <pfad>          - Verzeichnis wechseln
+  pwd                - Aktuellen Pfad anzeigen
+  return?            - Rueckgabewert der letzen Operation
+  file <datei>       - Dateiinformationen anzeigen
 \r
 END
 

@@ -97,7 +97,7 @@ drawCursor:
     
     inc di
     
-    mov cx, 60
+    mov cx, 70
 .loop:
     mov byte [gs:di], SELECTION_COLOR
     add di, 2
@@ -107,4 +107,136 @@ drawCursor:
     pop di
     ret
 ; ================================================
- 
+
+%define TOP_LEFT_X 8
+%define TOP_LEFT_Y 8
+%define BOX_WIDTH 52
+%define BOX_HEIGHT 7
+%define BOTTOM_RIGHT_X (TOP_LEFT_X + BOX_WIDTH)
+%define BOTTOM_RIGHT_Y (TOP_LEFT_Y + BOX_HEIGHT)
+drawBox:
+    pusha
+    pushf
+    push gs
+
+    mov ax, VIDEO_MEMORY_SEGMENT
+    mov gs, ax
+
+    push si
+    ; upper left corner
+    mov di, cursorPos(TOP_LEFT_X, TOP_LEFT_Y)
+    ; height
+    mov cl, BOX_HEIGHT
+.loopY:
+    ; width
+    mov ch, BOX_WIDTH
+    .loopX:
+        mov byte [gs:di], 0x20
+        inc di
+        mov byte [gs:di], TEXT_COLOR
+        inc di
+        dec ch
+        test ch, ch
+        jnz .loopX
+    add di, (SCREEN_WIDTH - BOX_WIDTH)*2  ; (80 - width) * 2
+    dec cl
+    test cl, cl
+    jnz .loopY
+    
+
+    mov di, cursorPos(TOP_LEFT_X, TOP_LEFT_Y)
+    mov cx, BOX_WIDTH
+.top:
+    mov byte [gs:di], 205
+    inc di
+    mov byte [gs:di], BORDER_COLOR
+    inc di
+    loop .top
+        
+    mov di, cursorPos(TOP_LEFT_X, BOTTOM_RIGHT_Y)
+    mov cx, BOX_WIDTH
+.bottom:
+    mov byte [gs:di], 205
+    inc di
+    mov byte [gs:di], BORDER_COLOR
+    inc di
+    loop .bottom
+        
+    mov di, cursorPos(TOP_LEFT_X, TOP_LEFT_Y)
+    mov cx, BOX_HEIGHT
+.left:
+    mov byte [gs:di], 186
+    inc di
+    mov byte [gs:di], BORDER_COLOR
+    add di, ((SCREEN_WIDTH * 2) - 1)
+    loop .left
+        
+    mov di, cursorPos(BOTTOM_RIGHT_X, TOP_LEFT_Y)
+    mov cx, BOX_HEIGHT
+.right:
+    mov byte [gs:di], 186
+    inc di
+    mov byte [gs:di], BORDER_COLOR
+    add di, ((SCREEN_WIDTH * 2) - 1)
+    loop .right
+        
+    mov di, cursorPos(TOP_LEFT_X, TOP_LEFT_Y)
+    mov byte [gs:di], 201
+    mov di, cursorPos(BOTTOM_RIGHT_X, TOP_LEFT_Y)
+    mov byte [gs:di], 187
+    mov di, cursorPos(TOP_LEFT_X, BOTTOM_RIGHT_Y)
+    mov byte [gs:di], 200
+    mov di, cursorPos(BOTTOM_RIGHT_X, BOTTOM_RIGHT_Y)
+    mov byte [gs:di], 188
+    inc di
+    mov byte [gs:di], BORDER_COLOR
+    inc di
+        
+    pop si
+    ; print the message in this loop
+    mov di, cursorPos((TOP_LEFT_X+1), (TOP_LEFT_Y+1))
+    mov ah, TEXT_COLOR
+    xor bp, bp
+.charLoop:
+    mov al, byte [ds:si]
+    inc si
+    test al, al
+    jz .inputLoop
+    cmp al, 0x0D
+    je .nl
+    cmp al, 0x0A
+    je .charLoop
+    cmp al, '\'
+    je .skip
+    mov byte [gs:di], al
+    add di, 2
+    jmp .charLoop
+.skip:
+    inc si
+    jmp .charLoop
+.nl:
+    mov di, cursorPos((TOP_LEFT_X+1), (TOP_LEFT_Y+1))
+    xor dx, dx
+    mov ax, bp
+    mov bx, (SCREEN_WIDTH * 2)
+    mul bx
+    add di, ax
+    inc bp
+    jmp .charLoop
+        
+.inputLoop:
+    ; wait one seconf
+    SLEEP 100
+.exit:
+    pop gs
+    popf
+    popa
+    ret
+
+%undef TOP_LEFT_X
+%undef TOP_LEFT_Y
+%undef BOX_WIDTH
+%undef BOX_HEIGHT
+%undef BOTTOM_RIGHT_X
+%undef BOTTOM_RIGHT_Y
+

@@ -1,134 +1,12 @@
 ; ====================================================
-; lists all the files in the root directory
-; (including sizes)
-; ====================================================
-view_dir:
-    pusha
-    push es
-    push ds
-    
-    mov dword [.fileSize], 0x00  ; init size to zero
-    print NEWLINE
-    
-    print LS_LABEL_1 ; print Label1 (see language.asm)
-    print .spacer
-    
-    mov si, DIRECTORY_OFFSET
-    xor ax, ax
-    mov es, ax
-    mov ds, ax
-    cld
-.fileLoop:
-    push cx
+PRINT_working_directory:
+    PRINT NEWLINE
 
-    mov di, fileName            ; the first 11 bytes of each entry are the file name
-    mov cx, 11                  ; so we copy that
-    rep movsb
+    PRINT CURRENT_PATH
     
-    mov al, byte [es:si]           ; after that are the attributes
-    mov byte [.attributes], al
+    PRINT NEWLINE
     
-    cmp byte [argument], 0x00 ; check if only certain extensions should be printed
-    je .noFilter
-    
-    push si
-    
-    mov si, fileName            ; if yes, check the extension on each filename
-    mov di, rFileName
-    call AdjustFileName         ; convert file name
-    
-    mov cx, 3
-    mov si, rFileName+8         ; check last 3 bytes (8.3 file names in fat12)
-    mov di, argument
-    rep cmpsb
-    jne .skip                   ; if the extension does not match we skip this file
-    
-    pop si
-.noFilter:
-    add si, 17
-    mov ecx, dword [si]         ; get the filesize from the entry
-    add dword [.fileSize], ecx    ; add it to the size of the directory
-    push si
-    
-    cmp byte [fileName], 0xE5 ; check if this is an invalid entry
-    je .del
-    cmp byte [fileName], 0x00 ; check if this is the last entry
-    je .eod
-
-    test byte [.attributes], 00010000b
-    jnz .dir ; check if it is a directory
-    
-    ltostr .number, ecx         ; convert file size to string
-
-    mov si, fileName            ; make filename more readable
-    call ReadjustFileName
-
-    print ReadjustFileName.newFileName ; print that "readjusted" filename
-    
-    mov ah, 0x0F  ; move cursor to X=19 in current row
-    int 0x21
-    mov dl, 19
-    mov ah, 0x0E
-    int 0x21
-
-    print .number ; print size in the next column print file size
-    jmp .ok
-    
-.dir:
-    print fileName
-    print .ldir ; directorys get marked by "<dir>"
-    
-.ok:
-    print NEWLINE ; new line after each entry
-    pop si
-    jmp .next             ; goto to the next entry
-.skip:                    ; this is were we jump if we want to skip an entry
-    pop si              
-    add si, 17 ; calculate address of next entry (32 bytes per entry)
-    jmp .next
-.del:
-    pop si
-.next:
-    pop cx
-    add si, 4
-
-    dec cx
-    jnz .fileLoop
-    jmp .end
-.eod:
-    pop si
-    pop cx
-.end:
-    print LS_LABEL_2 ; print the label about the filesize
-
-    ltostr .number, dword [.fileSize] ; convert directory size to string
-    
-    print .number ; print directory size
-    
-    print NEWLINE
-    
-    pop ds
-    pop es
-    popa
-    jmp main
-.number times 11 db 0x00
-.spacer times 30 db 205
-                 db "\r\n", 0x00
-.fileSize dd 0x00000000
-.attributes db 0x00
-.ldir db "   <DIR>", 0x00
-; ====================================================
-
-
-; ====================================================
-print_working_directory:
-    print NEWLINE
-
-    print CURRENT_PATH
-    
-    print NEWLINE
-    
-    print NEWLINE
+    PRINT NEWLINE
     
     jmp main
 ; ====================================================
@@ -158,9 +36,11 @@ delete_file:
     call check_invalid_filename
     jc .invalidFileName
     
-    mov ah, 0x13
-    mov dx, rFileName
-    int 0x21
+    FINDFILE rFileName
+
+    ;mov ah, 0x13
+    ;mov dx, rFileName
+    ;int 0x21
     cmp ax, -1
     je .notFound
     
@@ -169,13 +49,13 @@ delete_file:
     int 0x21
     
 .return:
-    print NEWLINE
+    PRINT NEWLINE
     jmp main
 .invalidFileName:
-    print WRITE_PROTECTION_ERROR
+    PRINT WRITE_PROTECTION_ERROR
     jmp .return
 .notFound:
-    print FILE_NOT_FOUND_ERROR
+    PRINT FILE_NOT_FOUND_ERROR
     jmp .return
 ; ====================================================
     
@@ -222,10 +102,11 @@ rename_file:
     call AdjustFileName
     cmp ax, -1
     je .notFound
-    
-    mov ah, 0x13
-    mov dx, .rArgument
-    int 0x21
+   
+    FINDFILE .rArgument
+    ;mov ah, 0x13
+    ;mov dx, .rArgument
+    ;int 0x21
     cmp ax, -1
     jne .badFileName
     
@@ -245,15 +126,15 @@ rename_file:
     loop .fileLoop
     
 .notFound:
-    print FILE_NOT_FOUND_ERROR
+    PRINT FILE_NOT_FOUND_ERROR
     jmp .return
     
 .badFileName:
-    print FILE_ALREADY_EXISTS_ERROR
+    PRINT FILE_ALREADY_EXISTS_ERROR
     jmp .return
     
 .invalidFileName:
-    print WRITE_PROTECTION_ERROR
+    PRINT WRITE_PROTECTION_ERROR
     jmp .return
     
 .Found:
@@ -264,7 +145,7 @@ rename_file:
     mov ah, 0x12
     int 0x21
 .return:
-    print NEWLINE
+    PRINT NEWLINE
     jmp main
 .rArgument times 13 db 0x00
 ; ====================================================
@@ -318,7 +199,7 @@ check_invalid_filename:
 ; tries to launch the command as a file
 ; ====================================================
 look_extern:
-    print NEWLINE
+    PRINT NEWLINE
 
     mov al, '.'
     mov si, command
@@ -356,18 +237,19 @@ look_extern:
     cmp ax, -1
     je .error
 
-    mov di, argument
-    mov dx, rFileName
-    mov ah, 0x17
-    int 0x21
-    
+    ;mov di, argument
+    ;mov dx, rFileName
+    ;mov ah, 0x17
+    ;int 0x21
+    EXECUTE rFileName, argument
+
     cmp ax, 0x01
     je .eError
     jmp .error
 .error: ; generell error
-    print LOAD_ERROR
+    PRINT LOAD_ERROR
     jmp main    
 .eError: ; not a bin file error
-    print NO_PROGRAM
+    PRINT NO_PROGRAM
     jmp main
 ; ====================================================

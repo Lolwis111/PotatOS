@@ -16,7 +16,7 @@ clear_screen:
 	
 	loop .clearLoop
 	
-	movecur 0, 0 ; move cursor to upper left corner
+	MOVECUR 0, 0 ; move cursor to upper left corner
 	
 	jmp main
 ; ====================================================
@@ -32,7 +32,7 @@ change_color:
 	mov al, byte [argument+1]
 	cmp byte [argument], al
     
-    print NEWLINE
+    PRINT NEWLINE
 
 	je main
 
@@ -48,15 +48,15 @@ change_color:
 	
     call screen_setColor
 	
-    print NEWLINE
+    PRINT NEWLINE
 	
 	jmp main
 .error:
-    print .errorStr
+    PRINT .errorStr
 	jmp main
 	
 .color_help:
-    print COLOR_HELP
+    PRINT COLOR_HELP
     jmp main
 
 .errorStr db "\r\nError\r\n", 0x00

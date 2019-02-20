@@ -13,7 +13,11 @@ BEGIN HELP
   color <color>      - Change color (0=help)
   cls                - Clears the screen
   rename <org> <new> - Rename a file
-  del <datei>        - Delete a file
+  del <file>         - Delete a file
+  cd <path>          - Change directory
+  pwd                - Print working directory
+  return?            - Return code of last operation
+  file <file>        - Show file information
 \r
 END
 

@@ -30,9 +30,9 @@ start:
 	
 ; ===========================================
 noargs: ; if there is no args, ask the user to try H for Help
-    print .msgNoArg
+    PRINT .msgNoArg
 	
-	EXIT EXIT_SUCCESS
+    EXIT EXIT_SUCCESS
 	
 .msgNoArg db 0x0D, 0x0A
 %ifdef german
@@ -48,11 +48,11 @@ noargs: ; if there is no args, ask the user to try H for Help
 
 ; ===========================================
 help: ; help prints a message
-    print .msgHelp
+    PRINT .msgHelp
 	
-	EXIT EXIT_SUCCESS ; and then exits
+    EXIT EXIT_SUCCESS ; and then exits
 
-.msgHelp	db "\r\nshutdown [r|s|h]"
+.msgHelp db "\r\nshutdown [r|s|h]"
 %ifdef german
 			db "\r\n   r Neustart"
 			db "\r\n   s Ausschalten"
@@ -115,9 +115,9 @@ shutdown:
 	
 ; ===========================================
 errorAPM:
-	print .msgApmError, 0x04 ; if stuff wont work we print a message
+    PRINT .msgApmError, 0x04 ; if stuff wont work we print a message
     
-    print SHUTDOWN
+    PRINT SHUTDOWN
     
     cli ; and stop the cpu
     hlt

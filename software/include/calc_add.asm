@@ -9,16 +9,16 @@ add_numbers:
     push eax
     jnc .noOverflow
     
-    print msgOverflow, createColor(BLACK, RED)
+    PRINT msgOverflow, createColor(BLACK, RED)
 
 .noOverflow:
     pop ecx ; convert result to string
     mov dword [result], ecx
-    ltostr lblResult, ecx
+    LTOSTR lblResult, ecx
     
-    print msgResult, NUM_COLOR
+    PRINT msgResult, NUM_COLOR
     
-    print lblResult, STD_COLOR ; print result
+    PRINT lblResult, STD_COLOR ; print result
     
     jmp main
 ; ===============================================

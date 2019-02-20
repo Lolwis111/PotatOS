@@ -14,5 +14,6 @@
 %include "fat12/fat.asm"
 %include "fat12/findfile.asm"
 %include "fat12/countfiles.asm"
+%include "fat12/file.asm"
 
 %endif

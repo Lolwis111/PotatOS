@@ -95,7 +95,7 @@ cls:
     pop gs
     popa
     
-    movecur 0, 0
+    MOVECUR 0, 0
     
     ret
 ; ==========================================
@@ -117,45 +117,45 @@ start:
     
 ; ==========================================
 main:
-    print lblOptions, NUM_COLOR
+    PRINT lblOptions, NUM_COLOR
     
-    print msgReady, NUM_COLOR ; >
+    PRINT msgReady, NUM_COLOR ; >
     
-    readline command, 7 ; read command from keyboard
+    READLINE command, 7 ; read command from keyboard
     
     mov si, command         ; make command upper case
     call UpperCase
     
-    print newLine, NUM_COLOR
+    PRINT newLine, NUM_COLOR
     
-    strcmp command, cmdEXIT ; EXIT-Command?
+    STRCMP command, cmdEXIT ; EXIT-Command?
     je exit
     
-    strcmp command, cmdADD ; ADD-Command?
+    STRCMP command, cmdADD ; ADD-Command?
     je add_numbers
     
-    strcmp command, cmdSUB ; SUB-Command?
+    STRCMP command, cmdSUB ; SUB-Command?
     je sub_numbers
     
-    strcmp command, cmdDIV ; DIV-Command?
+    STRCMP command, cmdDIV ; DIV-Command?
     je div_numbers
     
-    strcmp command, cmdMUL ; MUL-Command?
+    STRCMP command, cmdMUL ; MUL-Command?
     je mul_numbers
     
-    strcmp command, cmdTOBIN ; toBin-Command?
+    STRCMP command, cmdTOBIN ; toBin-Command?
     je dec_to_bin
 
-    strcmp command, cmdTOHEX ; toHex-Command?
+    STRCMP command, cmdTOHEX ; toHex-Command?
     je dec_to_hex
 
-    strcmp command, cmdTOOCT ; toOct-Command?
+    STRCMP command, cmdTOOCT ; toOct-Command?
     je dec_to_oct
     
-    strcmp command, cmdSTORE
+    STRCMP command, cmdSTORE
     je store
     
-    strcmp command, cmdVIEW
+    STRCMP command, cmdVIEW
     je viewMemory
     
     jmp main
@@ -185,7 +185,7 @@ store:
     mov dword [resultMemory+ebx*4], eax ; the letters A-F get mapped to the memory addresses
 .invalid:
 
-    print msgInvalidStorage
+    PRINT msgInvalidStorage
 
     jmp main
 ; ===============================================
@@ -194,29 +194,29 @@ store:
 ; ===============================================
 viewMemory:
     
-    ltostr lblResult, dword [resultMemory]
-    print lblResult, STD_COLOR
-    print newLine, NUM_COLOR
+    LTOSTR lblResult, dword [resultMemory]
+    PRINT lblResult, STD_COLOR
+    PRINT newLine, NUM_COLOR
     
-    ltostr lblResult, dword [resultMemory+4]
-    print lblResult, STD_COLOR
-    print newLine, NUM_COLOR
+    LTOSTR lblResult, dword [resultMemory+4]
+    PRINT lblResult, STD_COLOR
+    PRINT newLine, NUM_COLOR
     
-    ltostr lblResult, dword [resultMemory+8]
-    print lblResult, STD_COLOR
-    print newLine, NUM_COLOR
+    LTOSTR lblResult, dword [resultMemory+8]
+    PRINT lblResult, STD_COLOR
+    PRINT newLine, NUM_COLOR
     
-    ltostr lblResult, dword [resultMemory+12]
-    print lblResult, STD_COLOR
-    print newLine, NUM_COLOR
+    LTOSTR lblResult, dword [resultMemory+12]
+    PRINT lblResult, STD_COLOR
+    PRINT newLine, NUM_COLOR
     
-    ltostr lblResult, dword [resultMemory+16]
-    print lblResult, STD_COLOR
-    print newLine, NUM_COLOR
+    LTOSTR lblResult, dword [resultMemory+16]
+    PRINT lblResult, STD_COLOR
+    PRINT newLine, NUM_COLOR
     
-    ltostr lblResult, dword [resultMemory+20]
-    print lblResult, STD_COLOR
-    print newLine, NUM_COLOR
+    LTOSTR lblResult, dword [resultMemory+20]
+    PRINT lblResult, STD_COLOR
+    PRINT newLine, NUM_COLOR
     
     jmp main
 ; ===============================================

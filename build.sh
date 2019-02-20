@@ -155,55 +155,66 @@ dd status=noxfer conv=notrunc if=boot/boot.bin of=$output_image_name || exit
 
 echo "> installing components"
 
-rm -rf tmp-loop/ # delete old mount point
+rm -rf /tmp/tmp-loop/ # delete old mount point
 
-mkdir tmp-loop/ || exit # create new mount point
+mkdir /tmp/tmp-loop/ || exit # create new mount point
 
 # mount the floopy image
-sudo mount -o loop -t msdos $output_image_name tmp-loop/ || exit
+sudo mount -o loop -t msdos $output_image_name /tmp/tmp-loop/ || exit
 
 # build the folder structure
-mkdir tmp-loop/system/
-mkdir tmp-loop/tests/
-mkdir tmp-loop/images/
-mkdir tmp-loop/c-tests/
+mkdir /tmp/tmp-loop/system/
+mkdir /tmp/tmp-loop/tests/
+mkdir /tmp/tmp-loop/images/
+mkdir /tmp/tmp-loop/c-tests/
 
-mkdir tmp-loop/testdir1/ # create some random directories for testing purposes
-mkdir tmp-loop/testdir1/TEST1/
-mkdir tmp-loop/testdir1/TEST1/ABC/
-mkdir tmp-loop/testdir1/TEST1/DEF/
-mkdir tmp-loop/testdir1/TEST2/
-mkdir tmp-loop/testdir1/TEST3/
-mkdir tmp-loop/testdir1/TEST3/DIR12
-mkdir tmp-loop/testdir1/TEST3/TEST13
-mkdir tmp-loop/testdir1/TEST4/
+mkdir /tmp/tmp-loop/testdir1/ # create some random directories for testing purposes
+mkdir /tmp/tmp-loop/testdir1/TEST1/
+mkdir /tmp/tmp-loop/testdir1/TEST1/ABC/
+mkdir /tmp/tmp-loop/testdir1/TEST1/DEF/
+mkdir /tmp/tmp-loop/testdir1/TEST2/
+mkdir /tmp/tmp-loop/testdir1/TEST3/
+mkdir /tmp/tmp-loop/testdir1/TEST3/DIR12
+mkdir /tmp/tmp-loop/testdir1/TEST3/TEST13
+mkdir /tmp/tmp-loop/testdir1/TEST4/
 
-cp loader/loader.sys tmp-loop/ # copy system
-cp README tmp-loop/system/readme.txt
-cp LICENSE tmp-loop/system/license.txt
-cp driver/*.sys tmp-loop/system/ # copy the drivers
-cp software/*.bin tmp-loop/system/ # copy programms
-cp csoftware/*.bin tmp-loop/c-tests/ # copy the c software
+cp loader/loader.sys /tmp/tmp-loop/ # copy system
+cp README /tmp/tmp-loop/system/readme.txt
+cp LICENSE /tmp/tmp-loop/system/license.txt
+cp driver/*.sys /tmp/tmp-loop/system/ # copy the drivers
+cp software/*.bin /tmp/tmp-loop/system/ # copy programms
+cp csoftware/*.bin /tmp/tmp-loop/c-tests/ # copy the c software
 
 # viewer + images are in an extra directory
-mv tmp-loop/system/viewer.bin tmp-loop/images/viewer.bin
+mv /tmp/tmp-loop/system/viewer.bin /tmp/tmp-loop/images/viewer.bin
 
-cp tests/*.bin tmp-loop/tests/
+cp tests/*.bin /tmp/tmp-loop/tests/
 
 echo "> copying resources"
-cp -r misc/* tmp-loop/ # copy resources
+cp -r misc/* /tmp/tmp-loop/ # copy resources
 
 # move the images
-mv tmp-loop/*.llp tmp-loop/images/
+mv /tmp/tmp-loop/*.llp /tmp/tmp-loop/images/
 
-mv tmp-loop/strings.sys tmp-loop/system/
+mv /tmp/tmp-loop/strings.sys /tmp/tmp-loop/system/
+
+for file in /tmp/tmp-loop/system/*.* ;
+do
+    ./tools/Attributes/bin/attributes $file d
+done;
+
+#./archive /tmp/tmp-loop/system/strings.sys
+./tools/Attributes/bin/attributes /tmp/tmp-loop/system/strings.sys sh
+./tools/Attributes/bin/attributes /tmp/tmp-loop/system/system.sys sh
+./tools/Attributes/bin/attributes /tmp/tmp-loop/system/sysinit.sys sh
+./tools/Attributes/bin/attributes /tmp/tmp-loop/loader.sys sh
 
 sleep 0.2 # wait a moment to make sure everything is written
 
 echo "> release image"
 
-umount tmp-loop/ || exit # release floppy
-rm -rf tmp-loop/
+umount /tmp/tmp-loop/ || exit # release floppy
+rm -rf /tmp/tmp-loop/
 
 # adjust rights
 chmod a+rw $output_image_name

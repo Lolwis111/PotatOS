@@ -23,7 +23,7 @@ str8 times 2048 db 0x20
 msgOk db "No errors.", 0x0D, 0x0A, 0x00
 
 start:
-    print NEWLINE
+    PRINT NEWLINE
 
     mov si, str1
     call StringLength2
@@ -65,9 +65,9 @@ start:
     cmp cx, 2048
     jne error
 
-    print NEWLINE
+    PRINT NEWLINE
 
-    print msgOk
+    PRINT msgOk
 
     EXIT EXIT_SUCCESS
 

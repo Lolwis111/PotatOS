@@ -1,12 +1,12 @@
 ; ==============================================
 readA:
-    print lblA, NUM_COLOR
+    PRINT lblA, NUM_COLOR
 
-    readline inputString, 9
+    READLINE inputString, 9
 
     mov esi, inputString
     call UpperCase
-    strcmp inputString, cmdANS
+    STRCMP inputString, cmdANS
     je .ans
 
     mov esi, inputString
@@ -14,9 +14,9 @@ readA:
     cmpsd
     je .loadMem
     
-    strtol inputString    
-    cmp eax, -1
-    je .returnError
+    STRTOL inputString    
+    cmp eax, NO_ERROR
+    jne .returnError
 
     clc
     ret
@@ -52,13 +52,13 @@ readNumbers:
     
     mov dword [numberA], ecx
     
-    print lblB, NUM_COLOR
+    PRINT lblB, NUM_COLOR
     
-    readline inputString, 9
+    READLINE inputString, 9
 
     mov esi, inputString
     call UpperCase
-    strcmp inputString, cmdANS
+    STRCMP inputString, cmdANS
     je .ans
 
     mov esi, inputString
@@ -66,10 +66,10 @@ readNumbers:
     cmpsd
     je .loadMem
     
-    strtol inputString
+    STRTOL inputString
 
-    cmp eax, -1 
-    je .returnError
+    cmp eax, NO_ERROR 
+    jne .returnError
     
 .ok:
     mov dword [numberB], ecx

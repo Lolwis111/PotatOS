@@ -7,10 +7,10 @@ mul_numbers:
 
     mov dword [result], eax
 
-    ltostr lblResult, eax
+    LTOSTR lblResult, eax
     
-    print msgResult, NUM_COLOR    
-    print lblResult, STD_COLOR
+    PRINT msgResult, NUM_COLOR    
+    PRINT lblResult, STD_COLOR
 
     jmp main
 ; ===============================================   

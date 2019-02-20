@@ -131,7 +131,7 @@ start:
     
     ; pop es
     
-	jmp SOFTWARE_BASE ; jump to the loaded program (in this case its sysinit.sys)
+    jmp SOFTWARE_BASE ; jump to the loaded program (in this case its sysinit.sys)
 	
     
 ; if any of the files is missing we have a problem
@@ -153,7 +153,7 @@ start:
     call Print
     mov si, msgError
     call Print
-	xor ax, ax
-	int 0x16
-	int 0x19                    ; try rebooting when everything goes wrong
+    xor ax, ax
+    int 0x16
+    int 0x19                    ; try rebooting when everything goes wrong
 ; ====================================================================================

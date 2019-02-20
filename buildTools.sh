@@ -18,6 +18,17 @@ do
 done
 cd ../../../
 
+cd tools/Attributes/bin # Tool: clean Attributes
+rm -f attributes
+cd ..
+cd obj
+for i in *.o
+do
+    rm -f "$i"
+done
+cd ../../../
+
 echo "> building tools..."
 make -C tools/MkLocale
 make -C tools/LLP
+make -C tools/Attributes

@@ -1,34 +1,34 @@
 ;================================================
 drawInputBox:
-	push si
-	mov di, cursorPos(24, 7)
-	mov cl, 5
+    push si
+    mov di, cursorPos(24, 7)
+    mov cl, 5
 .loopY:
-	mov ch, 24
-	.loopX:
-		mov byte [gs:di], 20h
-		inc di
-		mov byte [gs:di], TEXT_COLOR
-		inc di
-		dec ch
-		test ch, ch
-		jnz .loopX
-	add di, 112
-	dec cl
-	test cl, cl
-	jnz .loopY
+    mov ch, 24
+    .loopX:
+        mov byte [gs:di], 20h
+        inc di
+        mov byte [gs:di], TEXT_COLOR
+        inc di
+        dec ch
+        test ch, ch
+        jnz .loopX
+    add di, 112
+    dec cl
+    test cl, cl
+    jnz .loopY
 	
-	mov di, cursorPos(24, 7)
-	mov cx, (SCREEN_HEIGHT - 1)
+    mov di, cursorPos(24, 7)
+    mov cx, (SCREEN_HEIGHT - 1)
 .top:
-	mov byte [gs:di], 205
-	inc di
-	mov byte [gs:di], BORDER_COLOR
-	inc di
-	loop .top
+    mov byte [gs:di], 205
+    inc di
+    mov byte [gs:di], BORDER_COLOR
+    inc di
+    loop .top
 	
-	mov di, cursorPos(24, 12)
-	mov cx, (SCREEN_HEIGHT - 1)
+mov di, cursorPos(24, 12)
+mov cx, (SCREEN_HEIGHT - 1)
 .bottom:
 	mov byte [gs:di], 205
 	inc di
@@ -96,14 +96,14 @@ drawInputBox:
 	mov ax, 0x0103
 	int 0x10
 
-	movecur 25, 10
+	MOVECUR 25, 10
 
 	mov dl, TEXT_COLOR
 	mov dh, '>'
 	mov ah, 0x10
 	int 0x21
 	
-	movecur 26, 10
+	MOVECUR 26, 10
 
 	
 	mov ah, 0x04
@@ -543,55 +543,53 @@ drawPosition:
 ; al color
 ;==========================================
 drawCursor:
-	pusha
-    
-	push dx
-	push ax
+    pusha
+    push dx
+    push ax
 	
-	movzx ax, dh
-	movzx cx, dl	
+    movzx ax, dh
+    movzx cx, dl	
 	
-	mov bx, cx
-	shl cx, 2
-	sub cx, bx
+    mov bx, cx
+    shl cx, 2
+    sub cx, bx
 	
-	add ax, 2
-	add cx, 4
+    add ax, 2
+    add cx, 4
 	
-	xor dx, dx
-	mov bx, (SCREEN_WIDTH * 2)
-	mul bx
+    xor dx, dx
+    mov bx, (SCREEN_WIDTH * 2)
+    mul bx
 	
-	shl cx, 1
-	add ax, cx
-	mov bx, ax
+    shl cx, 1
+    add ax, cx
+    mov bx, ax
 	
-	pop ax
+    pop ax
 	
-	add bx, 3
-	mov byte [gs:bx], al
-	add bx, 2
-	mov byte [gs:bx], al
+    add bx, 3
+    mov byte [gs:bx], al
+    add bx, 2
+    mov byte [gs:bx], al
 	
-	pop dx
+    pop dx
 	
-	push ax
+    push ax
 	
-	movzx ax, dh
-	movzx cx, dl
-	add ax, 2
-	xor dx, dx
-	mov bx, (SCREEN_WIDTH * 2)
-	mul bx
-	shl cx, 1
-	add ax, cx
-	mov bx, ax
-	add bx, 111
+    movzx ax, dh
+    movzx cx, dl
+    add ax, 2
+    xor dx, dx
+    mov bx, (SCREEN_WIDTH * 2)
+    mul bx
+    shl cx, 1
+    add ax, cx
+    mov bx, ax
+    add bx, 111
 	
-	pop ax
-	mov byte [gs:bx], al
-	
-	popa
-	
-	ret
+    pop ax
+    mov byte [gs:bx], al
+
+    popa
+    ret
 ;==========================================
