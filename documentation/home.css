@@ -1,0 +1,72 @@
+#memoryMap
+{
+    width: 80%;
+}
+
+.memoryBlock
+{
+    border: 1px solid black;
+    width: 150px;
+    height: 50px;
+    float: left;
+    text-align: center;
+    color: black;
+}
+
+.unusable
+{
+    background-color: red;
+}
+
+.free
+{
+    background-color: green;
+}
+
+.special
+{
+    background-color: yellow;
+}
+
+.readonly
+{
+    background-color: orange;
+}
+
+.level1, .level2
+{
+    margin-left: 20px;
+}
+
+.button
+{
+    border: 1px solid black;
+    padding: 5px 5px 5px 5px;
+    width: 150px;
+    margin-left: 3px;
+    margin-right: 3px;
+    color: black;
+    background-color: gray;
+}
+
+.button:hover
+{
+    background-color: black;
+    color: gray;
+}
+
+a, a:visited
+{
+    text-decoration: none;
+    float: left;
+}
+
+.menu
+{
+    margin-left: 20px;
+}
+
+th, td
+{
+    padding: 5px 5px 5px 5px;
+}

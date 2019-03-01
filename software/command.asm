@@ -83,9 +83,9 @@ main:
     STRCMP command, cmdFILE
     je PRINT_file_info
 
-    jmp look_extern
-    
-    ; jmp main
+    call look_extern
+
+    jmp main
 ; ====================================================
 
 

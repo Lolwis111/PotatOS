@@ -9,6 +9,7 @@ jmp start
 %include "functions.asm"
 %include "strings.asm"
 %include "keys.asm"
+%include "chars.asm"
 %include "language.asm"
 %include "bpb.asm"
 
@@ -28,6 +29,8 @@ fileSizeString times 11 db 0x00
 selectedIndex db 0x00
 fileCount db 0x00
 entriesToSkip db 0x00
+fileEntryViewer times 32 db 0x00
+fileEntryEdit   times 32 db 0x00
 ; ================================================
 
 
@@ -55,17 +58,56 @@ countFiles:
 
 
 ; ================================================
+; set up environment
+; ================================================
+initalize:
+    ; load the root directory
+    mov ah, 0x11
+    int 0x21
+
+    LOADDIRECTORY .systemDir
+
+    FINDFILE .viewer
+
+    mov si, DIRECTORY_OFFSET
+    shl ax, 5
+    add si, ax
+    mov di, fileEntryViewer
+    mov cx, 16
+    rep movsw
+
+    FINDFILE .edit
+
+    mov si, DIRECTORY_OFFSET
+    shl ax, 5
+    add si, ax
+    mov di, fileEntryEdit
+    mov cx, 16
+    rep movsw
+
+    ret
+
+.systemDir  db "SYSTEM     ", 0x00
+.viewer     db "VIEWER  BIN", 0x00
+.edit       db "EDIT    BIN", 0x00
+; ================================================
+
+
+; ================================================
 start:
     ; save segments and original directory
     call backupSegments
     call backupDir
 
+    call initalize
+
+    call restoreDir
     
     mov ax, VIDEO_TEXT_SEGMENT   ; set gs to point to the video memory
     mov gs, ax
 
     ; clear the screen
-    mov dl, 0x20
+    mov dl, CHAR_SPACE
     mov dh, BORDER_COLOR
     call clearScreen
     
@@ -150,7 +192,7 @@ main:
 
 ; ================================================
 exit:
-    mov dl, 0x20
+    mov dl, CHAR_SPACE
     mov dh, byte [SYSTEM_COLOR]
     call clearScreen
     call restoreDir

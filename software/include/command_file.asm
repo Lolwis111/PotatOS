@@ -212,7 +212,7 @@ look_extern:
     add si, cx
     mov di, .programExt
     mov cx, 4
-    rep cmpsb
+    repe cmpsb
     jne .eError
     jmp .extOk
     
@@ -237,10 +237,6 @@ look_extern:
     cmp ax, -1
     je .error
 
-    ;mov di, argument
-    ;mov dx, rFileName
-    ;mov ah, 0x17
-    ;int 0x21
     EXECUTE rFileName, argument
 
     cmp ax, 0x01
@@ -248,8 +244,8 @@ look_extern:
     jmp .error
 .error: ; generell error
     PRINT LOAD_ERROR
-    jmp main    
+    ret
 .eError: ; not a bin file error
     PRINT NO_PROGRAM
-    jmp main
+    ret
 ; ====================================================

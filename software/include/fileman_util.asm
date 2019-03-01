@@ -54,6 +54,7 @@ printString:
 ; up the console
 ; ================================================
 backupDir:
+    pusha
     push ds
     push es
     mov ax, DIRECTORY_SEGMENT
@@ -69,6 +70,7 @@ backupDir:
 
     pop es
     pop ds
+    popa
     ret
 ; ================================================
 
@@ -77,6 +79,7 @@ backupDir:
 ; copy the directory back to the original location
 ; ================================================
 restoreDir:
+    pusha
     push ds
     push es
     mov ax, DIRECTORY_SEGMENT
@@ -92,6 +95,7 @@ restoreDir:
 
     pop es
     pop ds
+    popa
     ret
 ; ================================================
 
@@ -100,6 +104,7 @@ restoreDir:
 ; save the segments
 ; ================================================
 backupSegments:
+    pusha
     mov ax, es
     mov word [segments], ax
     mov ax, ds
@@ -108,8 +113,11 @@ backupSegments:
     mov word [segments+4], ax
     mov ax, fs
     mov word [segments+6], fs
+    popa
     ret
+
 restoreSegments:
+    pusha
     mov ax, word [segments]
     mov es, ax
     mov ax, word [segments+2]
@@ -118,6 +126,7 @@ restoreSegments:
     mov gs, ax
     mov ax, word [segments+6]
     mov fs, ax
+    popa
     ret
 segments dw 0x0000, 0x0000, 0x0000, 0x0000
 ; ================================================

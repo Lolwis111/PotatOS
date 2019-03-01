@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
                 attr |= ATTR_ARCH;
                 break;
             }
+            case 'd':
             default:
             {
                 attr = ATTR_NONE;

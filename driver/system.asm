@@ -4,6 +4,7 @@
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %include "defines.asm"
+%include "keys.asm"
 
 [ORG SYSTEM_SYS]
 [BITS 16]
@@ -24,7 +25,7 @@ main:
     cmp ah, 0x04        ; read string from keyboard
     je readLine 
     
-    cmp ah, 0x05        ; load file
+    cmp ah, 0x05        ; loads a file form the current directory
     je loadFile
     
     cmp ah, 0x06        ; get time as string
@@ -89,6 +90,12 @@ main:
 
     cmp ah, 0x1A        ; read a directory
     je loadDirectory
+
+    cmp ah, 0x1B        ; loads a file given the entry in any directory
+    je loadFileEntry
+
+    ;cmp ah, 0x1C
+    ;je startProgramEntry ; start a process based on file entry
 
     cmp ah, 0xAA        ; all new 32-bit ready string-int operation
     je intToString32

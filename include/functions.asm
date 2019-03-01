@@ -46,18 +46,26 @@
 %macro LOADFILE 3
     mov dx, %1
     mov bx, %2
-    mov ebp, %3
+    mov bp, %3
     mov ah, 0x05
     int 0x21
 %endmacro
 
 %macro LOADFILE 2 ; load file to BP:BX
+    LOADFILE %1, %2, 0x0000
+%endmacro
+
+%macro LOADFILEENTRY 3
+    mov ah, 0x1B
     mov dx, %1
-    xor bp, bp
     mov bx, %2
-    mov ah, 0x05
+    mov ebp, %3
     int 0x21
-%endmacro 
+%endmacro
+
+%macro LOADFILEENTRY 2
+    LOADFILEENTRY %1, %2, 0
+%endmacro
 
 %macro LOADDIRECTORY 1
     mov dx, %1

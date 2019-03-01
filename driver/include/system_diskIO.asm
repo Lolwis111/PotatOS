@@ -14,6 +14,14 @@ private_loadFile: ; basically a wrapper for fat12.asm
 loadFile:
     call private_loadFile
     iret
+private_loadFileEntry:
+    xor ax, ax
+    mov si, dx
+    call ReadFile.customDirectory
+    ret
+loadFileEntry:
+    call private_loadFileEntry
+    iret
 ; ======================================================
 
 

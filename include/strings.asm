@@ -52,6 +52,11 @@ AdjustFileName:
 ; ES:DI <= FAT12 directory name
 ; ==========================================
 AdjustDirName:
+    push cx
+    push si
+    push di
+    push ax
+
     xor cx, cx
 .copy:
     lodsb
@@ -67,15 +72,17 @@ AdjustDirName:
     jl .addSpaces
     
 .addSpaces:
-    mov byte [es:di], ' '
+    ; 0x20 is space
+    mov byte [es:di], 0x20
     inc di
     inc cx
     cmp cx, 11
     jl .addSpaces
-    xor ax, ax
-    ret
-.error:
-    mov ax, -1
+    
+    pop ax
+    pop di
+    pop si
+    pop cx
     ret
 ; ==========================================
 
@@ -85,8 +92,9 @@ AdjustDirName:
 ; DS:SI => String
 ; ==========================================
 UpperCase:
+    push si
 .loop1:
-    cmp byte [ds:si], 00h
+    cmp byte [ds:si], 0x00
     je .return
     
     cmp byte [ds:si], 'a'
@@ -94,11 +102,12 @@ UpperCase:
     cmp byte [ds:si], 'z'
     ja .noatoz
     
-    sub byte [ds:si], 20h
+    sub byte [ds:si], 0x20
     inc si
     
     jmp .loop1
 .return:
+    pop si
     ret
 .noatoz:
     inc si
@@ -141,9 +150,9 @@ StringLength2:
 ; CX <- length
 ; ==========================================
 StringLength:
-    push bx
-    push dx
-    push bp
+    push ax
+    push si
+
     xor cx, cx
 .charLoop:
     cmp byte [ds:si], al
@@ -154,14 +163,12 @@ StringLength:
     inc cx
     jmp .charLoop
 .ok:
-    pop bp
-    pop dx
-    pop bx
+    pop si
+    pop ax
     ret
 .noOk:
-    pop bp
-    pop dx
-    pop bx
+    pop si
+    pop ax
     xor cx, cx
     ret
 ; ==========================================
@@ -173,9 +180,9 @@ StringLength:
 ; CX <= Index
 ; ==========================================
 fileNameLength:
-    push bx
-    push dx
-    push bp
+    push ax
+    push si
+
     xor cx, cx
 .loop1:
     lodsb
@@ -185,19 +192,13 @@ fileNameLength:
     je .done
     inc cx
     jmp .loop1
-.done:
-    pop bp
-    pop dx
-    pop bx
-    ret
 .error:
-    pop bp
-    pop dx
-    pop bx
     mov cx, -1
+.done:
+    pop si
+    pop ax
     ret
-    
-.noArgs        db "NO ARGUMENT", 0Dh, 0Ah, 00h
+.noArgs db "NO ARGUMENT", 0Dh, 0Ah, 00h
 ; ==========================================
 
 
@@ -208,7 +209,9 @@ fileNameLength:
 ; ES:DI => human filename
 ; ==========================================
 ReadjustFileName:
-    pusha
+    push cx
+    push ax
+    push si
     
     mov di, .newFileName
     mov cx, 8
@@ -226,7 +229,9 @@ ReadjustFileName:
     xor al, al  ; put \0 at the end
     stosb
     
-    popa
+    pop si
+    pop ax
+    pop cx
     mov di, .newFileName
     ret
 .newFileName times 13 db 0x00
@@ -331,7 +336,6 @@ AppendString:
     push ax
     push si
     push di
-    
     cld
 .gotoEndOfSILoop:
     cmp byte [es:di], al
@@ -348,8 +352,7 @@ AppendString:
     inc cx
     jmp .copyLoop
 .copyDone:
-    stosb
-    
+    stosb 
     pop di
     pop si
     pop ax
