@@ -12,7 +12,7 @@ mount_point="/tmp/tmp-loop"
 LIST_FILE=true
 NASM_FLAGS=" -Ox -f bin " # just flags for assembler, make sure you keep '-f bin'
 
-if [ "`whoami`" != "root" ] ; then # check if script has root rights
+if [ ! "$1" == "clean"  ] && [ "`whoami`" != "root" ] ; then # check if script has root rights
     echo "  You have to lunch this as root!"
     echo "  (loopback mounting is a root-only service!)"
     exit
@@ -58,6 +58,8 @@ if [ -e "language.asm" ] ; then # delete language.asm
 fi;
 
 cd ..
+
+make clean -C csoftware/kernelC/
 
 if [ "$1" = "clean" ] ; then
     echo -e "\e[92mDone!\e[39m"
