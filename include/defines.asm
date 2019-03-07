@@ -16,7 +16,6 @@
     
     %define TRUE 0
     %define FALSE -1
-    %define _HIGH_MEM_ FALSE
     
     %define RESULT_OK        0x01
     %define RESULT_CANCEL    0x00
@@ -53,7 +52,9 @@
     
     %define createColor(foreground, background) ((background*16)+foreground)
     %define cursorPos(x, y) ((y * (SCREEN_WIDTH * 2)) + (x * 2))
-    
+
+    %define SERIAL_PORT_1 0x03F8
+
     ; ADDRESSES
     
     %define LOADER_SYS      0x0500

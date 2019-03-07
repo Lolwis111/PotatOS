@@ -19,7 +19,7 @@ jmp start
 %include "fat12/readdirectory.asm" ; loading directory from disk
 %include "print16.asm"
 %include "common.asm"
-; ====================================================================================
+
 msgError0 db 0x0D, 0x0A, "System directory", 0x00
 msgError1 db 0x0D, 0x0A, "strings.sys", 0x00
 msgError2 db 0x0D, 0x0A, "system.sys", 0x00
@@ -58,8 +58,14 @@ start:
     mov si, msgHello
     call Print
 
+    ;mov di, CURRENT_PATH
+    ;mov si, .initialPath
+    ;mov cx, 9
+    ;rep movsb
+    ;mov word [CURRENT_PATH_LENGTH], cx
+
     call LoadRoot       ; load the root directory
-    
+
     mov si, SystemDir
     call ReadDirectory  ; load the 'system' directory
     jc .error0
@@ -84,6 +90,7 @@ start:
     
     jmp SOFTWARE_BASE ; jump to the loaded program (in this case its sysinit.sys)	
     
+.initialPath db "/SYSTEM/", 0x00
 ; if any of the files is missing we have a problem
 .error0:
     mov si, msgError0

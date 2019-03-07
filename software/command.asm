@@ -27,6 +27,8 @@ rFileName times 11 db 0x20
                    db "\n\r"
                    db 0x00 ; filename, 'fat12' format (DUMMY    BIN)
 
+%define BUFFER_LENGTH 64
+
 ready db "CMD> ", 0x00
 
 start:
@@ -38,7 +40,7 @@ main:
     
     PRINT ready ; print CMD>
     
-    READLINE inputBuffer, 64 ; read user input
+    READLINE inputBuffer, BUFFER_LENGTH ; read user input
     
     mov si, inputBuffer ; convert it to all upper case letters
     call UpperCase
@@ -82,7 +84,7 @@ main:
     je PRINT_return_code ; command_util
 
     STRCMP command, cmdFILE
-    je PRINT_file_info
+    je PRINT_file_info  ; command_fileInfo
 
     call look_extern
 
@@ -113,11 +115,11 @@ parseCommands:
     inc di
     jmp .skipLoop
 .copy:
-    mov di, argument ; get everything after the first space
-    mov ax, 64          ; and use that as argument (up to 64 characters)
+    mov di, argument      ; get everything after the first space
+    mov ax, BUFFER_LENGTH ; and use that as argument (up to 64 characters)
     sub ax, cx
     mov cx, ax
-    rep movsb   
+    rep movsb
 .return:
     ret
 ; ====================================================
@@ -127,41 +129,30 @@ parseCommands:
 ; clears all the input buffers
 ; ====================================================
 clearBuffer:
-    push si
     push di
-    push bp
+    push cx
+    cld
 
-    mov cx, 64
-    mov di, command     ; clear command
-    mov si, argument ; args to command
-    mov bp, inputBuffer ; and buffer
-.Loop1:
-    mov byte [di], 0x00 ; just set everything to zeros
-    mov byte [bp], 0x00
-    mov byte [si], 0x00
-    inc di
-    inc si
-    inc bp
-
-    dec cx
-    jnz .Loop1
-
-    mov cx, 11          ; clear the filename too
+    xor ax, ax
+    mov cx, BUFFER_LENGTH
+    mov di, command
+    rep stosb
+    mov cx, BUFFER_LENGTH
+    mov di, argument
+    rep stosb
+    mov cx, BUFFER_LENGTH
+    mov di, inputBuffer
+    rep stosb
+    mov cx, 11
     mov di, rFileName
-.Loop2 :
-    mov byte [di], 0x00
-    inc di
-    dec cx
-    jnz .Loop2
+    rep stosb
 
-    pop bp
+    pop cx
     pop di
-    pop si
-
     ret
 ; ====================================================
 
-inputBuffer   times 64 db 0x00
-argument      times 64 db 0x00
-command       times 64 db 0x00
+inputBuffer   times BUFFER_LENGTH db 0x00
+argument      times BUFFER_LENGTH db 0x00
+command       times BUFFER_LENGTH db 0x00
 commandLength dw 0x0000

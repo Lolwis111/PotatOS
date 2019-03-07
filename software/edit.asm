@@ -12,27 +12,31 @@ jmp start
 %include "chars.asm"
 
 %define COLOR createColor(WHITE, BLACK)
-%define FILE_OFFSET fileBuffer
-
+%define FILE_SEGMENT 0x1000
 %include "include/edit_render.asm"
+%include "include/edit_gui.asm"
 
 ; ===============================================
 start:
     push ax
+    
+    mov ax, VIDEO_TEXT_SEGMENT ; set GS to point to video memory
+    mov gs, ax
+
     mov dh, COLOR
     mov dl, CHAR_SPACE
     call clearScreen
+    
     pop ax
     
-    mov bx, ax
-    cmp byte [bx], -1   ; check for an argument
+    cmp ax, -1   ; check for an argument
     je .noArgument      ; no argument
 
     mov si, ax          ; Wenn ja dann Datei aus dem Argument laden
     mov di, fileName
     call AdjustFileName
     
-    LOADFILE fileName, FILE_OFFSET ; load file
+    LOADFILE fileName, 0, FILE_SEGMENT ; load file
     
     mov word [fileLenght], cx
     cmp ax, -1
@@ -54,7 +58,7 @@ start:
     cmp ax, -1
     je .error
     
-    LOADFILE fileName, FILE_OFFSET ; try loading the file
+    LOADFILE fileName, 0, FILE_SEGMENT ; try loading the file
     mov word [fileLenght], cx
     cmp ax, -1
     je .error
@@ -73,24 +77,7 @@ start:
 
 ; ===============================================
 ; data
-; =====+=========================================
-lblTop  db 177
-        times 11 db 20h
-        times 148 db 177
-        db 0x00
-
-%ifdef german
-    lblBottom   times 81 db 177
-                db 24, " Hochscrollen", 177, 25, " Runterscrollen", 177, "ESC Beenden", 177, "F5 Neu laden"
-                times 22 db 177
-                db 0x00
-%elif english
-    lblBottom   times 81 db 177
-                db 24, " scroll up", 177, 25, " scroll down", 177, "ESC quit", 177, "F5 reload"
-                times 34 db 177
-                db 0x00
-%endif
-            
+; ===============================================   
 linesToSkip dw 0x00
 fileLenght  dw 0x00
 
@@ -198,8 +185,6 @@ main:
     call renderText
     
     READCHAR
-    ;xor ah, ah
-    ;int 0x16
 
     cmp ah, KEY_UP  ; arrow-up
     je .scrollUp

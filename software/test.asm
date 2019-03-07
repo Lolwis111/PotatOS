@@ -8,16 +8,11 @@ jmp start
 %include "functions.asm"
 %include "language.asm"
 
+message db "Hallo Welt!", 0xFF
+
 start:
-    mov ah, 0xAC
+    mov dx, message
+    mov ah, 0xE2
     int 0x21
 
-    cmp al, 0x00
-    je start
-
-    mov ah, 0x10
-    mov dl, 0x07
-    mov dh, al
-    int 0x21
-
-    jmp start
+    EXIT EXIT_SUCCESS

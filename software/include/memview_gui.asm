@@ -224,10 +224,8 @@ drawBox:
 	
 	
 .inputLoop:
-	xor ax, ax
-	int 0x16
-	
-	cmp ah, 0x01
+	READCHAR	
+	cmp ah, KEY_ESCAPE
 	je .exit
 	jmp .inputLoop
 	

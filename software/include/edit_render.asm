@@ -47,17 +47,17 @@ renderPosition:
 renderText:    
     call clearTextArea
 
-    xor ax, ax
-    mov es, ax
-    mov esi, FILE_OFFSET
+    xor ax, FILE_SEGMENT
+    mov fs, ax
+    xor si, si
     cmp word [linesToSkip], 0x00
     je .ok    
     
     xor dx, dx    
     xor cx, cx
 .skipLoop:
-    mov al, byte [es:esi]
-    inc esi
+    mov al, byte [fs:si]
+    inc si
     inc cx
     
     cmp al, 0x0A
@@ -85,9 +85,9 @@ renderText:
     ; ---------------
     mov bx, 0x0200
 .charLoop:
-    mov al, byte [es:esi]
+    mov al, byte [fs:si]
     
-    inc esi
+    inc si
     
     cmp al, 0x00
     je .done

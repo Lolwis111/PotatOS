@@ -16,10 +16,16 @@ print_working_directory:
     PRINT CURRENT_PATH
     
     PRINT NEWLINE
-    
+
+    mov cx, word [CURRENT_PATH_LENGTH]
+    ITOSTR .wdl, cx
+
+    PRINT .wdl
+
     PRINT NEWLINE
     
     jmp main
+.wdl times 12 db 0x00
 ; ====================================================
 
 ; ====================================================

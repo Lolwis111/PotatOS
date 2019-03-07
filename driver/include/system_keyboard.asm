@@ -103,6 +103,7 @@ private_readChar:
     add si, ax
     mov al, byte [si]
     mov ah, dh
+    
     ret
 .space:
     mov ah, dh

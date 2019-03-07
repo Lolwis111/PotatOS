@@ -107,6 +107,12 @@ main:
     je readChar         ; this functions does not use interrupts and is therefor
                         ; protected mode ready
 
+    cmp ah, 0xE1
+    je com1_sendByte
+
+    cmp ah, 0xE2
+    je com1_sendMessage
+
     cmp ah, 0xF0        ; initalize the memory for the allocator
     je initMemory
 
@@ -138,6 +144,7 @@ main:
 %include "system_sleep.asm"
 %include "system_memory.asm"
 %include "system_keyboard.asm"
+%include "system_serial.asm"
 
 col db 0x00
 row db 0x06
@@ -180,27 +187,38 @@ exitProgram:
     mov dh, byte [row]  ; move cursor to the left
     mov dl, 0x00        
     call private_setCursorPosition
-    
+
+    ; load /SYSTEM/
+    call private_getRootDir
+    mov dx, .systemDir
+    call private_loadDirectory
+
+    ; load /SYSTEM/COMMAND.BIN
     xor bp, bp
     mov ebx, SOFTWARE_BASE
     mov dx, .fileName
     call private_loadFile
+ 
     or ax, ax
     jnz .error
     
     cli
+    
     xor bx, bx
     mov ax, -1
     mov es, bx
     mov ds, bx
     mov gs, bx
     mov fs, bx
+    
     sti
+    
     jmp 0x0000:SOFTWARE_BASE
 .error:
     cli
     hlt
-.fileName db "COMMAND BIN", 0x00
+.fileName  db "COMMAND BIN", 0x00
+.systemDir db "SYSTEM", 0x00
 ; ======================================================
 
 
@@ -209,25 +227,20 @@ exitProgram:
 ; ES:DI <= argument string to pass
 ; ======================================================
 startProgram:
-    cmp di, -1
-    je .noArgs
+    ; if the first byte of the argument is \0
+    ; there is not argument to be passed
+    cmp word [es:di], 0x00
+    je .hasNoArgument
     
     mov si, di
     mov di, .argumentTemp
 
     mov cx, 64
-.copyArgs:                  ; copy argument to a location that wont be overriden by the new program
-    mov al, byte [esi]
-    test al, al
-    jz .copyDone
-    mov byte [edi], al
-    inc si
-    inc di
-    dec cx
-    jz .copyDone
-    jmp .copyArgs
-.noArgs:
-    mov byte [.argumentTemp], -1
+    rep movsb
+    mov byte [.hasArgument], TRUE
+    jmp .copyDone
+.hasNoArgument:
+    mov byte [.hasArgument], FALSE
 .copyDone:
     mov byte [edi], 0x00
     mov si, dx              ; check that filename has .BIN extension
@@ -238,13 +251,9 @@ startProgram:
     cmp byte [esi+10], 'N'
     jne .noExecutableError
     
-    push si
-    
     mov bx, SOFTWARE_BASE ; load the program into memory
     xor bp, bp
     call private_loadFile
-    
-    pop si
     
     cmp ax, 0   ; if the file can not be load its an error
     jne .error
@@ -252,24 +261,35 @@ startProgram:
     add esp, 6  ; remove stack pointers created by interrupt instruction, we do not need this
 
     sti
+
     xor bx, bx
-    mov ax, .argumentTemp
     mov es, bx
     mov ds, bx
-    mov gs, bx
     mov fs, bx
+    mov gs, bx
+
     cli
+
+    cmp byte [.hasArgument], TRUE
+    je .setArgument
+    mov ax, -1
+    jmp .argumentOK
+.setArgument:
+    mov ax, .argumentTemp
+.argumentOK:
     jmp 0x0000:SOFTWARE_BASE   ; start programm
     
 .noExecutableError:
     mov ax, 0x01
     stc
+
     iret
     
 .error:
     stc
     mov ax, 0x02
     iret
+.hasArgument db FALSE
 .argumentTemp times 65 db 0x00
 ; ======================================================
 

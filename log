@@ -1,0 +1,49 @@
+make: Entering directory '/home/levin/PotatOS/csoftware/kernelC'
+rm -f *.bin *.o *.dis
+make: Leaving directory '/home/levin/PotatOS/csoftware/kernelC'
+creating language.asm
+> create floppy image
+mkfs.fat 4.1 (2017-01-24)
+create listing files
+> testing defines.asm
+> building bootloader
+> Generate list files
+> Do not assemble debug code
+> Do not assemble high memory features
+
+> building programms
+...........
+> building drivers
+..
+> building tests
+....
+> building c software
+make: Entering directory '/home/levin/PotatOS/csoftware/kernelC'
+nasm protectedmode.asm -f bin -o protectedmode.bin
+nasm kernelEntry.asm -f elf -o kernelEntry.o
+/home/levin/i386elfgcc/bin/i386-elf-gcc -m32 -O2 -ffreestanding -c kernel.c -o kernel.o
+/home/levin/i386elfgcc/bin/i386-elf-gcc -m32 -O2 -ffreestanding -c stdio.c -o stdio.o
+/home/levin/i386elfgcc/bin/i386-elf-ld -o kernel.sys -Ttext 0x10000 kernelEntry.o kernel.o stdio.o --oformat binary
+cat protectedmode.bin kernel.sys > pmtest.bin
+make: Leaving directory '/home/levin/PotatOS/csoftware/kernelC'
+
+> installing bootloader
+1+0 records in
+1+0 records out
+> installing components
+installing driver/sysinit.sys
+installing driver/system.sys
+installing software/bin/calc.bin
+installing software/bin/colors.bin
+installing software/bin/command.bin
+installing software/bin/edit.bin
+installing software/bin/fileman.bin
+installing software/bin/grafik.bin
+installing software/bin/memory.bin
+installing software/bin/memview.bin
+installing software/bin/shutdown.bin
+installing software/bin/test.bin
+installing software/bin/viewer.bin
+> copying resources
+> release image
+[92m> Done 23:17:40![39m

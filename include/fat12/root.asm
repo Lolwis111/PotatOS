@@ -25,7 +25,13 @@ LoadRoot:
     mov es, bx
     xor bx, bx
     call ReadSectors
-    
+
+    xor ax, ax
+    mov es, ax
+    mov byte [es:CURRENT_PATH], '/'
+    mov byte [es:CURRENT_PATH], 0x00
+    mov word [CURRENT_PATH_LENGTH], 1
+
     pop es
     popa
     

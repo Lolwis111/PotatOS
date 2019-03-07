@@ -46,7 +46,7 @@ viewDirectory:
     pop si
 .noFilter:
     add si, 17
-    mov ecx, dword [si]         ; get the filesize from the entry
+    mov ecx, dword [es:si]         ; get the filesize from the entry
     add dword [.fileSize], ecx    ; add it to the size of the directory
     push si
     
@@ -64,14 +64,10 @@ viewDirectory:
     call ReadjustFileName
 
     PRINT ReadjustFileName.newFileName ; print that "readjusted" filename
-   
+    
+    ; move cursor to X=19 in current row
     READCUR
     MOVECUR 19, dh
-    ;mov ah, 0x0F  ; move cursor to X=19 in current row
-    ;int 0x21
-    ;mov dl, 19
-    ;mov ah, 0x0E
-    ;int 0x21
 
     PRINT .number ; print size in the next column print file size
     jmp .ok

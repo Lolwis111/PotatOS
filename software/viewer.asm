@@ -16,18 +16,16 @@ jmp start
 %include "functions.asm"
 %include "chars.asm"
 
+%define IMAGE_DATA_SEGMENT 0x1000
+
 input       times 12 db 0
 fileName    times 12 db 0
 hack        db 0x00
-imageDataSegment: dw 0x0000
 ; =====================================================================
 start:
     mov si, ax
-    mov ax, imageData
-    shr ax, 4
-    mov word [imageDataSegment], ax
 
-    cmp byte [si], -1   ; check for an argument
+    cmp ax, -1   ; check for an argument
     je .noArgument      ; no argument?
 
     cmp byte [si], '-'
@@ -38,7 +36,7 @@ start:
     mov di, fileName
     call AdjustFileName
     
-    LOADFILE fileName, 0, word [imageDataSegment]; load the file
+    LOADFILE fileName, 0, IMAGE_DATA_SEGMENT ; load the file
     cmp ax, -1
     je .error
     
@@ -60,7 +58,7 @@ start:
     cmp ax, -1
     je .error
     
-    LOADFILE fileName, 0, word [imageDataSegment] ; load the file
+    LOADFILE fileName, 0, IMAGE_DATA_SEGMENT ; load the file
     cmp ax, -1
     je .error
     jmp init
@@ -74,8 +72,7 @@ start:
     
 ; =====================================================================
 exitV:
-    xor ax, ax
-    int 0x16
+    READCHAR 
 
     mov ax, 0x0003 ; go back to text mode
     int 0x10
@@ -103,7 +100,7 @@ exitInvalid:
 
 ; ===================================================================== 
 init:
-    mov ax, word [imageDataSegment] ; point fs to file in memory ("file segment")
+    mov ax, IMAGE_DATA_SEGMENT ; point fs to file in memory ("file segment")
     mov fs, ax
     
     mov esi, 0x03           ; check the first three chars
@@ -149,6 +146,7 @@ printImage:
     
     cmp dx, 64000 ; 320x200 = 64000 => abort after this many bytes
     jne .pixelLoop
+
     jmp exitV
 ; ======================================================================
 
