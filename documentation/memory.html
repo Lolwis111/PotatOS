@@ -1,26 +1,22 @@
 <!DOCTYPE html>
 <html>
     <head>
-
         <title>Memory Map</title>
-
     </head>
-
     <body>
+        <link rel="stylesheet" type="text/css" href="./memory.css">
         <link rel="stylesheet" type="text/css" href="./home.css">
-
         <h1>Documentation of PotatOS</h1>
         
         <div class="menu">
             <a href="home.html"><div class="button">Home</div></a>
             <a href="memory.html"><div class="button">Memory Map</div></a>
-            <a href="api.html"><div class="button">System API INT 0x21</div></a>    
+            <a href="api.html"><div class="button">System API INT 0x21</div></a>
             <a href="files.html"><div class="button">Description of the files</div></a>
         </div>
         <br>
-
         <h1>memory map</h1>
-    
+        
         <table border="1">
             <tr>
                 <th>address</th>
@@ -35,65 +31,23 @@
                 <td>interupt vector table</td>
             </tr>
             <tr>
-                <td>0x01000</td>
-                <td>4096 Byte</td>
-                <td>unusable</td>
-                <td>
-                    system.sys gets loaded here. It provides all the
-                    system calls and should therefor not be overriden.
-                </td>
-            </tr>
-            <tr>
-                <td>0x02000</td>
-                <td>8 KiByte</td>
-                <td>unusable</td>
-                <td>
-                    directory cache. A copy of the current working
-                    directory gets loaded here for quick access.
-                    Gets overriden everytime a the directory is 
-                    changed.
-                </td>
-            </tr>
-            <tr>
-                <td>0x04000</td>
-                <td>8 KiByte</td>
-                <td>unusable</td>
-                <td>
-                    The file allocation table of the current drive
-                    gets loaded here. Is required to allow for file
-                    and directories to be read.
-                </td>
-            </tr>
-            <tr>
-                <td>0x06000</td>
+                <td>0x00500</td>
                 <td>1 Byte</td>
                 <td>read only</td>
                 <td>
-                    This byte represents the current color attribute.
-                    Can be used to print to the terminal in system
-                    color.
+                    The current color attribute byte is saved here.
                 </td>
             </tr>
             <tr>
-                <td>0x06001</td>
-                <td>1 Byte</td>
-                <td>reserved</td>
-                <td>
-                    Was used for settings. Might be used for
-                    kernel functions in the future.
-                </td>
-            </tr>
-            <tr>
-                <td>0x06002</td>
+                <td>0x00501</td>
                 <td>2 Byte</td>
                 <td>read only</td>
                 <td>
-                    This word contains the return code of the last
-                    execution.
+                    The return code of the last execution is saved here.
                 </td>
             </tr>
             <tr>
-                <td>0x06004</td>
+                <td>0x00503</td>
                 <td>2 Byte</td>
                 <td>read only</td>
                 <td>
@@ -101,18 +55,42 @@
                 </td>
             </tr>
             <tr>
-                <td>0x06006</td>
-                <td>1 KiByte</td>
+                <td>0x00505</td>
+                <td>1024 Byte</td>
                 <td>read only</td>
                 <td>
                     The current path is saved here.
                 </td>
             </tr>
             <tr>
-                <td>0x06406</td>
-                <td>7164 Byte</td>
+                <td>0x01000</td>
+                <td>12288 Byte</td>
                 <td>unusable</td>
-                <td>This is the kernel stack.</td>
+                <td>
+                    system.sys gets loaded here. It provides all the
+                    system calls and should therefor not be overriden.
+                </td>
+            </tr>
+            <tr>
+                <td>0x04000</td>
+                <td>8 KiByte</td>
+                <td>unusable</td>
+                <td>
+                    directory cache. A copy of the current working
+                    directory gets loaded here for quick access.
+                    Gets overriden everytime a the directory is
+                    changed.
+                </td>
+            </tr>
+            <tr>
+                <td>0x06000</td>
+                <td>8 KiByte</td>
+                <td>unusable</td>
+                <td>
+                    The file allocation table of the current drive
+                    gets loaded here. Is required to allow for file
+                    and directories to be read.
+                </td>
             </tr>
             <tr>
                 <td>0x08000</td>
@@ -126,27 +104,18 @@
             </tr>
             <tr>
                 <td>0x09000</td>
-                <td>476 KiByte</td>
+                <td>700 KiByte</td>
                 <td>free for use</td>
                 <td>
                     A user programm gets loaded at address 0x09000.
                     The programm has then guaranteed access to the
-                    space from 0x9000 up to 0x80000 without
+                    space from 0x9000 up to 0xB8000 without
                     destroying the kernel.
                 </td>
             </tr>
             <tr>
-                <td>0x80000</td>
-                <td>4 KiByte</td>
-                <td>unusable</td>
-                <td>
-                    The kernel keeps a copy of command.bin
-                    for quick access here.
-                </td>
-            </tr>
-            <tr>
                 <td>0xB8000</td>
-                <td>4 KByte</td>
+                <td>4096 Byte</td>
                 <td>special usage</td>
                 <td>
                     Represents the videobuffer for text mode.
@@ -179,7 +148,7 @@
             <div class="free memoryBlock">user space memory</div>
             <div class="unusable memoryBlock">copy of command.bin</div>
             <div class="special memoryBlock">text framebuffer</div>
-            <div class="special memoryBlock">BIOS data, might be usable</div>
+            <div class="special memoryBlock">BIOS data</div>
         </div>
     </body>
 </html>
