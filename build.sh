@@ -1,5 +1,90 @@
 #!/bin/bash
 
+cleanListFiles()
+{
+    rm -f boot/boot.lst
+    rm -f loader/loader.lst
+    rm -f driver/*.lst
+    rm -f software/list/*.lst
+    rm -f tests/list/*.lst
+}
+
+cleanBinaries()
+{
+    rm -f boot/boot.bin
+    rm -f loader/loader.sys
+    rm -f driver/*.sys driver/*.bin
+    rm -f software/bin/*bin
+    rm -f tests/bin/*.bin
+}
+
+buildSoftware()
+{
+    cd ./software/
+
+    # assemble the software
+    for file in *.asm
+    do
+        if [ $LIST_FILE = true ] ; then
+            list=" -l list/`basename $file .asm`.lst "
+        fi
+
+        nasm $NASM_FLAGS $dbg $list $a20 -d "$language" -i $include_system\
+            -i $include_software $file -o bin/`basename $file .asm`.bin || exit
+
+        echo -ne "." # print a dot on success for each program
+    done;
+
+    cd ..
+}
+
+buildDriver()
+{
+    # assemble the drivers
+    cd ./driver/
+
+    for file in *.asm
+    do
+        if [ $LIST_FILE = true ] ; then
+            list=" -l `basename $file .asm`.lst "
+        fi
+        
+        nasm $NASM_FLAGS $dbg $list $a20 -i $include_system\
+            -i $include_driver $file -o `basename $file .asm`.sys || exit
+        echo -ne "." # print a dot on success for each driver
+    done;
+
+    # the current layout does not allow system.sys to be bigger
+    # than 12 KiBytes (12288 Bytes). This we check here
+    systemSysSize=$(wc -c system.sys | awk '{print $1}')
+    if (( systemSysSize > systemSysLimit )) ;
+    then
+        echo "FATAL ERROR"
+        echo "System.sys is bigger than 12KiByte!"
+        echo ""
+        exit
+    fi;
+
+    cd ..
+}
+
+buildTests()
+{
+    # assemble the tests 
+    cd ./tests/
+    for file in *.asm
+    do
+        if [ $LIST_FILE = true ] ; then
+            list=" -l `basename $file .asm`.lst "
+        fi;
+        nasm $NASM_FLAGS $dbg $list $a20 -i $include_system $file\
+            -o `basename $i .asm`.bin || exit
+        echo -ne "." # print a dot on success for each driver
+    done;
+
+    cd ..
+}
+
 build_home=$(pwd)  # copy working directory
 include_system="${build_home}/include/" # globaly available include files
 include_software="${build_home}/software/include/" # program internal include files
@@ -9,7 +94,14 @@ language="english" # language to create this in, check Lang/ for available langu
 language_string_list="lang/stringlist"
 mount_point="/tmp/tmp-loop"
 
-LIST_FILE=true
+systemSysLimit=12288
+
+A20=false       # assemble the code to enable the A20 gate, this allows to 
+                # access the segment just over 1 MB resulting in 1MB+64KB available RAM
+                # This also enables the ALLOC/FREE routines which allow programs
+                # to request pages of 512 Byte in this upper segment
+DEBUG=false     # assemble the debug code
+LIST_FILE=true  # Generate list files 
 NASM_FLAGS=" -Ox -f bin " # just flags for assembler, make sure you keep '-f bin'
 
 if [ ! "$1" == "clean"  ] && [ "`whoami`" != "root" ] ; then # check if script has root rights
@@ -18,54 +110,57 @@ if [ ! "$1" == "clean"  ] && [ "`whoami`" != "root" ] ; then # check if script h
     exit
 fi
 
-# cleaning process:
-rm -f ${output_image_name}  # delete old image
+cleanListFiles
+cleanBinaries
 
-cd misc # delete old strings.sys
+# delete the old files
+rm -f ${output_image_name}
 
-rm -f "strings.sys"
+# delete the old generated language files
+rm -f "misc/strings.sys"
+rm -f include/language.asm 
 
-cd ../boot/ # delte old bootloader
-for i in *.bin *.lst
-do
-    rm -f "$i"
-done
-
-cd ../driver/ # delete old system drivers
-
-for i in *.sys *.lst
-do
-    rm -f "$i"
-done
-
-cd ../loader/ # delte stage2 boot loader
-
-for i in *.sys *.lst
-do
-    rm -f "$i"
-done
-
-cd ../software/ # delete old programms
-
-for i in bin/*.bin list/*.lst
-do
-    rm -f "$i"
-done
-
-cd ../include/
-if [ -e "language.asm" ] ; then # delete language.asm 
-    rm -f language.asm 
-fi;
-
-cd ..
-
+# clean the 32 bit kernel software
 make clean -C csoftware/kernelC/
 
+# exit here if only clean was asked
 if [ "$1" = "clean" ] ; then
     echo -e "\e[92mDone!\e[39m"
     exit
 fi;
 
+# parse the arguments
+# d - disabe debug
+# D - enable debug
+# h - disable high memory (A20 gate)
+# H - enable high memory (A20 gate)
+# l - disable list file generation
+# L - enable list file generation
+while getopts "hHdDlL" opt;
+do
+    case "$opt" in
+        H)
+            A20=true
+        ;;
+        h)
+            A20=false
+        ;;
+        D)
+            DEBUG=true
+        ;;
+        d)
+            DEBUG=false
+        ;;
+        L)
+            LIST_FILE=true
+        ;;
+        l)
+            LIST_FILE=false
+        ;;
+    esac;
+done;
+
+# generate the language files
 echo "creating language.asm"
 
 if [ ! -e "./lang/$language" ] ; then
@@ -95,61 +190,73 @@ if [ $LIST_FILE = true ] ; then
     echo "create listing files"
 fi
 
+echo "> testing defines.asm"
+
+# assemble defines.asm
+# this should result in a binary of size 0
+# because defines.asm is supposed to only contain
+# macros and %defines, but should not generate any code
+nasm $NASM_FLAGS -o include/defines.bin include/defines.asm
+definesBinSize=$(wc -c include/defines.bin | awk '{print $1}')
+rm -f include/defines.bin
+if (( definesBinSize > 0 )) ;
+then
+    echo "FATAL ERROR"
+    echo "defines.asm should only contain macros and defines!"
+    echo ""
+    exit
+fi;
+
 echo "> building bootloader"
 
 list=""
-if [ $LIST_FILE = true ] ; then
+if [ $LIST_FILE = true ] ;
+then
+    echo "> Generate list files"
     list=" -l boot/boot.lst "
-fi
-nasm $NASM_FLAGS $list -i $include_system -o boot/boot.bin boot/boot.asm || exit
+else
+    echo "> Do not generate list files"
+fi;
 
-if [ $LIST_FILE = true ] ; then
+# craft the commands that enable/disable the selected features
+dbg=""
+a20=""
+if [ $DEBUG = true ] ;
+then
+    echo "> Assemble debug code"
+    dbg=" -d DEBUG "
+else
+    echo "> Do not assemble debug code"
+fi;
+if [ $A20 = true ] ;
+then
+    echo "> Assemble high memory features"
+    a20=" -d A20 "
+else
+    echo "> Do not assemble high memory features"
+fi;
+# assemble the stage 1 bootloader
+nasm $NASM_FLAGS $list $dbg $a20 -i $include_system -o boot/boot.bin boot/boot.asm || exit
+
+# assemble the stage 2 bootloader
+if [ $LIST_FILE = true ] ; 
+then
     list=" -l loader/loader.lst "
-fi
-nasm $NASM_FLAGS $list -i $include_system -o loader/loader.sys loader/loader.asm || exit
+fi;
+nasm $NASM_FLAGS $dbg $list $a20 -i $include_system\
+        -o loader/loader.sys loader/loader.asm || exit
 
+echo ""
 echo "> building programms"
-cd ./software/
+buildSoftware
 
-for i in *.asm
-do
-    if [ $LIST_FILE = true ] ; then
-        list=" -l list/`basename $i .asm`.lst "
-    fi
-
-    nasm $NASM_FLAGS $list -d "$language" -i $include_system\
-        -i $include_software $i -o bin/`basename $i .asm`.bin || exit
-
-    echo -ne "." # print a dot on success for each program
-done
-
-echo "" # newLine
+echo ""
 echo "> building drivers"
-
-cd ../driver/
-for i in *.asm
-do
-    if [ $LIST_FILE = true ] ; then
-        list=" -l `basename $i .asm`.lst "
-    fi
-    nasm $NASM_FLAGS $list -i $include_system -i $include_driver $i -o `basename $i .asm`.sys || exit
-    echo -ne "." # print a dot on success for each driver
-done
+buildDriver
 
 echo "" # newLine
 echo "> building tests"
-
-cd ../tests/
-for i in *.asm
-do
-    if [ $LIST_FILE = true ] ; then
-        list=" -l `basename $i .asm`.lst "
-    fi
-    nasm $NASM_FLAGS $list -i $include_system $i -o `basename $i .asm`.bin || exit
-    echo -ne "." # print a dot on success for each driver
-done
-
-cd ..
+buildTests
 
 echo ""
 echo "> building c software"
@@ -234,16 +341,16 @@ done;
 ./tools/Attributes/bin/attributes $mount_point/system/sysinit.sys sh
 ./tools/Attributes/bin/attributes $mount_point/loader.sys sh
 
-sleep 0.2 # wait a moment to make sure everything is written
-
 echo "> release image"
 
+# unmount the image
 umount $mount_point/ || exit # release floppy
 rm -rf $mount_point/
 
 # adjust rights
 chmod a+rw $output_image_name
 
+# print success message
 echo -e "\e[92m> Done $(date +"%H:%M:%S")!\e[39m"
 
 exit
