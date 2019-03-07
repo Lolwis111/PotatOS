@@ -103,6 +103,8 @@ private_printChar:
     je .cr
     cmp dh, 0x0A
     je .lf
+    ; cmp dh, 0x00
+    ; je .done
     
     mov byte [gs:bx], dh    ; write the char and the color to vga memory
     mov byte [gs:bx+1], dl
@@ -111,9 +113,9 @@ private_printChar:
     inc byte [col]
     ; when we reach the right end of 
     ; the screen we goto to the next line
-    cmp byte [col], (SCREEN_WIDTH*2)
+    cmp byte [col], (SCREEN_WIDTH)
     je .newLine 
-
+.done:
     pop gs
     ret
 
