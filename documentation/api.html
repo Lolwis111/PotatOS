@@ -1,26 +1,21 @@
 <!DOCTYPE html>
 <html>
     <head>
-
         <title>API</title>
-
     </head>
     <body>
-
         <h1>Documentation of PotatOS</h1>
         
         <div class="menu">
             <a href="home.html"><div class="button">Home</div></a>
             <a href="memory.html"><div class="button">Memory Map</div></a>
-            <a href="api.html"><div class="button">System API INT 0x21</div></a>    
+            <a href="api.html"><div class="button">System API INT 0x21</div></a>
             <a href="files.html"><div class="button">Description of the files</div></a>
         </div>
         <br>
-
         <link rel="stylesheet" type="text/css" href="./home.css">
-
         <h1>Systemcalls</h1>
-    
+        
         <p>
             To call the kernel and execute a function, one must load the
             function number into the AH register and call interupt 0x21.
@@ -30,9 +25,9 @@
             this (Intel Assembler Style):
         </p>
         <code style="font-family: monospace;">
-            mov bx, 0x0000  ; return code 0 indicates no error<br>
-            mov ax, 0x0000  ; function 0 is exit<br>
-            int 0x21        ; call the kernel<br>
+        mov bx, 0x0000  ; return code 0 indicates no error<br>
+        mov ax, 0x0000  ; function 0 is exit<br>
+        int 0x21        ; call the kernel<br>
         </code>
         <br>
         <table border="1">
@@ -88,457 +83,497 @@
                 </td>
                 <td>nothing</td>
                 <td>
-                    Prints the \0 terminated string from ES:EDX with 
+                    Prints the \0 terminated string from ES:EDX with
                     color BL at the current cursor positon
                 </td>
                 <td>
                     PRINT [string]<br>
                     PRINT [string], [color]
-                <td>
-            </tr>
-            
-            <tr>
-                <td>0x02</td>
-                <td>strcmp</td>
-                <td>
-                    ES:ESI = pointer to first string<br>
-                    DS:EDI = pointer to second string
-                </td>
-                <td>AL = boolean</td>
-                <td>
-                    Compares the two \0 terminated strings
-                    If they are equal AL = 0
-                </td>
-                <td>STRCMP [str1], [str2]</td>
-            </tr>
-            
-            <tr>
-                <td>0x03</td>
-                <td>shortToString</td>
-                <td>
-                    EDX = pointer to string buffer<br>
-                    CX = short to convert
-                </td>
-                <td>nothing</td>
-                <td>
-                    Converts the integer from cx into a string and saves
-                    it in the buffer. The string has leading zeros
-                    if the integer has less than 5 digits.
-                </td>
-                <td>STOSTR [buffer], [short]</td>
-            </tr>
-            
-            <tr>
-                <td>0x04</td>
-                <td>readline</td>
-                <td>
-                    ES:EDX = pointer to string buffer<br>
-                    CX = length of buffer
-                </td>
-                <td>CX = number of chars read </td>
-                <td>
-                    Reads a string from the keyboard and
-                    saves it in the buffer.
-                </td>
-                <td>READLINE [buffer], [maxlength]</td>
-            </tr>
-
-            <tr>
-                <td>0x05</td>
-                <td>loadfile</td>
-                <td>
-                    EDX = pointer to filename string<br>
-                    BP:EBX = pointer to destination buffer
-                </td>
-                <td>
-                    ECX = filesize<br>
-                    AX = errorcode
-                </td>
-                <td>
-                    Loads the file with the filename in DX into the memory
-                    at address BP:EBX and saves the filesize reported from the
-                    filesystem in ECX.
-                </td>
-                <td>
-                    LOADFILE [filename], [address]<br>
-                    LOADFILE [filename], [address], [segment]
-                </td>
-            </tr>
-
-            <tr>
-                <td>0x06</td>
-                <td>getTimeString</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    EDX = pointer to string with time
-                </td>
-                <td>
-                    Returns a pointer to string with the current time in EDX.
-                </td>
-                <td>TIME</td>
-            </tr>
-
-            <tr>
-                <td>0x07</td>
-                <td>getDateString</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    EDX = pointer to string with time
-                </td>
-                <td>
-                    Returns a pointer to string with the current date in EDX.
-                </td>
-                <td>DATE</td>
-            </tr>
-            
-            <tr>
-                <td>0x08</td>
-                <td>getVersion</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    AH = Majorversion<br>
-                    AL = Minorversion
-                </td>
-                <td>
-                    Returns the version in AX.
-                </td>
-                <td>VERSION</td>
-            </tr>
-
-            <tr>
-                <td>0x09</td>
-                <td>stringToInt</td>
-                <td>
-                    DS:EDX = pointer to string
-                </td>
-                <td>
-                    ECX = converted integer<br>
-                    AX = errorcode<br>
-                    carryflag
-                </td>
-                <td>
-                    Tries to convert the string in DS:EDX into an 
-                    integer in ECX. If an error occours, the errorcode 
-                    is in AX, ECX = 0 and the carry flag is set.
-                </td>
-                <td>STRTOL [string]</td>
-            </tr>
-            
-            <tr>
-                <td>0x0A</td>
-                <td>deletefile</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    nothing
-                </td>
-                <td>
-                    Function currently not implemented.
-                </td>
-                <td>
-                    &nbsp;
-                </td>
-            </tr>
-            
-            <tr>
-                <td>0x0B</td>
-                <td>random</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    ECX = random integer
-                </td>
-                <td>
-                    Calculates a pseudorandom number and
-                    returns it in ECX.
-                </td>
-                <td>RANDOM</td>
-            </tr>
-            
-            <tr>
-                <td>0x0B</td>
-                <td>getCPUInfo</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    AX = string pointer to CPU vendor<br>
-                    BX = string pointer to CPU model
-                </td>
-                <td>
-                    Returns stringpointer to CPU vendor in AX.
-                    Returns stringpointer to CPU model in BX.
-                </td>
-                <td>
-                    &nbsp;
-                </td>
-            </tr>
-            
-            <tr>
-                <td>0x0D</td>
-                <td>hexstrToByte</td>
-                <td>
-                    EDX = pointer to hexstring
-                </td>
-                <td>
-                    CL = converted byte
-                </td>
-                <td>
-                    Assumes that EDX points to a string and interprets
-                    the first two characters as hexadecimal digits.
-                    These two digits get converted into a byte.
-                    Warning: No error detection!
-                </td>
-                <td>HEXTOSTR [str]</td>
-            </tr>
-            
-            <tr>
-                <td>0x0E</td>
-                <td>setCursorPosition</td>
-                <td>
-                    DH = rownumber<br>
-                    DL = columnnumber
-                </td>
-                <td>
-                    nothing
-                </td>
-                <td>
-                    Moves the cursor to the position DH:DL.
-                    If DH:DL are bigger than the screen would allow,
-                    they get clamped to the biggest possible value.
-                </td>
-                <td>MOVECUR [x], [y]</td>
-            </tr>
-            
-            <tr>
-                <td>0x0F</td>
-                <td>getCursorPosition</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    DH = rownumber<br>
-                    DL = columnnumber
-                </td>
-                <td>
-                    Returns the current cursor position.
-                </td>
-                <td>READCUR</td>
-            </tr>
-            
-            <tr>
-                <td>0x10</td>
-                <td>printChar</td>
-                <td>
-                    DH = character to print<br>
-                    DL = color to print in
-                </td>
-                <td>
-                    none
-                </td>
-                <td>
-                    Prints a single character in DH with the
-                    color from DL to the current cursor position.
-                </td>
-                <td>
-                    PRINTCHAR [char]<br>
-                    PRINTCHAR [char], [color]
-                </td>
-            </tr>
-            
-            <tr>
-                <td>0x11</td>
-                <td>loadroot</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    CX = number of files in root dir
-                </td>
-                <td>
-                    Loads the root directory from the current
-                    drive into the directory cache.
-                </td>
-                <td>
-                    &nbsp;
-                </td>
-            </tr>
-            
-            <tr>
-                <td>0x12</td>
-                <td>saveroot</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    nothing
-                </td>
-                <td>
-                    Currently not implemented
-                </td>
-                <td>
-                    &nbsp;
-                </td>
-            </tr>
-            
-            <tr>
-                <td>0x13</td>
-                <td>findfile</td>
-                <td>
-                    DX = pointer to filename string
-                </td>
-                <td>
-                    AX = index of file in directory
-                </td>
-                <td>
-                    Returns the index of the file in the directory in AX.
-                    If the file was not found, AX = -1.
-                </td>
-                <td>FINDFILE [filename]</td>
-            </tr>
-            
-            <tr>
-                <td>0x14</td>
-                <td>writefile</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    nothing
-                </td>
-                <td>
-                    Currently not implemented
-                </td>
-                <td>
-                    &nbsp;
-                </td>
-            </tr>
-            
-            <tr>
-                <td>0x15</td>
-                <td>byteToHexstr</td>
-                <td>
-                    CL = integer byte
-                </td>
-                <td>
-                    DX = pointer to 3 character string with hexdecimals
-                </td>
-                <td>
-                    Converts the byte in CL into a hexstring that is \0 terminated.
-                </td>
-                <td>ITOHEX [byte]</td>
-            </tr>
-            
-            <tr>
-                <td>0x16</td>
-                <td>bcdToInt</td>
-                <td>
-                    AL = byte in BCD
-                </td>
-                <td>
-                    AX = integer
-                </td>
-                <td>
-                    Converts the binary coded decimal in AL into an integer in AX.
-                </td>
-                <td>BCDTOINT [byte]</td>
-            </tr>
-            
-            <tr>
-                <td>0x17</td>
-                <td>execute</td>
-                <td>
-                    DX = pointer to filename string
-                    ES:DI = pointer to argument string
-                </td>
-                <td>
-                    nothing
-                </td>
-                <td>
-                    Tries to launch the programm with the given filename
-                    and passes the given argument string to it.
-                </td>
-                <td>EXECUTE [filename], [arguments]</td>
-            </tr>
-
-            <tr>
-                <td>0x18</td>
-                <td>initSleep</td>
-                <td>
-                    none
-                </td>
-                <td>
-                    nothing
-                </td>
-                <td>
-                    Initalizes the programmable interupt timer.
-                    Gets called by sysinit.sys to allow for sleep() to work
-                </td>
-                <td>
-                    &nbsp;
-                </td>
-            </tr>
-            
-            <tr>
-                <td>0x19</td>
-                <td>sleep</td>
-                <td>
-                    EBX = time to sleep (in blocks of 10ms)
-                </td>
-                <td>
-                    nothing
-                </td>
-                <td>
-                    Sleeps for the given amount of time.<br>
-                    To sleep for one second, one would call sleep(100)
-                </td>
-                <td>SLEEP [time]</td>
-            </tr>
-
-            <tr>
-                <td>0xAA</td>
-                <td>intToString</td>
-                <td>
-                    EDX = pointer to string buffer
-                    ECX = integer to convert
-                </td>
-                <td>
-                    nothing
-                </td>
-                <td>
-                    Converts the integer from ecx into a string and saves
-                    it in the buffer.
-                </td>
-                <td>
-                    ITOSTR [str], [integer]<br>
-                    LTOSTR [str], [integer
-                </td>
-            </tr>
-            
-            <tr>
-                <td>0xFF</td>
-                <td>debug1</td>
-                <td>
-                    EDX = any value
-                </td>
-                <td>
-                    nothing
-                </td>
-                <td>
-                    Prints the value in EDX interpreted as integer to the current 
-                    cursor position.
-                </td>
-                <td>DEBUG1 [value]</td>
-            </tr>
-            
-        </table>
-    </body>
-</html>
+                    <td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x02</td>
+                        <td>strcmp</td>
+                        <td>
+                            ES:ESI = pointer to first string<br>
+                            DS:EDI = pointer to second string
+                        </td>
+                        <td>AL = boolean</td>
+                        <td>
+                            Compares the two \0 terminated strings
+                            If they are equal AL = 0
+                        </td>
+                        <td>STRCMP [str1], [str2]</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x03</td>
+                        <td>shortToString</td>
+                        <td>
+                            EDX = pointer to string buffer<br>
+                            CX = short to convert
+                        </td>
+                        <td>nothing</td>
+                        <td>
+                            Converts the integer from cx into a string and saves
+                            it in the buffer. The string has leading zeros
+                            if the integer has less than 5 digits.
+                        </td>
+                        <td>STOSTR [buffer], [short]</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x04</td>
+                        <td>readline</td>
+                        <td>
+                            ES:EDX = pointer to string buffer<br>
+                            CX = length of buffer
+                        </td>
+                        <td>CX = number of chars read </td>
+                        <td>
+                            Reads a string from the keyboard and
+                            saves it in the buffer.
+                        </td>
+                        <td>READLINE [buffer], [maxlength]</td>
+                    </tr>
+                    <tr>
+                        <td>0x05</td>
+                        <td>loadfile</td>
+                        <td>
+                            EDX = pointer to filename string<br>
+                            BP:EBX = pointer to destination buffer
+                        </td>
+                        <td>
+                            ECX = filesize<br>
+                            AX = errorcode
+                        </td>
+                        <td>
+                            Loads the file with the filename in DX into the memory
+                            at address BP:EBX and saves the filesize reported from the
+                            filesystem in ECX.
+                        </td>
+                        <td>
+                            LOADFILE [filename], [address]<br>
+                            LOADFILE [filename], [address], [segment]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>0x06</td>
+                        <td>getTimeString</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            EDX = pointer to string with time
+                        </td>
+                        <td>
+                            Returns a pointer to string with the current time in EDX.
+                        </td>
+                        <td>TIME</td>
+                    </tr>
+                    <tr>
+                        <td>0x07</td>
+                        <td>getDateString</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            EDX = pointer to string with time
+                        </td>
+                        <td>
+                            Returns a pointer to string with the current date in EDX.
+                        </td>
+                        <td>DATE</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x08</td>
+                        <td>getVersion</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            AH = Majorversion<br>
+                            AL = Minorversion
+                        </td>
+                        <td>
+                            Returns the version in AX.
+                        </td>
+                        <td>VERSION</td>
+                    </tr>
+                    <tr>
+                        <td>0x09</td>
+                        <td>stringToInt</td>
+                        <td>
+                            DS:EDX = pointer to string
+                        </td>
+                        <td>
+                            ECX = converted integer<br>
+                            AX = errorcode<br>
+                            carryflag
+                        </td>
+                        <td>
+                            Tries to convert the string in DS:EDX into an
+                            integer in ECX. If an error occours, the errorcode
+                            is in AX, ECX = 0 and the carry flag is set.
+                        </td>
+                        <td>STRTOL [string]</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x0A</td>
+                        <td>deletefile</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Function currently not implemented.
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x0B</td>
+                        <td>random</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            ECX = random integer
+                        </td>
+                        <td>
+                            Calculates a pseudorandom number and
+                            returns it in ECX.
+                        </td>
+                        <td>RANDOM</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x0B</td>
+                        <td>getCPUInfo</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            AX = string pointer to CPU vendor<br>
+                            BX = string pointer to CPU model
+                        </td>
+                        <td>
+                            Returns stringpointer to CPU vendor in AX.
+                            Returns stringpointer to CPU model in BX.
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x0D</td>
+                        <td>hexstrToByte</td>
+                        <td>
+                            EDX = pointer to hexstring
+                        </td>
+                        <td>
+                            CL = converted byte
+                        </td>
+                        <td>
+                            Assumes that EDX points to a string and interprets
+                            the first two characters as hexadecimal digits.
+                            These two digits get converted into a byte.
+                            Warning: No error detection!
+                        </td>
+                        <td>HEXTOSTR [str]</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x0E</td>
+                        <td>setCursorPosition</td>
+                        <td>
+                            DH = rownumber<br>
+                            DL = columnnumber
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Moves the cursor to the position DH:DL.
+                            If DH:DL are bigger than the screen would allow,
+                            they get clamped to the biggest possible value.
+                        </td>
+                        <td>MOVECUR [x], [y]</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x0F</td>
+                        <td>getCursorPosition</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            DH = rownumber<br>
+                            DL = columnnumber
+                        </td>
+                        <td>
+                            Returns the current cursor position.
+                        </td>
+                        <td>READCUR</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x10</td>
+                        <td>printChar</td>
+                        <td>
+                            DH = character to print<br>
+                            DL = color to print in
+                        </td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            Prints a single character in DH with the
+                            color from DL to the current cursor position.
+                        </td>
+                        <td>
+                            PRINTCHAR [char]<br>
+                            PRINTCHAR [char], [color]
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x11</td>
+                        <td>loadroot</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            CX = number of files in root dir
+                        </td>
+                        <td>
+                            Loads the root directory from the current
+                            drive into the directory cache.
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x12</td>
+                        <td>saveroot</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Currently not implemented
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x13</td>
+                        <td>findfile</td>
+                        <td>
+                            DX = pointer to filename string
+                        </td>
+                        <td>
+                            AX = index of file in directory
+                        </td>
+                        <td>
+                            Returns the index of the file in the directory in AX.
+                            If the file was not found, AX = -1.
+                        </td>
+                        <td>FINDFILE [filename]</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x14</td>
+                        <td>writefile</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Currently not implemented
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x15</td>
+                        <td>byteToHexstr</td>
+                        <td>
+                            CL = integer byte
+                        </td>
+                        <td>
+                            DX = pointer to 3 character string with hexdecimals
+                        </td>
+                        <td>
+                            Converts the byte in CL into a hexstring that is \0 terminated.
+                        </td>
+                        <td>ITOHEX [byte]</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x16</td>
+                        <td>bcdToInt</td>
+                        <td>
+                            AL = byte in BCD
+                        </td>
+                        <td>
+                            AX = integer
+                        </td>
+                        <td>
+                            Converts the binary coded decimal in AL into an integer in AX.
+                        </td>
+                        <td>BCDTOINT [byte]</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x17</td>
+                        <td>execute</td>
+                        <td>
+                            DX = pointer to filename string
+                            ES:DI = pointer to argument string
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Tries to launch the programm with the given filename
+                            and passes the given argument string to it.
+                        </td>
+                        <td>EXECUTE [filename], [arguments]</td>
+                    </tr>
+                    <tr>
+                        <td>0x18</td>
+                        <td>initSleep</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Initalizes the programmable interupt timer.
+                            Gets called by sysinit.sys to allow for sleep() to work
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>0x19</td>
+                        <td>sleep</td>
+                        <td>
+                            EBX = time to sleep (in blocks of 10ms)
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Sleeps for the given amount of time.<br>
+                            To sleep for one second, one would call sleep(100)
+                        </td>
+                        <td>SLEEP [time]</td>
+                    </tr>
+                    <tr>
+                        <td>0xAA</td>
+                        <td>intToString</td>
+                        <td>
+                            EDX = pointer to string buffer
+                            ECX = integer to convert
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Converts the integer from ecx into a string and saves
+                            it in the buffer.
+                        </td>
+                        <td>
+                            ITOSTR [str], [integer]<br>
+                            LTOSTR [str], [integer
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>0xAC</td>
+                        <td>readChar</td>
+                        <td>
+                            none
+                        </td>
+                        <td>
+                            AL = ASCII Code 0<br>
+                            AH = Keyboard scancode
+                        </td>
+                        <td>Uses IO ports to read a character from the Intel 8042 keyboard controller without interrupts.</td>
+                        <td>none</td>
+                    </tr>
+                    <tr>
+                        <td>0xF0</td>
+                        <td>initMemory <i>(1)</i></td>
+                        <td>none</td>
+                        <td>none</td>
+                        <td>
+                            Initialises the upper memory to allow for alloc/free calls.
+                        </td>
+                        <td>none</td>
+                    </tr>
+                    <tr>
+                        <td>0xF1</td>
+                        <td>allocPage <i>(1)</i></td>
+                        <td>none</td>
+                        <td>
+                            GS:BP = far pointer to the allocated page. The page is 512 Bytes in size.
+                        </td>
+                        <td>
+                            Finds the first free page in the high memory area.
+                            If no page is found the carry flag is set.
+                        </td>
+                        <td>ALLOC</td>
+                    </tr>
+                    <tr>
+                        <td>0xF2</td>
+                        <td>freePage <i>(1)</i></td>
+                        <td>BP = Page to free</td>
+                        <td>none</td>
+                        <td>
+                            Frees the page with the address (GS:)BP, 
+                            the method only needs the base pointer here.
+                        </td>
+                        <td>FREE [addr]</td>
+                    </tr>
+                    <tr>
+                        <td>0xFF</td>
+                        <td>debug1</td>
+                        <td>
+                            EDX = any value
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Prints the value in EDX interpreted as integer to the current
+                            cursor position.
+                        </td>
+                        <td>DEBUG1 [value]</td>
+                    </tr>
+                    
+                </table>
+            </body>
+        </html>

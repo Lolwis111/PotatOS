@@ -130,8 +130,7 @@ start:
 ; ================================================
 main:
     ; read char
-    xor ax, ax
-    int 0x16
+    READCHAR
     
     ; scroll up and down
     cmp ah, KEY_UP

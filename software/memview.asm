@@ -267,15 +267,13 @@ main:
     call renderMemoryHex    ; draw the data in hex representation
     call renderMemoryASCII  ; draw the data in ascii right next to it
 
-    xor ax, ax              ; wait for user input
-    int 0x16
+    READCHAR                ; get user input<
 
     cmp ah, KEY_PAGEUP   ; page up key, move 16 bytes backwards
     je .scrollUp
 
     cmp ah, KEY_PAGEDOWN ; page down key, move 16 bytes forwards
     je .scrollDown
-
 
     ; arrow keys navigate the cursor (wont autoscroll)
     cmp ah, KEY_UP    ; arrow key up

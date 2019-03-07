@@ -2,7 +2,6 @@
 %define _DEFINES_ASM_
 
     [BITS 16]
-
     ; SCREEN
     
     %define SCREEN_WIDTH 80
@@ -77,5 +76,20 @@
     %define FAT_OFFSET          0x6000 ; offset to fat of disk
     %define FAT_SEGMENT         0x0600 ; segment to fat of disk
     %define FAT_SIZE            0x2000 ; size of the fat memory block
+
+    ; These will trigger errors when the address ranges overlap
+    ; due to some coding error 
+
+    %if ((DIRECTORY_OFFSET)+(DIRECTORY_SIZE)) > (FAT_OFFSET)
+        %error Directory overlaps with FAT!
+    %endif
+
+    %if ((FAT_OFFSET)+(FAT_SIZE)) > (STRINGS_SYS)
+        %error FAT overlaps with strins.sys!
+    %endif
+
+    %if ((CURRENT_PATH)+(CURRENT_PATH_MAX_LENGTH)) > (SYSTEM_SYS)
+        %error The current path overlaps with system.sys!
+    %endif
 
 %endif ; _DEFINES_ASM_

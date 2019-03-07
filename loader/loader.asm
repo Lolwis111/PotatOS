@@ -18,12 +18,7 @@ jmp start
 %include "fat12/readfile.asm" ; loading file from disk
 %include "fat12/readdirectory.asm" ; loading directory from disk
 %include "print16.asm"
-
-Sysinit   db "SYSINIT SYS", 0x00 ; reads config and sets up system
-Driver    db "SYSTEM  SYS", 0x00 ; API for int0x21
-Strings   db "STRINGS SYS", 0x00 ; contains language specific strings that devs can use
-SystemDir db "SYSTEM     ", 0x00 ; system directory
-    
+%include "common.asm"
 ; ====================================================================================
 msgError0 db 0x0D, 0x0A, "System directory", 0x00
 msgError1 db 0x0D, 0x0A, "strings.sys", 0x00

@@ -1,3 +1,5 @@
+%include "keys.asm"
+
 ; ======================================================
 ; reads a string from the keyboard
 ; DS:DX => dest string
@@ -5,23 +7,19 @@
 ; CX <= actual amount of chars read
 ; ======================================================
 readLine:
-    push ax
-    push dx
-    
     mov di, dx
     mov word [.counter], 0x00 ; counts how many chars were read
 .kbLoop:
-    xor ax, ax              ; wait for key press
-    int 0x16  
+    call private_readChar   ; read the next character
     
-    test al, al             ; al=0 => special key
-    jz .kbLoop
+    cmp ah, KEY_ENTER       ; confirm input, exit routine
+    je .return
 
-    cmp al, 0x0D            ; Enter?
-    je .return              ; yes, return
-    
-    cmp al, 0x08            ; Backspace?    
-    je .back                ; yes, delete last char
+    cmp ah, KEY_BACKSPACE   ; delete last character
+    je .back
+
+    test al, al             ; AL = 0 => not a printable character, 
+    jz .kbLoop              ; we wont need it
     
     inc word [.counter]     ; increment counter
     cmp word [.counter], cx ; if max_chars is reached, do not accept more chars
@@ -31,7 +29,7 @@ readLine:
         ; also refreshes all relevant addresses
     stosb               ; save char
     
-    push di
+    pusha
 
     mov dh, al
     mov dl, byte [SYSTEM_COLOR]
@@ -40,7 +38,7 @@ readLine:
     mov dh, byte [row]
     call private_setCursorPosition
     
-    pop di
+    popa
     
     jmp .kbLoop         ; read the next char
     
@@ -49,7 +47,7 @@ readLine:
     jbe .kbLoop
     dec word [.counter]
     
-    push di
+    pusha
     
     dec byte [col]      ; move on char back
     
@@ -62,7 +60,7 @@ readLine:
     mov dl, byte [col]
     call private_setCursorPosition
     
-    pop di
+    popa
     
     dec di              ; move on char back
     mov al, 0x00            
@@ -75,9 +73,6 @@ readLine:
     xor al, al
     stosb               ; strings are \0 terminated
     mov cx, word [.counter]
-    pop dx
-    pop ax
-    
     iret                ; return
 .counter dw 0x00
 ; ======================================================

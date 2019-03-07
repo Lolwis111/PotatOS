@@ -1,4 +1,5 @@
 initMemory:
+%ifdef A20
     push eax
     push di
     push cx
@@ -16,6 +17,7 @@ initMemory:
     pop cx
     pop di
     pop eax
+%endif
     iret
 
 ; ========================================================
@@ -24,11 +26,13 @@ initMemory:
 ; on success, gs:bp points to the page
 ; on error the carry flag is set and gs:bp 
 ; is undefined
-; =======================================================
+; ========================================================
 allocPage:
     call private_allocPage
     iret
+
 private_allocPage:
+%ifdef A20
     push ax
     push cx
 
@@ -45,9 +49,9 @@ private_allocPage:
     cmp cx, 126
     jne .entryLoop
 .notFound:
-    stc
     pop cx
     pop ax
+    stc
     ret
 .found:
     shl cx, 9       ; page offset = 1024 + (index * 512)
@@ -60,6 +64,9 @@ private_allocPage:
     clc
     pop cx
     pop ax
+%else
+    stc
+%endif
     ret
 ; ========================================================
 
@@ -71,7 +78,9 @@ private_allocPage:
 freePage:
     call private_freePage
     iret
+
 private_freePage:
+%ifdef A20
     push gs
     push ax
     push cx
@@ -102,5 +111,8 @@ private_freePage:
     pop cx
     pop ax
     pop gs
+%else
+    stc
+%endif
     ret
 ; ========================================================

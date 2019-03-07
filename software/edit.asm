@@ -197,8 +197,9 @@ main:
     call renderPosition
     call renderText
     
-    xor ah, ah
-    int 0x16
+    READCHAR
+    ;xor ah, ah
+    ;int 0x16
 
     cmp ah, KEY_UP  ; arrow-up
     je .scrollUp

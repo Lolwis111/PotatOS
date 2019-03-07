@@ -57,6 +57,10 @@ show_version:
     PRINT bx
     
     PRINT NEWLINE
+
+    call show_cpuid_features
+
+    PRINT NEWLINE
     
     jmp main
 

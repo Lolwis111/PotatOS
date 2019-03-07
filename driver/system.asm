@@ -103,6 +103,10 @@ main:
     cmp ah, 0xAB
     je intToHexString32
 
+    cmp ah, 0xAC        ; read a character using the 8042 keyboard controller
+    je readChar         ; this functions does not use interrupts and is therefor
+                        ; protected mode ready
+
     cmp ah, 0xF0        ; initalize the memory for the allocator
     je initMemory
 
@@ -133,6 +137,7 @@ main:
 %include "system_environment.asm"
 %include "system_sleep.asm"
 %include "system_memory.asm"
+%include "system_keyboard.asm"
 
 col db 0x00
 row db 0x06

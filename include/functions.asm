@@ -34,6 +34,11 @@
     PRINT %1, [SYSTEM_COLOR]
 %endmacro
 
+%macro READCHAR 0
+    mov ah, 0xAC
+    int 0x21
+%endmacro
+
 %macro READLINE 2
     mov dx, %1
     mov cx, %2

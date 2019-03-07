@@ -21,6 +21,7 @@ jmp start   ; goto start
 %include "include/command_file.asm"
 %include "include/command_fileInfo.asm"
 %include "include/command_viewDirectory.asm"
+%include "include/command_cpuid.asm"
 fileName times 13 db 0x00 ; filename, 'human' format (DUMMY.BIN)
 rFileName times 11 db 0x20
                    db "\n\r"

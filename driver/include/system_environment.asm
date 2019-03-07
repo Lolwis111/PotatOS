@@ -53,7 +53,7 @@ hardwareInfo:
 
 ; ======================================================
 getSystemVersion:
-    mov ah, byte [MAJOR_VERSION]
-    mov al, byte [MINOR_VERSION]
+    mov ah, byte MAJOR_VERSION
+    mov al, byte MINOR_VERSION
     iret
 ; ======================================================
