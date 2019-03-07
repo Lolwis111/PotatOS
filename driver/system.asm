@@ -99,7 +99,19 @@ main:
 
     cmp ah, 0xAA        ; all new 32-bit ready string-int operation
     je intToString32
-    
+
+    cmp ah, 0xAB
+    je intToHexString32
+
+    cmp ah, 0xF0        ; initalize the memory for the allocator
+    je initMemory
+
+    cmp ah, 0xF1        ; allocate a 1kb memory page
+    je allocPage
+
+    cmp ah, 0xF2        ; free a 1kb memory page
+    je freePage
+
     cmp ah, 0xFF        ; debug function, just prints the values of registers eax, ebx, ecx and edx
     je addressDebug
     
@@ -120,11 +132,14 @@ main:
 %include "system_userIO.asm"
 %include "system_environment.asm"
 %include "system_sleep.asm"
+%include "system_memory.asm"
 
 col db 0x00
 row db 0x06
 
 addressDebug:
+%ifdef DEBUG
+    pushf
     pushad
     
     ; ==================================
@@ -144,9 +159,12 @@ addressDebug:
     ; ==================================
     
     popad
+    popf
+%endif
     iret
-; .values dd 0x00000000, 0x00000000, 0x00000000, 0x00000000
+%ifdef DEBUG
 .string: times 20 db 0x00
+%endif
 
 ; ======================================================
 ; exits the current program and jumps back to cli
@@ -158,27 +176,25 @@ exitProgram:
     mov dl, 0x00        
     call private_setCursorPosition
     
-    push ds ; save the segments
-    push es
+    xor bp, bp
+    mov ebx, SOFTWARE_BASE
+    mov dx, .fileName
+    call private_loadFile
+    or ax, ax
+    jnz .error
     
-    mov ax, 0x8000 ; we loaded command.bin at 0x8000:0x0000
-    mov ds, ax
-    xor si, si
-    mov es, si
-    mov di, 0x9000 ; so just copy it down into the program memory
-    mov cx, 2048
-    rep movsw
-    
-    pop es ; restore the segments
-    pop ds
+    cli
+    xor bx, bx
     mov ax, -1
-    jmp SOFTWARE_BASE
-    
-    ; TODO: build algorithm to resolve file paths
-    ; mov dx, .fileName   ; just start command.bin and go back to the terminal
-    ; mov di, -1
-    ; jmp startProgram
-    
+    mov es, bx
+    mov ds, bx
+    mov gs, bx
+    mov fs, bx
+    sti
+    jmp 0x0000:SOFTWARE_BASE
+.error:
+    cli
+    hlt
 .fileName db "COMMAND BIN", 0x00
 ; ======================================================
 
@@ -228,13 +244,17 @@ startProgram:
     cmp ax, 0   ; if the file can not be load its an error
     jne .error
     
-    ; cmp ax, 0           ; check if that worked    
-    ; jne .trySystemDir 
-    
     add esp, 6  ; remove stack pointers created by interrupt instruction, we do not need this
-    
+
+    sti
+    xor bx, bx
     mov ax, .argumentTemp
-    jmp SOFTWARE_BASE   ; start programm
+    mov es, bx
+    mov ds, bx
+    mov gs, bx
+    mov fs, bx
+    cli
+    jmp 0x0000:SOFTWARE_BASE   ; start programm
     
 .noExecutableError:
     mov ax, 0x01
@@ -251,12 +271,11 @@ startProgram:
 
 ; ======================================================
 ; compares two strings
-; DI => string 1
-; SI => string 2
+; ES:DI => string 1
+; DS:SI => string 2
 ; AL <= 0 equal, 1 not equal
 ; ======================================================
 compareString:
-    pusha
     xor al, al
 .Loop:
     lodsb
@@ -264,12 +283,10 @@ compareString:
     jne .NotEqual
     test al, al
     jnz .Loop
-
-    popa
+.Equal:
     mov al, TRUE
     iret
 .NotEqual:
-    popa
     mov al, FALSE
     iret
 ; ======================================================
@@ -282,6 +299,9 @@ compareString:
 ; demos its fine
 ; ======================================================
 random:
+    push eax
+    push ebx
+    push edx
     xor edx, edx
     mov eax, 24298
     mov ebx, dword [.lastX]
@@ -290,6 +310,9 @@ random:
     div ebx
     mov dword [.lastX], edx
     mov ecx, edx
+    pop edx
+    pop ebx
+    pop eax
     ret
 .lastX dd 125
 ; ======================================================

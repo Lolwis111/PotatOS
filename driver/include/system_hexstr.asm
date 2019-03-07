@@ -33,6 +33,44 @@ decToHex:
 
 
 ; ======================================================
+; converts the integer in ecx to a hexstring
+; ECX <= Integer
+; EDX <= String
+; ======================================================
+intToHexString32:
+    pushad
+    pushf
+
+    mov eax, ecx
+    mov cx, 8
+    mov edi, edx
+.byteLoop:
+    push cx
+    
+    xor edx, edx
+    mov ebx, 16
+    div ebx
+    push eax
+
+    mov esi, .hexChars
+    add esi, edx
+    mov al, byte [esi]
+    mov byte [edi], al
+    dec edi
+
+    pop eax
+    
+    pop cx
+    loop .byteLoop
+    
+    popf
+    popad
+    iret
+.hexChars db "0123456789ABCDEF"
+; ===============================================
+
+
+; ======================================================
 ; Converts a hexadecimal digit in al to
 ; a base10 value in cl
 ; al <= hex digit

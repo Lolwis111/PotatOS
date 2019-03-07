@@ -1,5 +1,17 @@
 %ifndef _FUNCTIONS_ASM_
 %define _FUNCTIONS_ASM_
+
+%macro ALLOC 0
+    mov ah, 0xF1
+    int 0x21
+%endmacro
+
+%macro FREE 1
+    mov ah, 0xF2
+    mov bp, %1
+    int 0x21
+%endmacro
+
 %macro PRINTCHAR 2
     mov dh, byte %1
     mov dl, byte %2
@@ -124,6 +136,13 @@
 %macro ITOHEX 1
     mov ah, 0x15
     mov cl, %1
+    int 0x21
+%endmacro
+
+%macro LTOHEX 2
+    mov ah, 0xAB
+    mov ecx, %2
+    mov edx, %1
     int 0x21
 %endmacro
 

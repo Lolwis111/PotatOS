@@ -1,17 +1,4 @@
 ; =======================================================
-Print:
-	lodsb
-	or al, al
-	jz .return
-	mov ah, 0x0E
-	int 0x10
-	jmp Print
-.return:
-	ret
-; =======================================================
-
-
-; =======================================================
 enableA20: ; enable A20-Gate to use a little more memory
     pusha
     

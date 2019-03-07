@@ -1,5 +1,16 @@
+%include "bpb.asm"
+%include "floppy/readsectors.asm"
+%include "floppy/lba.asm"
+%include "fat12/fat.asm"
+%include "fat12/readdirectory.asm"
+%include "fat12/root.asm"
+
+%include "command_changeDirectory.asm"
+
 ; ====================================================
-PRINT_working_directory:
+; print the current working directory
+; ====================================================
+print_working_directory:
     PRINT NEWLINE
 
     PRINT CURRENT_PATH
@@ -10,17 +21,6 @@ PRINT_working_directory:
     
     jmp main
 ; ====================================================
-
-
-
-%include "bpb.asm"
-%include "floppy/readsectors.asm"
-%include "floppy/lba.asm"
-%include "fat12/fat.asm"
-%include "fat12/readdirectory.asm"
-%include "fat12/root.asm"
-
-%include "command_changeDirectory.asm"
 
 ; ====================================================
 ; deletes a file

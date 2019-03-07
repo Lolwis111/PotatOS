@@ -1,10 +1,13 @@
 ; ======================================================
 ; reads a string from the keyboard
-; DX => dest string
+; DS:DX => dest string
 ; CX => max chars
 ; CX <= actual amount of chars read
 ; ======================================================
 readLine:
+    push ax
+    push dx
+    
     mov di, dx
     mov word [.counter], 0x00 ; counts how many chars were read
 .kbLoop:
@@ -28,16 +31,16 @@ readLine:
         ; also refreshes all relevant addresses
     stosb               ; save char
     
-    pusha
-    
+    push di
+
     mov dh, al
-    mov dl, byte [ds:SYSTEM_COLOR]
+    mov dl, byte [SYSTEM_COLOR]
     call private_printChar
     mov dl, byte [col]
     mov dh, byte [row]
     call private_setCursorPosition
     
-    popa
+    pop di
     
     jmp .kbLoop         ; read the next char
     
@@ -46,12 +49,12 @@ readLine:
     jbe .kbLoop
     dec word [.counter]
     
-    pusha
+    push di
     
     dec byte [col]      ; move on char back
     
     mov dh, 0x00
-    mov dl, byte [ds:SYSTEM_COLOR] 
+    mov dl, byte [SYSTEM_COLOR] 
     call private_printChar
     
     dec byte [col] ; move cursor back
@@ -59,9 +62,8 @@ readLine:
     mov dl, byte [col]
     call private_setCursorPosition
     
-    popa
+    pop di
     
-    ; Variable
     dec di              ; move on char back
     mov al, 0x00            
     stosb               ; override with zero
@@ -73,7 +75,9 @@ readLine:
     xor al, al
     stosb               ; strings are \0 terminated
     mov cx, word [.counter]
-    iret                ; return
+    pop dx
+    pop ax
     
+    iret                ; return
 .counter dw 0x00
 ; ======================================================

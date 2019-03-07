@@ -9,9 +9,9 @@ printString: ; public wrapper
 private_printString:
     mov si, dx  ; copy string to source register
     mov dl, bl  ; copy color
-    push bx    
 .charLoop: ; read the string char by char and only stop when \0 appears
     lodsb       
+
     test al, al 
     jz .end
     
@@ -69,7 +69,7 @@ private_printString:
     jmp .print
     
 .end:
-    pop bx ; adjust cursor position at the end
+    ; adjust cursor position at the end
     mov dh, byte [row]
     mov dl, byte [col]
     call private_setCursorPosition
@@ -78,26 +78,28 @@ private_printString:
 
     
 ; ======================================================    
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 printCharC: ; public wrapper
     call private_printChar
     iret
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 private_printChar:
+    push gs
     push dx
-    mov ax, VIDEO_MEMORY_SEGMENT ; calculate address in memory that belongs to cursor positon
+
+    ; calculate address in memory that belongs to cursor positon
+    mov ax, VIDEO_MEMORY_SEGMENT
     mov gs, ax                
     movzx bx, byte [col]   ; forumla: (x * 2) + (y * SCREEN_WIDTH)
     movzx ax, byte [row]
     shl bx, 1
+    ; mul 160
     mov cx, SCREEN_WIDTH*2
     mul cx
     add bx, ax
+
     pop dx
     
-    cmp dh, 0x0D ; \n and \r are handled differenz
+    cmp dh, 0x0D ; \n and \r are handled differently
     je .cr
     cmp dh, 0x0A
     je .lf
@@ -107,61 +109,56 @@ private_printChar:
     add bx, 2
     
     inc byte [col]
-    
-    cmp byte [col], 160 ; when we reach the right end of the screen we goto to the next line
-                        ; 
+    ; when we reach the right end of 
+    ; the screen we goto to the next line
+    cmp byte [col], (SCREEN_WIDTH*2)
     je .newLine 
+
+    pop gs
     ret
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 .newLine:
     mov byte [col], 0x00 ; move cursor to the left border
     inc byte [row]       ; increment linenumber
     
-    cmp byte [row], 24
-    jae .moveBuffer     ; when we are at the very bottom we move the whole buffer one row up
-    
+    ; when we are at the very bottom we move the whole buffer one row up
+    cmp byte [row], (SCREEN_HEIGHT-1)
+    jae .moveBuffer
+    pop gs
     ret
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .cr:
     mov byte [col], 0x00 ; \r just jumps to the left border
+    pop gs
     ret
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .lf:
     inc byte [row]      ; move cursor one row down
-    cmp byte [row], 24
+    cmp byte [row], (SCREEN_HEIGHT-1)
     jae .moveBuffer     ; we reach the bottom -> we scroll
+    pop gs
     ret
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 .moveBuffer:
     push si
-    mov byte [row], 23  ; copy the whole vga memory (beginning at line 2)
-    mov ax, es          ; one line up
-    
-    push ax             ; the very bottom row is filled with spaces
-    mov ax, ds
-    push ax
+    push es
+    push ds
+
+    ; copy the whole vga memory (beginning at line 2)
+    ; one line up
+    mov byte [row], (SCREEN_HEIGHT-2)
     
     mov ax, VIDEO_MEMORY_SEGMENT
     mov es, ax
     mov ds, ax
-    mov si, 160
-    mov di, 0x00
+    mov si, (SCREEN_WIDTH*2)
+    xor di, di
     mov cx, (SCREEN_BUFFER_SIZE - SCREEN_WIDTH)
     rep movsw
     
-    pop ax
-    mov ds, ax
-    pop ax
-    mov es, ax
+    pop ds
+    pop es
     pop si
+    pop gs
     ret
-;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ; ======================================================

@@ -21,7 +21,6 @@ jmp start   ; goto start
 %include "include/command_file.asm"
 %include "include/command_fileInfo.asm"
 %include "include/command_viewDirectory.asm"
-
 fileName times 13 db 0x00 ; filename, 'human' format (DUMMY.BIN)
 rFileName times 11 db 0x20
                    db "\n\r"
@@ -29,7 +28,8 @@ rFileName times 11 db 0x20
 
 ready db "CMD> ", 0x00
 
-start:  ; just PRINT a newline so old ready is 100% sure on its own line
+start:
+    ; just PRINT a newline so old ready is 100% sure on its own line
     PRINT NEWLINE
     
 main:
@@ -75,7 +75,7 @@ main:
     je delete_file ; command_file
     
     STRCMP command, cmdPWD
-    je PRINT_working_directory ; command_file
+    je print_working_directory ; command_file
     
     STRCMP command, cmdRETURN
     je PRINT_return_code ; command_util

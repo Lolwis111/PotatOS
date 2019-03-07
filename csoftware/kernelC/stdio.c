@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "stdint.h"
+#include "os.h"
 
 static char cursorX = 0;
 static char cursorY = 0;
@@ -58,18 +59,6 @@ void clearScreen(void)
         *videoMemory = 0x07; 
         videoMemory++;
     }
-}
-
-void outb(uint16_t port, uint8_t byte)
-{
-    asm volatile ("out %0, %1" : : "a"(byte), "Nd"(port)); 
-}
-
-uint8_t inb(uint16_t port)
-{
-    uint8_t ret;
-    asm volatile ("in %1, %0" : "=a"(ret) : "Nd"(port));
-    return ret;
 }
 
 void moveBuffer(void)

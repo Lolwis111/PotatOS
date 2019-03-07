@@ -3,21 +3,29 @@
 ; % from the bootloader                          %
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-[ORG 0x9000]
+%include "defines.asm"
+
+[ORG SOFTWARE_BASE]
 [BITS 16]
 
 jmp start
 
-
 ; ==========================================
-%include "defines.asm"
 %include "common.asm"
-%include "fat12.asm"
-%include "sysinit_utils.asm"
+%ifdef A20
+    %include "sysinit_a20.asm"
+%endif
 %include "screen.asm"
+%include "print16.asm"
 ; ==========================================
     
-msg         db 0x0D, 0x0A, "Executing SYSINIT.SYS...", 0x0D, 0x0A, 0x00
+Path        db "/SYSTEM/", 0x00
+PathEnd:
+%define PATH_LENGTH (PathEnd - Path)
+msg         db 0x0D, 0x0A
+            db "Executing SYSINIT.SYS..."
+            db 0x0D, 0x0A
+            db 0x00
 colorByte   db 0x00
 highMem     db 0x00
 kb_switch   db 0x00
@@ -27,35 +35,40 @@ start:
     call Print
 
     cli
+    
     xor ax, ax
     mov es, ax
     mov ds, ax
+    mov fs, ax
+    mov gs, ax
 
-    mov word [0x0084], 0x1000   ; set interrupt 0x21 to point to our system.sys
-    mov word [0x0086], 0x0000   ; so we have our OS-API ready to use
-
+    mov word [0x0084], SYSTEM_SYS ; set interrupt 0x21 to point to our system.sys
+    mov word [0x0086], 0x0000     ; so we have our OS-API ready to use
+    
     sti
     
+    cld
+    xor ax, ax ; override path with zeroes
+    mov di, CURRENT_PATH
+    mov cx, CURRENT_PATH_MAX_LENGTH
+    rep stosw
+    
+    mov word [CURRENT_PATH_LENGTH], PATH_LENGTH
+    mov di, CURRENT_PATH
+    mov si, Path
+    mov cx, PATH_LENGTH
+    rep movsb
+   
     mov ah, 0x18
     int 0x21
 
-    mov cx, 0x01    ; load the bootloader (because we sneaked in some config there lmao)
-    xor ax, ax
-    mov es, ax
-    mov ebx, 0x7000
-    call ReadSectors
-    
-    ; get the two config bytes
-    mov esi, 0x71FC
-    mov al, byte [es:esi]
-    mov byte [0x1FFF], al   ; set color
-    mov dl, al
+    mov byte [SYSTEM_COLOR], 0x07   ; set color to light grey on black
+    mov dl, 0x07
     call screen_setColor
-    
-    cmp byte [es:esi+1], 0 ; set highMem
-    je startTerminal
-    
+
+%ifdef A20
     call enableA20
+%endif
     
 startTerminal:
     ; exit this 'program' and start the terminal

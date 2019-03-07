@@ -17,13 +17,17 @@ start:
 
 %include "gdt.asm"
 %include "switchToPM.asm"
+%include "a20.asm"
 %include "print32.asm"
 
 [BITS 32]
 beginPM:
+    call enableA20
+
     mov ebx, msgProtected
     call print32
     call KERNEL_OFFSET
+    
     jmp $
 
 msgProtected db "We are now in 32 Bit protected mode."

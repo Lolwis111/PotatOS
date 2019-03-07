@@ -222,13 +222,6 @@ msgNewLine  db 0x0D, 0x0A, 0x00
 msgOK       db "OK", 0x0D, 0x0A, 0x00
 msgFailure  db 0x0D, 0x0A, "ERROR: PRESS ANY KEY TO RESET", 0x0D, 0x0A, 0x00
 
-times 508-($-$$) db 0   ; pad this file to 507 Bytes (leaving 3 Bytes for config + 2 Bytes for signature)
-
-; =======================================================================
-; config section - this is where the config for the 16-bit mode is saved
-; =======================================================================
-config_color_byte db 0x07       ; default is white on black
-config_highmem_enable db 0x00   ; disable high memory per default
-; =======================================================================
+times 510-($-$$) db 0   ; pad this file to 510 Bytes (2 Bytes for signature)
 
 dw 0xAA55               ; and make the last two bytes the boot signature
