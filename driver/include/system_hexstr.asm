@@ -77,7 +77,7 @@ intToHexString32:
 ; cl => base10 number
 ; ======================================================
 private_hexToDec:
-    mov si, dx
+    push ax
     xor cx, cx
     mov cl, al
     cmp cl, '0'         ; anything below 0 is invalid (check ascii map)
@@ -87,7 +87,8 @@ private_hexToDec:
     ja .checkAtoF       ; chars greater than 9 are letters (which can be valid)
     
     sub cl, '0'         ; get the decimal value from the ascii char
-    xor ax, ax          ; no error
+    pop ax
+    clc                 ; no error
     ret                 ; return
 .checkAtoF:             ; check uppercase letters
     cmp cl, 'A'         ; everyting below A is invalid
@@ -95,8 +96,9 @@ private_hexToDec:
     cmp cl, 'F'         ; everything above F may be lowercase letter
     ja .checkatof
     
-    sub cl, 'A'         ; get decimal value from ascii char
-    xor ax, ax          ; no error
+    sub cl, ('A'-10)    ; get decimal value from ascii char
+    pop ax
+    clc                 ; no error
     ret                 ; return
 .checkatof:             ; check lowercase letters
     cmp cl, 'a'         ; now only a-f remain as valid digits
@@ -104,11 +106,13 @@ private_hexToDec:
     cmp cl, 'f'
     ja .invalidDigit
     
-    sub cl, 'a'         ; get decimal value
+    sub cl, ('a'-10)    ; get decimal value
+    pop ax
     clc                 ; no error
     ret                 ; return
 .invalidDigit:
     xor cx, cx          ; zero the output value
+    pop ax
     stc                 ; an error occured
     ret                 ; return
 ; ======================================================
@@ -117,120 +121,44 @@ private_hexToDec:
 ; ======================================================
 ; converts the first two characters of the string into
 ; decimal, assuming they represent a hexadecimal value
+; DS:DX <= Pointer to string
+; CL => represented byte
+; Carry flag indicates error
 ; ======================================================
 hexToDec:
+    push si
+    push ax
+    push bx
+    
     mov si, dx
     xor ax, ax
     xor bx, bx
-    mov al, byte [ds:si]
-    inc si
-   
-    cmp al, 48  ; digits 0-9
-    je .num16
-    cmp al, 49
-    je .num16
-    cmp al, 50
-    je .num16
-    cmp al, 51
-    je .num16
-    cmp al, 52
-    je .num16
-    cmp al, 53
-    je .num16
-    cmp al, 54
-    je .num16
-    cmp al, 55
-    je .num16
-    cmp al, 56
-    je .num16
-    cmp al, 57
-    je .num16
-.chars:            ; digits A-F
-    cmp al, 65
-    je .char16
-    cmp al, 66
-    je .char16
-    cmp al, 67
-    je .char16
-    cmp al, 68
-    je .char16
-    cmp al, 69
-    je .char16
-    cmp al, 70
-    je .char16
-
-    cmp cx, 1
-    je .noc
-    mov cx, 1
-    sub al, 32
-    jmp .chars
-.noc:
-    mov ax, FALSE
-    iret
-    
-.num16:
-    sub ax, 48
-    shl ax, 4
-    jmp .hex2
-.char16:
-    sub ax, 55
-    shl ax, 4
-.hex2:
-    mov bx, ax
-    mov al, byte [ds:si]
-    inc si
-    cmp al, 48
-    je .num161
-    cmp al, 49
-    je .num161
-    cmp al, 50
-    je .num161
-    cmp al, 51
-    je .num161
-    cmp al, 52
-    je .num161
-    cmp al, 53
-    je .num161
-    cmp al, 54
-    je .num161
-    cmp al, 55
-    je .num161
-    cmp al, 56
-    je .num161
-    cmp al, 57
-    je .num161
-.chars2:
-    cmp al, 65
-    je .char161
-    cmp al, 66
-    je .char161
-    cmp al, 67
-    je .char161
-    cmp al, 68
-    je .char161
-    cmp al, 69
-    je .char161
-    cmp al, 70
-    je .char161
-    
-    cmp cx, 2
-    je .noc2
-    mov cx, 2
-    sub al, 32
-    jmp .chars2
-.noc2:
-    mov ax, -1
     xor cx, cx
+    
+    mov al, byte [ds:si]  ; get first char
+    
+    call private_hexToDec ; outputs cl
+    jc .error
+    mov bl, cl
+    
+    
+    mov al, byte [ds:si+1]  ; get seond char
+    call private_hexToDec ; outputs cl
+    jc .error
+    shl bl, 4
+    or cl, bl
+    
+    pop bx
+    pop ax
+    pop si
+    ; outputs cl
+    clc
     iret
-.num161:
-    sub ax, 48
-    add bx, ax
-    jmp .end
-.char161:
-    sub ax, 55
-    add bx, ax
-.end:
-    mov ax, TRUE
-    mov cx, bx
+.error:
+    pop bx
+    pop ax
+    pop si
+    xor cx, cx
+    stc
     iret
 ; ======================================================
