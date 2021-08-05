@@ -1,6 +1,6 @@
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Stellt Methoden zum Lesen auf Schreiben auf  %
-; % Disketten zur verfügung (LOW_LEVEL_IO)       %
+; % Provides methods for reading and writing     %
+; % to a floppy disk.       (LOW_LEVEL_IO)       %
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %ifndef _FLOPPY16_INC_

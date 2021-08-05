@@ -3,27 +3,27 @@
 
 ; ==================================================================================================
 ; BIOS Parameter Block
-; Stellt Informationen zum Dateisystem bereit
+; Provides basic information about the disk and the file system
 ; ==================================================================================================
-OEM                 DB "PotatOS "   ; OEM-Name (Muss 8 Bytes lang sein)
-BytesPerSector:     DW 512          ; Sektorengroesse in Byte
-SectorsPerCluster:  DB 1            ; Sektoren pro Cluster
-ReservedSectors:    DW 1            ; reservierte Sektoren (einer fuer Bootloader)
-NumberOfFATS:       DB 2            ; Anzahl an FATs
-RootEntries:        DW 224          ; maximale Anzahl an Dateien in root (FAT12 Limit)
-TotalSectors:       DW 2880         ; Gesamtanzahl an Sektoren (2880 * 512 Byte = 1.44MB)
-Media:              DB 0xF0         ; Laufwerkstyp (Floppy)
-SectorsPerFAT:      DW 9            ; FAT-Groesse in Sektoren
-SectorsPerTrack:    DW 18           ; Spurgroesse in Sektoren
-HeadsPerCylinder:   DW 2            ; Lesekoepfe pro Zylinder
-HiddenSectors:      DD 0            ; Versteckte Sektoren
-TotalSectorsBig:    DD 0            ; Gesamtanzahl an Vektoren falls TotalSectors nicht reicht
-DriveNumber:        DB 0            ; Laufwerksnummer (0 = erste Floppy)
+OEM                 DB "PotatOS "   ; OEM-Name (has to be 8 Bytes long)
+BytesPerSector:     DW 512          ; sectorsize in bytes
+SectorsPerCluster:  DB 1            ; sectors per cluster
+ReservedSectors:    DW 1            ; reserved sectors
+NumberOfFATS:       DB 2            ; number of FATs
+RootEntries:        DW 224          ; files in the root directory
+TotalSectors:       DW 2880         ; total sector count (2880 * 512 Byte = 1.44MB)
+Media:              DB 0xF0         ; drive type (Floppy)
+SectorsPerFAT:      DW 9            ; FAT-size in sectors
+SectorsPerTrack:    DW 18           ; tracksize in sectors
+HeadsPerCylinder:   DW 2            ; heads per cylinder
+HiddenSectors:      DD 0            ; hidden sectors
+TotalSectorsBig:    DD 0            ; totalsectors incase TotalSectors isnt big enough
+DriveNumber:        DB 0            ; drive number (0 = erste Floppy)
 Unused:             DB 41           ; FAT12, 1.44MB DOS Floppy
-ExtBootSignature:   DB 0x29         ; Bootsignatur
-SerialNumber:       DD 0x9a8b7c6d   ; Seriennummer (idr egal)
-VolumeLabel:        DB "POTATOSBOOT"; Laufwerkstitel (muss 11 Bytes lang sein) [veraltet]
-FileSystem:         DB "FAT12   "   ; Dateisystem (muss 8 Bytes lang sein, ist nicht verlaesslich)
+ExtBootSignature:   DB 0x29         ; signature
+SerialNumber:       DD 0x9a8b7c6d   ; serial number (doesnt really matter)
+VolumeLabel:        DB "POTATOSBOOT"; label (has to be 11 Bytes)
+FileSystem:         DB "FAT12   "   ; filesystem name (has to be 8 Bytes, not reliable)
 ; ==================================================================================================
 
 %endif

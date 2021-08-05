@@ -1,7 +1,7 @@
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Stellt allegemeine Informationen für das     %
-; % System bereit. Z.B. Version und wichtige     %
-; % wichtige Dateinamen.                         %
+; % Provides general information for the OS.     %
+; % Such as version and important system file    %
+; % names.                                       %
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %ifndef _COMMON_INC_

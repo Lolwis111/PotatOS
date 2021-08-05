@@ -1,6 +1,5 @@
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-; % Stellt Methoden zum Lesen auf Schreiben auf  %
-; % Disketten zur verfügung (LOW_LEVEL_IO)       %
+; % Provides methods to work with the screen     %
 ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %ifndef _SCREEN_INC_
