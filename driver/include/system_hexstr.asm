@@ -76,10 +76,6 @@ intToHexString32:
 ; al <= hex digit
 ; cl => base10 number
 ; ======================================================
-hexToDec:
-    call private_hexToDec
-    iret
-
 private_hexToDec:
     mov si, dx
     xor cx, cx
@@ -115,4 +111,126 @@ private_hexToDec:
     xor cx, cx          ; zero the output value
     stc                 ; an error occured
     ret                 ; return
+; ======================================================
+    
+
+; ======================================================
+; converts the first two characters of the string into
+; decimal, assuming they represent a hexadecimal value
+; ======================================================
+hexToDec:
+    mov si, dx
+    xor ax, ax
+    xor bx, bx
+    mov al, byte [ds:si]
+    inc si
+   
+    cmp al, 48  ; digits 0-9
+    je .num16
+    cmp al, 49
+    je .num16
+    cmp al, 50
+    je .num16
+    cmp al, 51
+    je .num16
+    cmp al, 52
+    je .num16
+    cmp al, 53
+    je .num16
+    cmp al, 54
+    je .num16
+    cmp al, 55
+    je .num16
+    cmp al, 56
+    je .num16
+    cmp al, 57
+    je .num16
+.chars:            ; digits A-F
+    cmp al, 65
+    je .char16
+    cmp al, 66
+    je .char16
+    cmp al, 67
+    je .char16
+    cmp al, 68
+    je .char16
+    cmp al, 69
+    je .char16
+    cmp al, 70
+    je .char16
+
+    cmp cx, 1
+    je .noc
+    mov cx, 1
+    sub al, 32
+    jmp .chars
+.noc:
+    mov ax, FALSE
+    iret
+    
+.num16:
+    sub ax, 48
+    shl ax, 4
+    jmp .hex2
+.char16:
+    sub ax, 55
+    shl ax, 4
+.hex2:
+    mov bx, ax
+    mov al, byte [ds:si]
+    inc si
+    cmp al, 48
+    je .num161
+    cmp al, 49
+    je .num161
+    cmp al, 50
+    je .num161
+    cmp al, 51
+    je .num161
+    cmp al, 52
+    je .num161
+    cmp al, 53
+    je .num161
+    cmp al, 54
+    je .num161
+    cmp al, 55
+    je .num161
+    cmp al, 56
+    je .num161
+    cmp al, 57
+    je .num161
+.chars2:
+    cmp al, 65
+    je .char161
+    cmp al, 66
+    je .char161
+    cmp al, 67
+    je .char161
+    cmp al, 68
+    je .char161
+    cmp al, 69
+    je .char161
+    cmp al, 70
+    je .char161
+    
+    cmp cx, 2
+    je .noc2
+    mov cx, 2
+    sub al, 32
+    jmp .chars2
+.noc2:
+    mov ax, -1
+    xor cx, cx
+    iret
+.num161:
+    sub ax, 48
+    add bx, ax
+    jmp .end
+.char161:
+    sub ax, 55
+    add bx, ax
+.end:
+    mov ax, TRUE
+    mov cx, bx
+    iret
 ; ======================================================
