@@ -158,39 +158,31 @@ editByte:
     sub dl, cl
     add dl, 5
     MOVECUR dl, dh
-    ; mov ah, 0x0E
-    ; int 0x21
 
     call hideCursor
-    ; mov ch, 32
-    ; mov ah, 1
-    ; mov al, 3
-    ; int 0x10
 
     mov byte [0x1FFF], createColor(WHITE, BLACK)
-    READLINE .hex, 2
-    cmp cx, 0
+    READLINE .hex, 2            ; read 2 chars
+    cmp cx, 0                   ; 0 chars -> no input
     je .backup
-    cmp cx, 2
+    cmp cx, 2                   ; 2 chars -> full input
     je .ok
-    mov byte [.hex+1], '0'
+    mov byte [.hex+1], '0'      ; 1 char -> pad with a zero
 .ok:
     pop bx
 
-    mov al, byte [.hex]
+    HEXTOSTR .hex               ; try reading input as hexstring
+    jc .backup                  ; catch invalid input (e.g. 0xFK)
+
+    mov al, byte [.hex]         ; put the entered value on screen
     mov byte [gs:bx], al
+    
     mov al, byte [.hex+1]
+    
     add bx, 2
-    mov byte [gs:bx], al
+    mov byte [gs:bx], al        ; put the entered value on screen
 
-    ;mov ah, 0x0D
-    ;mov dx, .hex
-    ;int 0x21
-    HEXTOSTR .hex
-    cmp ax, -1
-    je .checkASCII
-
-    mov di, word [selectAdr]
+    mov di, word [selectAdr]    ; put the entered value into the actual memory
     mov byte [fs:di], cl
 
 .return:
@@ -206,16 +198,6 @@ editByte:
     mov al, byte [.dataByte]
     mov byte [fs:di], al
     jmp .return
-.checkASCII:
-    cmp byte [.hex], 'x'
-    jne .backupNoPop
-
-    mov di, word [selectAdr]
-    mov cl, byte [.hex+1]
-    mov byte [fs:di], cl
-
-    jmp .return
-
 .hex        db "00", 0x00
 .dataByte   db 0x00
 ;==========================================
@@ -393,18 +375,9 @@ main:
     mov word [.nOffset], 0x0000
 
     HEXTOSTR word [.adr]
-    ;mov ah, 0x0D
-    ;mov dx, word [.adr]
-    ;int 0x21    ; convert the first two hexchars to decimal
-
     mov byte [.nOffset+1], cl ; put them in the upper half
 
     HEXTOSTR word [.adr+2]
-
-    ;mov ah, 0x0D ; convert the lower two hexchars
-    ;mov dx, word [.adr+2]
-    ;int 0x21
-
     add byte [.nOffset], cl ; put them in the lower half
 
     mov cx, word [.nOffset]
@@ -429,15 +402,11 @@ main:
     mov word [.nOffset], 0x0000
 
     HEXTOSTR word [.adr]
-    ;mov ah, 0x0D
-    ;mov dx, word [.adr]
-    ;int 0x21
-
+    
     mov byte [.nOffset+1], cl
+    
     HEXTOSTR word [.adr+2]
-    ;mov ah, 0x0D
-    ;mov dx, word [.adr+2]
-    ;int 0x21
+    
     add byte [.nOffset], cl
 
     mov cx, word [.nOffset]
