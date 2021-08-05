@@ -120,6 +120,7 @@ intToString16:
 intToString32:
     call private_intToString32
     iret
+
 private_intToString32:
     pusha
     
@@ -127,11 +128,10 @@ private_intToString32:
     mov eax, ecx
 
     test eax, eax
-    jz .zero
+    jz .zero        ; test if input is zero
+    jns .start      ; test if input is signed/unsigned
 
-    cmp eax, 0x00
-    jns .start
-
+    ; signed -> add the sign
     not eax
     inc eax
     mov byte [edi], '-'
@@ -178,7 +178,7 @@ private_intToString32:
     ret
 .zero:
     mov byte [edi], '0'
-    inc esi
+    inc edi
     mov byte [edi], 0x00
     
     popa
