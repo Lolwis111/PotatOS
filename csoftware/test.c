@@ -3,16 +3,23 @@
 asm(".code16gcc\n");
 #endif
 
-asm("pusha;call $0, $main;popa;xor %eax,%eax;xor %ebx,%ebx;int $0x21;");
+asm("call $0, $main; xor %eax,%eax;xor %ebx,%ebx;int $0x21;");
 
-void main(void)
+void print(char* string)
 {
-    unsigned char* ptr = (unsigned char*)0xB8000;
+    asm volatile (
+        "mov $0x01, %%ah;"
+        "mov $0x07, %%bl;"
+        "int $0x21;"
+        :
+        :"d"(string)
+        : "eax", "ebx"
+    );
+}
 
-    for(int i = 0; i < 2000; i += 2)
-    {
-        ptr++;
-        *ptr = 0x03;
-        ptr++;
-    }
+int main(void)
+{
+    
+
+    return 0;
 }

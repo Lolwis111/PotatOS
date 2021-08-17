@@ -21,7 +21,18 @@ asm(".code16gcc\n");
 #define COLOR_LIGHT_GREEN 10
 #define COLOR_YELLOW 14
 
-asm("jmp $0, $main");
+asm ("call $0, $main; xor %eax,%eax;xor %ebx,%ebx;int $0x21;");
+
+void farWrite_byte(short segment, short offset, char data)
+{
+    asm volatile(
+        "mov %%ax, %%gs;"
+        "movb %%dl, %%gs:(%%bx);"
+        :
+        : "a"(segment), "b"(offset), "d"(data)
+        :
+        );
+}
 
 float degreeToRadians(float x)
 {
@@ -42,7 +53,7 @@ int abs(int x)
 
 void sleep(int time)
 {
-    asm("mov $0x19, %%ah;"
+    asm volatile ("mov $0x19, %%ah;"
         "int $0x21;"
         : :"b"(time)
     );
@@ -50,7 +61,7 @@ void sleep(int time)
 
 void fsincos(float x, float* sin, float* cos)
 {
-    asm(
+    asm volatile (
         "FLD %2;"
         "FSINCOS;"
         "FSTP %0;"
@@ -68,20 +79,20 @@ void putPixel(int x, int y, char color)
     if(y < 0) y = 0;
     else if(y > HEIGHT) y = HEIGHT - 1;
 
-    char* ptr = (char*)(0xA0000);
+    int offset = (y * WIDTH) + x;
 
-    ptr += (y * WIDTH) + x;
-    *ptr = color;
+    farWrite_byte(0xA000, offset, color);
 }
 
 void cls(char color)
 {
-    char* ptr = (char*)0xA0000;
+    int offset = 0;
 
-    for(int i = 0; i < WIDTH*HEIGHT; i++)
+    int i;
+    for(i = 0; i < WIDTH*HEIGHT; i++)
     {
-        *ptr = color;
-        ptr++;
+        farWrite_byte(0xA000, offset, color);
+        offset++;
     }
 }
 
@@ -122,7 +133,8 @@ void drawLine(int x0, int y0, int x1, int y1, char color)
 
 void drawCircle(int x, int y, float radius, char color)
 {
-    for(int degree = 0; degree < 360; degree++)
+    int degree;
+    for(degree = 0; degree < 360; degree++)
     {
         float sin;
         float cos;
@@ -132,20 +144,53 @@ void drawCircle(int x, int y, float radius, char color)
     }
 }
 
+void graphicsMode(void)
+{
+    asm volatile (
+        "mov $0x0013, %ax;"
+        "int $0x10;"
+    );
+}
+
+void textMode(void)
+{
+    asm volatile (
+        "mov $0x0003, %ax;"
+        "int $0x10;"
+    );
+}
+
+char readchar(void)
+{
+    char character;
+    asm volatile (
+        "mov $1, %%ah;"
+        "int $0x16;"
+        : "=a"(character)
+        : 
+        : 
+        );
+
+    if (character != 0)
+        asm volatile ("xor %%ax, %%ax;int $0x16;":"=a"(character) : :);
+
+    return character;
+}
 
 void main(void)
 {
-    asm("mov $0x0013, %ax; int $0x10;");
-
+    graphicsMode();
+    
     int offset = 0;
-    while(1)
+
+    while(readchar() != 0)
     {
         cls(COLOR_BLACK);
 
-        int colorI = 0;
-        for(int i = offset; i < (offset + 6); i++)
+        int colorI = 0, i, degree;
+        for(i = offset; i < (offset + 6); i++)
         {
-            for(int degree = i; degree < (i + 360); degree += 6)
+            for(degree = i; degree < (i + 360); degree += 6)
             {
                 float sin;
                 float cos;
@@ -187,14 +232,12 @@ void main(void)
         drawCircle(CENTERX, CENTERY, 50, COLOR_GREEN);
         drawCircle(CENTERX, CENTERY, 100, COLOR_YELLOW);
 
-        sleep(20);
+        sleep(10);
 
         offset++;
     }
 
-    asm("xor %ax, %ax;int $0x16;");
+    textMode();
 
-    asm("mov $0x0003, %ax; int $0x10;");
-
-    asm("xor %ax, %ax; xor %bx, %bx; int $0x21;");
+    return;
 }
