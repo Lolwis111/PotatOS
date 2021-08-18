@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 cleanListFiles()
 {
     rm -f boot/boot.lst
@@ -261,7 +262,7 @@ buildTests
 echo ""
 echo "> building c software"
 
-make -C csoftware/kernelC/ || exit # compile c programms
+make -C csoftware/ || exit # compile c programms
 
 echo "" # newLine
 echo "> installing bootloader"
@@ -313,9 +314,9 @@ do
     cp $file $mount_point/system/
 done;
 
-# cp csoftware/*.bin $mount_point/c-tests/ # copy the c software
-cp csoftware/kernelC/kernel.sys $mount_point/c-tests/
-cp csoftware/kernelC/pmtest.bin $mount_point/c-tests/
+cp csoftware/*.bin $mount_point/c-tests/ # copy the c software
+# cp csoftware/kernelC/kernel.sys $mount_point/c-tests/
+# cp csoftware/kernelC/pmtest.bin $mount_point/c-tests/
 
 # viewer + images are in an extra directory
 mv $mount_point/system/viewer.bin /tmp/tmp-loop/images/viewer.bin
