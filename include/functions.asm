@@ -104,6 +104,19 @@
     int 0x21
 %endmacro
 
+%macro FTOSTR 2 ; converts arg2 to string in arg1
+    mov ebx, %2
+    mov edx, %1
+    mov ah, 0x1C
+    int 0x21
+%endmacro
+
+%macro STRTOF 1
+    mov edx, %1
+    mov ah, 0x1C
+    int 0x21
+%endmacro
+
 %macro STRTOL 1 ; converts arg1 string to long
     mov ah, 0x09
     mov dx, %1

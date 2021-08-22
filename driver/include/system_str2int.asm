@@ -6,6 +6,10 @@
 ; Carryflag <= Error indication
 ; ======================================================
 stringToInt:
+    call stringToInt
+    iret
+
+private_stringToInt:
     xor ecx, ecx ; result
     mov si, dx
     
@@ -57,12 +61,12 @@ stringToInt:
     mov eax, INVALID_ARGUMENT_ERROR 
     xor ecx, ecx
     stc
-    iret
+    ret
 .overflowError:
     mov eax, OVERFLOW_ERROR
     xor ecx, ecx
     stc
-    iret
+    ret
 .done:
     test bl, bl
     je .ret
@@ -70,5 +74,5 @@ stringToInt:
 .ret:
     mov eax, NO_ERROR
     clc
-    iret
+    ret
 ; ======================================================

@@ -94,6 +94,12 @@ main:
     cmp ah, 0x1B        ; loads a file given the entry in any directory
     je loadFileEntry
 
+    cmp ah, 0x1C
+    je floatToString
+
+    cmp ah, 0x1D
+    je stringToFloat
+
     ;cmp ah, 0x1C
     ;je startProgramEntry ; start a process based on file entry
 
@@ -134,6 +140,8 @@ main:
 
 %include "system_int2str.asm"
 %include "system_str2int.asm"
+%include "system_flt2str.asm"
+%include "system_str2flt.asm"
 %include "system_print.asm"
 %include "system_hexstr.asm"
 %include "system_diskIO.asm"
