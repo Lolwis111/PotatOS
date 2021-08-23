@@ -10,7 +10,7 @@ lblTop  db 177
                 db 177, "F5 Neu laden"
                 times 22 db 177
                 db 0x00
-%elif english
+%else
     lblBottom   times 81 db 177
                 db 24, " scroll up", 177, 25, " scroll down", 177
                 db "ESC quit", 177, "F5 reload"
