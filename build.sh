@@ -71,16 +71,19 @@ buildDriver()
 
 buildTests()
 {
-    # assemble the tests 
     cd ./tests/
+
+    # assemble the tests
     for file in *.asm
     do
         if [ $LIST_FILE = true ] ; then
-            list=" -l `basename $file .asm`.lst "
-        fi;
-        nasm $NASM_FLAGS $dbg $list $a20 -i $include_system $file\
-            -o `basename $i .asm`.bin || exit
-        echo -ne "." # print a dot on success for each driver
+            list=" -l list/`basename $file .asm`.lst "
+        fi
+
+        nasm $NASM_FLAGS $dbg $list $a20 -i $include_system\
+            $file -o bin/`basename $file .asm`.bin || exit
+
+        echo -ne "." # print a dot on success for each program
     done;
 
     cd ..
@@ -321,7 +324,7 @@ cp csoftware/*.bin $mount_point/c-tests/ # copy the c software
 # viewer + images are in an extra directory
 mv $mount_point/system/viewer.bin /tmp/tmp-loop/images/viewer.bin
 
-cp tests/*.bin $mount_point/tests/
+cp tests/bin/*.bin $mount_point/tests/
 
 echo "> copying resources"
 cp -r misc/* $mount_point/ # copy resources
