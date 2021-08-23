@@ -13,17 +13,12 @@ floatToString:
     or ax, 0x0C00                   ; enable trunc rounding mode
     mov word [.fpuControl+2], ax    ; save copy
 
-    ; check if ecx is bigger than 15 if yes clamp it to 15
+    ; check if ecx is bigger than 8 if yes clamp it to 8
     ; because internal memory restrictions and also why
     ; would you ever need more we talking single precision here
-    mov ebp, 8
+    mov ebp, 7
     cmp ecx, ebp
     cmova ecx, ebp
-
-    ; if ecx is below 0 then just assume the user likes having 3 decimals
-    mov ebp, 3
-    cmp ecx, 0
-    cmovb ecx, ebp
 
     mov ebp, edx
 
@@ -32,11 +27,8 @@ floatToString:
     mov dword [.the_float], ebx 
 
     test dword [.the_float], 0x80000000
-    jz .noSign
+    setnz byte [.sign]
 
-    mov byte [.sign], 0x01
-
-.noSign:
     ; force most significant bit to 0 (force sign to be positive)
     and dword [.the_float], 0x7FFFFFFF
 
