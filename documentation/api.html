@@ -211,7 +211,7 @@
                         <td>
                             ECX = converted integer<br>
                             AX = errorcode<br>
-                            carryflag
+                            carryflag indicates error
                         </td>
                         <td>
                             Tries to convert the string in DS:EDX into an
@@ -447,7 +447,7 @@
                         <td>0x17</td>
                         <td>execute</td>
                         <td>
-                            DX = pointer to filename string
+                            DX = pointer to filename string<br>
                             ES:DI = pointer to argument string
                         </td>
                         <td>
@@ -470,7 +470,7 @@
                         </td>
                         <td>
                             Initalizes the programmable interupt timer.
-                            Gets called by sysinit.sys to allow for sleep() to work
+                            Gets called by sysinit.sys to allow for sleep() to work.
                         </td>
                         <td>
                             &nbsp;
@@ -492,11 +492,69 @@
                         </td>
                         <td>SLEEP [time]</td>
                     </tr>
+
+                    <tr>
+                        <td>0x1A</td>
+                        <td>loadDirectory</td>
+                        <td>
+                            DS:EDX = pointer to directory name
+                        </td>
+                        <td>
+                            Carryflag indicates error
+                        </td>
+                        <td>
+                            Tries to change the current working directory to the directory specified by the name.<br>
+                            The directory to change to has to be in the current working directory.<br>
+                        </td>
+                        <td>
+                            LOADDIRECTORY [str]
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>0x1C</td>
+                        <td>floatToString</td>
+                        <td>
+                            DS:EDX = pointer to string buffer<br>
+                            ECX = precision (number of decimals)<br>
+                            EBX = Single Precision Float
+                        </td>
+                        <td>
+                            nothing
+                        </td>
+                        <td>
+                            Converts the float from ebx into a string and saves
+                            it in the buffer.
+                        </td>
+                        <td>
+                            FTOSTR [str], [float]
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>0x1D</td>
+                        <td>stringToFloat</td>
+                        <td>
+                            DS:EDX = pointer to string buffer<br>
+                        </td>
+                        <td>
+                            EAX = Single Precision Float<br>
+                            Carryflag indicates an error
+                        </td>
+                        <td>
+                            Tries to convert the string pointed to by DS:EDX into a single precision float.
+                            On success, the float is in the EAX register. (requires x87)
+                        </td>
+                        <td>
+                            STRTOF [str], [float]
+                        </td>
+                    </tr>
+
                     <tr>
                         <td>0xAA</td>
                         <td>intToString</td>
                         <td>
-                            EDX = pointer to string buffer
+                            EDX = pointer to string buffer<br>
                             ECX = integer to convert
                         </td>
                         <td>
@@ -507,8 +565,8 @@
                             it in the buffer.
                         </td>
                         <td>
-                            ITOSTR [str], [integer]<br>
-                            LTOSTR [str], [integer
+                            ITOSTR [str], [integer 16 Bit]<br>
+                            LTOSTR [str], [integer 32 Bit]
                         </td>
                     </tr>
                     <tr>
@@ -522,6 +580,26 @@
                             AH = Keyboard scancode
                         </td>
                         <td>Uses IO ports to read a character from the Intel 8042 keyboard controller without interrupts.</td>
+                        <td>none</td>
+                    </tr>
+                    <tr>
+                        <td>0xE1</td>
+                        <td>com1_sendByte</td>
+                        <td>AL = Byte to send</td>
+                        <td>none</td>
+                        <td>
+                            Sends byte in al on the COM1 port.
+                        </td>
+                        <td>SERIAL_WRITE</td>
+                    </tr>
+                    <tr>
+                        <td>0xE2</td>
+                        <td>com1_sendMessage</td>
+                        <td>DS:SI = String to send</td>
+                        <td>none</td>
+                        <td>
+                            Sends string in DS:SI on COM1 port.
+                        </td>
                         <td>none</td>
                     </tr>
                     <tr>
