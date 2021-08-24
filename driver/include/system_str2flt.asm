@@ -1,26 +1,30 @@
 ; ===============================================
-; ES:EDX <= String pointer
+; DS:DX <= String pointer
 ; EAX => 32 Bit float
 ; ===============================================
 stringToFloat:
     pushad
-
-    mov esi, edx
+    push es
+    
+    cld
+    xor ax, ax
+    mov si, dx
+    mov es, ax
 
     call TrimLeft
 
     mov byte [.negative], 0x00
 
-    cmp byte [ds:esi], '-'
+    cmp byte [ds:si], '-'
     jne .start
 
     mov byte [.negative], 0x01
-    inc esi
+    inc si
 .start:
-    mov edi, .intstr
+    mov di, .intstr
 .copy:
-    mov al, byte [ds:esi]   ; copy int part so up to the dot
-    inc esi
+    mov al, byte [ds:si]   ; copy int part so up to the dot
+    inc si
     
     cmp al, 0x00
     je .done2
@@ -39,14 +43,15 @@ stringToFloat:
     cmp al, '9'
     ja .error
 
-    mov byte [edi], al
-    inc edi
+    mov byte [es:di], al
+    inc di
     jmp .copy
 .decimals:
-    mov edi, .floatstr
+    mov byte [es:di], 0x00
+    mov di, .floatstr
 .copyDecimals:              ; copy the part after the dot (decimals)
-    mov al, byte [ds:esi]
-    inc esi
+    mov al, byte [ds:si]
+    inc si
     
     cmp al, 0x00
     je .done2
@@ -62,27 +67,31 @@ stringToFloat:
     cmp al, '9'
     ja .error
 
-    mov byte [edi], al
-    inc edi
+    mov byte [es:di], al
+    inc di
     jmp .copyDecimals
 .done2:
-    mov esi, .floatstr
-    mov eax, 1 
+    mov eax, 1
+    mov byte [es:di], 0x00
+    mov si, .floatstr
     ; count how long decimal string is and calculate divisor on the go
     ; length 5 -> 10^5 divisor
 .float_length:
-    push eax
-    mov al, byte [esi]
-    inc esi
+    mov ebp, eax
+    
+    mov al, byte [es:si]
+    inc si
+    
     test al, al
     jz .done3
-    pop eax
-    xor edx, edx
+    
     mov ebx, 10
+    xor edx, edx
+    mov eax, ebp
     mul ebx
     jmp .float_length
 .done3:
-    pop eax
+    mov eax, ebp
 
     mov dword [.divisor], eax
 
@@ -105,17 +114,35 @@ stringToFloat:
     fchs ; negate float if negative
 .save:
     fstp dword [.the_float]
-    mov eax, dword [.the_float]
-
     clc
     jmp .okay
 .error:
     stc
 .okay:
+    call .clean
+    pop es
     popad
+    mov eax, dword [.the_float]
     iret
-.intstr times 10 db 0x00
-.floatstr times 10 db 0x00
+
+.clean:
+    xor edx, edx
+    mov dword [es:.intstr], edx
+    mov dword [es:.intstr+4], edx
+    mov dword [es:.intstr+8], edx
+    mov dword [es:.intstr+12], edx
+    mov dword [es:.floatstr], edx
+    mov dword [es:.floatstr+4], edx
+    mov dword [es:.floatstr+8], edx
+    mov dword [es:.floatstr+12], edx
+    mov dword [es:.intpart], edx
+    mov dword [es:.floatpart], edx
+    mov dword [es:.divisor], edx
+    mov byte [es:.negative], dl
+    ret
+
+.intstr times 16 db 0x00
+.floatstr times 16 db 0x00
 .intpart dd 0x00000000
 .floatpart dd 0x00000000
 .divisor dd 0x00000000

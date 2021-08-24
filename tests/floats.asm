@@ -26,6 +26,8 @@ f15 dd -1234.5678
 ;msgOk db "No errors."
 newLine db "\r\n", 0x00
 
+abc db "abc", 0x00
+
 string times 40 db 0x00
 
 start:
@@ -39,9 +41,12 @@ start:
     .forLoop:
         push cx
         push si
+
+        ; mov ecx, 5
         FTOSTR string, dword [si]
         PRINT string
         PRINT newLine 
+
         pop si
         pop cx
         add si, 4
