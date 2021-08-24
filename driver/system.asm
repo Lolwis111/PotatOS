@@ -346,6 +346,6 @@ random:
     pop edx
     pop ebx
     pop eax
-    ret
+    iret
 .lastX dd 125
 ; ======================================================
