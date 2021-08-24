@@ -122,23 +122,27 @@ start:
     EXIT EXIT_SUCCESS
 
 ; compare EAX and EBX
+; by doing:
+;    abs(eax - ebx) < threshold
+; threshold being 0.0001 here.
 compareFloat:
     mov dword [.temp1], eax
     mov dword [.temp2], ebx
-    fld dword [.temp1]
-    fsub dword [.temp2]
-    fabs
-    fld dword [.difference]
-    fcomip st0, st1
-    fstp dword [.temp1]
-    ja .pass
+    fld dword [.temp1]      ; load a
+    fsub dword [.temp2]     ; load b and subtract from a
+    fabs                    ; abs(a - b)
+    fld dword [.threshold]  ; load threshold
+    fcompp                  ; compare abs(a-b) and threshold and also clear stack
+    fstsw ax                ; load status word
+    test ax, 0x0100         ; check bits for st0 > src
+    jz .pass                ; z-flag means its true
+
     PRINT .err
     ret
 .pass:
     PRINT .okay
     ret
-
-.difference dd 0.0001
+.threshold dd 0.0001
 .temp1 dd 0x00000000
 .temp2 dd 0x0000000
 .okay db "okay\r\n", 0x00

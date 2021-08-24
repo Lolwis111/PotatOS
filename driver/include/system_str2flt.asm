@@ -4,12 +4,8 @@
 ; ===============================================
 stringToFloat:
     pushad
-    push es
-    
     cld
-    xor ax, ax
     mov si, dx
-    mov es, ax
 
     call TrimLeft
 
@@ -43,11 +39,11 @@ stringToFloat:
     cmp al, '9'
     ja .error
 
-    mov byte [es:di], al
+    mov byte [di], al
     inc di
     jmp .copy
 .decimals:
-    mov byte [es:di], 0x00
+    mov byte [di], 0x00
     mov di, .floatstr
 .copyDecimals:              ; copy the part after the dot (decimals)
     mov al, byte [ds:si]
@@ -67,19 +63,19 @@ stringToFloat:
     cmp al, '9'
     ja .error
 
-    mov byte [es:di], al
+    mov byte [di], al
     inc di
     jmp .copyDecimals
 .done2:
     mov eax, 1
-    mov byte [es:di], 0x00
+    mov byte [di], 0x00
     mov si, .floatstr
     ; count how long decimal string is and calculate divisor on the go
     ; length 5 -> 10^5 divisor
 .float_length:
     mov ebp, eax
     
-    mov al, byte [es:si]
+    mov al, byte [si]
     inc si
     
     test al, al
@@ -120,25 +116,24 @@ stringToFloat:
     stc
 .okay:
     call .clean
-    pop es
     popad
     mov eax, dword [.the_float]
     iret
 
 .clean:
     xor edx, edx
-    mov dword [es:.intstr], edx
-    mov dword [es:.intstr+4], edx
-    mov dword [es:.intstr+8], edx
-    mov dword [es:.intstr+12], edx
-    mov dword [es:.floatstr], edx
-    mov dword [es:.floatstr+4], edx
-    mov dword [es:.floatstr+8], edx
-    mov dword [es:.floatstr+12], edx
-    mov dword [es:.intpart], edx
-    mov dword [es:.floatpart], edx
-    mov dword [es:.divisor], edx
-    mov byte [es:.negative], dl
+    mov dword [.intstr], edx
+    mov dword [.intstr+4], edx
+    mov dword [.intstr+8], edx
+    mov dword [.intstr+12], edx
+    mov dword [.floatstr], edx
+    mov dword [.floatstr+4], edx
+    mov dword [.floatstr+8], edx
+    mov dword [.floatstr+12], edx
+    mov dword [.intpart], edx
+    mov dword [.floatpart], edx
+    mov dword [.divisor], edx
+    mov byte [.negative], dl
     ret
 
 .intstr times 16 db 0x00
