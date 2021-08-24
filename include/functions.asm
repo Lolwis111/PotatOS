@@ -113,7 +113,7 @@
 
 %macro STRTOF 1
     mov edx, %1
-    mov ah, 0x1C
+    mov ah, 0x1D
     int 0x21
 %endmacro
 
@@ -209,6 +209,12 @@
 %macro DEBUG1 1
     mov ah, 0xFF
     mov edx, %1
+    int 0x21
+%endmacro
+
+%macro SERIAL_WRITE 1
+    mov ah, 0xE1
+    mov al, %1
     int 0x21
 %endmacro
 
