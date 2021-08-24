@@ -1,6 +1,6 @@
 com1_sendByte:
     call com1_privateSendByte
-    ret
+    iret
 
 com1_privateSendByte:
     push dx
