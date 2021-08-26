@@ -1,20 +1,15 @@
 ; ===============================================
 add_numbers:
     call readNumbers
-    cmp eax, -1
+    cmp ax, -1
     je main
     
-    mov eax, dword [numberA]
-    add eax, dword [numberB]
-    push eax
-    jnc .noOverflow
-    
-    PRINT msgOverflow, createColor(BLACK, RED)
+    fld dword [numberA]
+    fadd dword [numberB]
+    fstp dword [result]
 
-.noOverflow:
-    pop ecx ; convert result to string
-    mov dword [result], ecx
-    LTOSTR lblResult, ecx
+    ; convert result to string
+    FTOSTR lblResult, dword [result]
     
     PRINT msgResult, NUM_COLOR
     

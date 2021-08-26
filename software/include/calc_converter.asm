@@ -6,7 +6,7 @@ dec_to_bin:
 
     mov eax, ecx
     mov cx, 32
-    mov edi, .bitString+35
+    mov di, .bitString+35
 .bitLoop:
     push cx
     xor edx, edx
@@ -15,7 +15,7 @@ dec_to_bin:
     push eax
 
     add dx, 48
-    mov byte [edi], dl
+    mov byte [di], dl
     dec edi
 
     pop eax
@@ -37,7 +37,7 @@ dec_to_hex:
 
     mov eax, ecx
     mov cx, 8
-    mov edi, .hexString+11
+    mov di, .hexString+11
 .charLoop:
     push cx
     
@@ -46,11 +46,11 @@ dec_to_hex:
     div ebx
     push eax
 
-    mov esi, .hexChars
-    add esi, edx
-    mov al, byte [esi]
-    mov byte [edi], al
-    dec edi
+    mov si, .hexChars
+    add si, dx
+    mov al, byte [si]
+    mov byte [di], al
+    dec di
 
     pop eax
     
@@ -73,7 +73,7 @@ dec_to_oct:
 
     mov eax, ecx
     mov cx, 12
-    mov edi, .octString+15
+    mov di, .octString+15
 .charLoop:
     push cx
     xor edx, edx
@@ -82,8 +82,8 @@ dec_to_oct:
     push eax
 
     add dx, 48
-    mov byte [edi], dl
-    dec edi
+    mov byte [di], dl
+    dec di
 
     pop eax
     pop cx

@@ -7,31 +7,15 @@ div_numbers:
     cmp dword [numberB], 0x00
     je .div0
     
-    xor edx, edx
-    mov eax, dword [numberA]
-    mov ecx, dword [numberB]
-    idiv ecx ; divide
+    fld dword [numberA]
+    fdiv dword [numberB]
+    fstp dword [result]
     
-    ; AX => Ergebnis
-    ; DX => Rest
-    
-    push edx
-    
-    mov dword [result], eax
-    LTOSTR lblResult, eax ; convert result to string
+    FTOSTR lblResult, dword [result] ; convert result to string
     
     PRINT msgResult, NUM_COLOR
     
     PRINT lblResult, STD_COLOR ; print result
-    
-    PRINT newLine, NUM_COLOR
-    
-    pop ecx
-    LTOSTR lblResult, ecx ; this is basically modulo, convert that to string too
-    
-    PRINT .lblRest, NUM_COLOR
-
-    PRINT lblResult, STD_COLOR ; print modulo
     
     jmp main
 .div0:

@@ -44,15 +44,12 @@ msgResult   db "\r\n"
 
 newLine      db "\r\n", 0x00
 msgReady        db "> ", 0x00
-msgOverflow     db "\r\nOverflow\r\n", 0x00
 
 lblA            db "A = ", 0x00
 lblB            db "\r\nB = ", 0x00
-lblResult       db "0000000000", 0x00, 0x00, 0x00
-inputString     times 16 db 0x00
+lblResult       times 20 db 0x00
+inputString     times 17 db 0x00
 
-cmdANS          db "ANS", 0x00
-cmdMEM          db "MEM "
 cmdADD          db "ADD", 0x00
 cmdSUB          db "SUB", 0x00
 cmdDIV          db "DIV", 0x00
@@ -60,9 +57,6 @@ cmdMUL          db "MUL", 0x00
 cmdTOBIN        db "TOBIN", 0x00
 cmdTOHEX        db "TOHEX", 0x00
 cmdTOOCT        db "TOOCT", 0x00
-cmdSTORE        db "STORE  "
-cmdVIEW         db "VIEW", 0x00
-
 cmdEXIT         db "EXIT", 0x00
 
 color db 0x00
@@ -70,13 +64,6 @@ color db 0x00
 numberA         dd 0x00000000
 numberB         dd 0x00000000
 result          dd 0x00000000
-
-resultMemory dd 0x00000000
-             dd 0x00000000
-             dd 0x00000000
-             dd 0x00000000
-             dd 0x00000000
-             dd 0x00000000
 
 ; ==========================================
 ; ClearScreen
@@ -152,12 +139,6 @@ main:
     STRCMP command, cmdTOOCT ; toOct-Command?
     je dec_to_oct
     
-    STRCMP command, cmdSTORE
-    je store
-    
-    STRCMP command, cmdVIEW
-    je viewMemory
-    
     jmp main
 ; ===============================================
 
@@ -168,58 +149,6 @@ main:
 %include "include/calc_div.asm"
 %include "include/calc_mul.asm"
 %include "include/calc_converter.asm"
-
-; ===============================================
-store:
-    xor ebx, ebx
-    mov bl, byte [command+6] ; command: STORE [A-F]
-    
-    cmp ebx, 'A'
-    jb .invalid
-    cmp ebx, 'F'
-    ja .invalid
-    
-    sub ebx, 'A'
-    
-    mov eax, dword [result]
-    mov dword [resultMemory+ebx*4], eax ; the letters A-F get mapped to the memory addresses
-.invalid:
-
-    PRINT msgInvalidStorage
-
-    jmp main
-; ===============================================
-
-
-; ===============================================
-viewMemory:
-    
-    LTOSTR lblResult, dword [resultMemory]
-    PRINT lblResult, STD_COLOR
-    PRINT newLine, NUM_COLOR
-    
-    LTOSTR lblResult, dword [resultMemory+4]
-    PRINT lblResult, STD_COLOR
-    PRINT newLine, NUM_COLOR
-    
-    LTOSTR lblResult, dword [resultMemory+8]
-    PRINT lblResult, STD_COLOR
-    PRINT newLine, NUM_COLOR
-    
-    LTOSTR lblResult, dword [resultMemory+12]
-    PRINT lblResult, STD_COLOR
-    PRINT newLine, NUM_COLOR
-    
-    LTOSTR lblResult, dword [resultMemory+16]
-    PRINT lblResult, STD_COLOR
-    PRINT newLine, NUM_COLOR
-    
-    LTOSTR lblResult, dword [resultMemory+20]
-    PRINT lblResult, STD_COLOR
-    PRINT newLine, NUM_COLOR
-    
-    jmp main
-; ===============================================
 
 
 ; ===============================================

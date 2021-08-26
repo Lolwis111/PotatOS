@@ -2,12 +2,11 @@
 mul_numbers:
     call readNumbers
     
-    mov eax, dword [numberA]
-    imul dword [numberB]
+    fld dword [numberA]
+    fmul dword [numberB]
+    fstp dword [result]
 
-    mov dword [result], eax
-
-    LTOSTR lblResult, eax
+    FTOSTR lblResult, dword [result]
     
     PRINT msgResult, NUM_COLOR    
     PRINT lblResult, STD_COLOR

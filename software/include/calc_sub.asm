@@ -1,20 +1,14 @@
 ; ===============================================
 sub_numbers:
     call readNumbers
-    cmp eax, -1
+    cmp ax, -1
     je main
     
-    mov ecx, dword [numberA]
-    sub ecx, dword [numberB]
-    push ecx
-    jno .noOverflow
-
-    PRINT msgOverflow, createColor(BLACK, RED)
-
-.noOverflow:  
-    pop ecx
-    mov dword [result], ecx
-    LTOSTR lblResult, ecx ; convert result to string
+    fld dword [numberA]
+    fsub dword [numberB]
+    fstp dword [result]
+    
+    FTOSTR lblResult, dword [result] ; convert result to string
 
     PRINT msgResult, NUM_COLOR
     
