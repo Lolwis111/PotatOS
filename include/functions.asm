@@ -104,7 +104,12 @@
     int 0x21
 %endmacro
 
-%macro FTOSTR 2 ; converts arg2 to string in arg1
+%macro FTOSTR 2
+    FTOSTR %1, %2, 3
+%endmacro
+
+%macro FTOSTR 3 ; converts arg2 to string in arg1
+    mov ecx, %3
     mov ebx, %2
     mov edx, %1
     mov ah, 0x1C

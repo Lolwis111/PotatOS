@@ -524,10 +524,13 @@
                         </td>
                         <td>
                             Converts the float from ebx into a string and saves
-                            it in the buffer.
+                            it in the buffer. ECX will get clamped to between 0 and 7.
+                            If the macro is used with no precision argument, then precision
+                            is set to 3.
                         </td>
                         <td>
-                            FTOSTR [str], [float]
+                            FTOSTR [str], [float]<br>
+                            FTOSTR [str], [float], [precision]
                         </td>
                     </tr>
 
