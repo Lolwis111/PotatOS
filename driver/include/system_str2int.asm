@@ -6,7 +6,7 @@
 ; Carryflag <= Error indication
 ; ======================================================
 stringToInt:
-    call stringToInt
+    call private_stringToInt
     iret
 
 private_stringToInt:
