@@ -1,138 +1,141 @@
 ; ===============================================
 ; EBX <= 32 Bit float
-; ES:EDX <= String Pointer
+; DS:EDX <= String Pointer
 ; ECX <= precision
 ; ===============================================
 floatToString:
     pushad
+    push es
 
-    fnstcw word [.fpuControl]        ; load control
-    fwait
+    xor ax, ax
+    mov bp, dx
+    mov es, ax
 
-    mov ax, word [.fpuControl]      ; 
+    fnstcw word [es:.fpuControl]        ; load control
+
+    mov ax, word [es:.fpuControl]      ; 
     or ax, 0x0C00                   ; enable trunc rounding mode
-    mov word [.fpuControl+2], ax    ; save copy
+    mov word [es:.fpuControl+2], ax    ; save copy
 
     ; check if ecx is bigger than 8 if yes clamp it to 8
     ; because internal memory restrictions and also why
     ; would you ever need more we talking single precision here
-    mov ebp, 7
-    cmp ecx, ebp
-    cmova ecx, ebp
+    test ecx, ecx
+    jns .positive
+    neg ecx
+.positive:
+    cmp ecx, 7
+    jbe .noClamp
+    mov ecx, 7
+.noClamp:
+    ; save the register paramters
+    mov byte [es:.sign], 0x00
+    mov dword [es:.precision], ecx
+    mov dword [es:.the_float], ebx 
 
-    mov ebp, edx
-
-    mov byte [.sign], 0x00
-    mov dword [.precision], ecx
-    mov dword [.the_float], ebx 
-
-    test dword [.the_float], 0x80000000
-    setnz byte [.sign]
+    ; test msb  -> 1 means negative
+    test dword [es:.the_float], 0x80000000
+    setnz byte [es:.sign]
 
     ; force most significant bit to 0 (force sign to be positive)
-    and dword [.the_float], 0x7FFFFFFF
-
+    and dword [es:.the_float], 0x7FFFFFFF
     mov eax, 1
 .multiLoop:
-    xor edx, edx
-    mov ebx, 10
-    mul ebx
+    ; eax * 10 = (eax * 5) * 2
+    lea eax, [eax + eax * 4] ; eax = eax*4 + eax = eax*5
+    shl eax, 1 ; eax = eax * 2
     loop .multiLoop
 
-    mov dword [.multi], eax
+    mov dword [es:.multi], eax
 
     call .x87trunc              ; enable truncate mode
-    fld dword [.the_float]      ; load float
+    fld dword [es:.the_float]      ; load float
     frndint                     ; round to integer
-    fistp dword [.intpart]      ; save integer part
+    fistp dword [es:.intpart]      ; save integer part
     call .x87default            ; return to normal rounding
 
-    fld dword [.the_float]      ; load float again
-    fisub dword [.intpart]      ; decimals = (float - int_part)
-    fimul dword [.multi]        ; multiply decimals by 100000
+    fld dword [es:.the_float]      ; load float again
+    fisub dword [es:.intpart]      ; decimals = (float - int_part)
+    fimul dword [es:.multi]        ; multiply decimals by 100000
     frndint                     ; round to int again to get decimals
-    fistp dword [.floatpart]     
+    fistp dword [es:.floatpart]     
 
-    mov edx, .floatString1
-    mov ecx, dword [.intpart]   ; convert integer part to string
+    mov dx, .floatString1
+    mov ecx, dword [es:.intpart]   ; convert integer part to string
     call private_intToString32
 
-    mov edx, .floatString2
-    mov ecx, dword [.floatpart]   ; convert decimals to string
+    mov dx, .floatString2
+    mov ecx, dword [es:.floatpart]   ; convert decimals to string
     call private_intToString32
 
     xor ecx, ecx
-    mov esi, .floatString2
+    mov si, .floatString2
 .countDigits:                   ; count how many decimals there are
-    cmp byte [esi], 0x00
+    cmp byte [es:si], 0x00
     je .counted
-    inc esi
+    inc si
     inc ecx
     jmp .countDigits
 .counted:
-    sub dword [.precision], ecx     ; number of decimals is maximal precision 
+    sub dword [es:.precision], ecx     ; number of decimals is maximal precision 
                                     ; so (precision - #decimals) = leading zeros do insert
 
-    mov edi, .paddedDecimals
+    mov di, .paddedDecimals
 
-    cmp dword [.precision], 0       ; if ecx==.precsion we need no leading zeros
+    cmp dword [es:.precision], 0       ; if ecx==.precsion we need no leading zeros
     je .noLeadingZeros
 
-    push ecx
-    
-    mov ecx, dword [.precision] 
+    mov ecx, dword [es:.precision] 
 .padWith0:
-    mov byte [edi], '0'
-    inc edi
+    mov byte [es:di], '0'
+    inc di
     loop .padWith0
     
-    pop ecx
-
+    mov ecx, dword [es:.precision] 
 .noLeadingZeros:
-    mov esi, .floatString2  ; only copy .floatString2 into .paddedDecimal
+    mov si, .floatString2  ; only copy .floatString2 into .paddedDecimal
     rep movsb
 .dbg:
-    mov edi, ebp
-    mov esi, .floatString1
+    mov di, bp
+    mov si, .floatString1
 
-    cmp byte [.sign], 0x01  ; if sign
+    cmp byte [es:.sign], 0x01  ; if sign
     jne .copy
-    mov byte [edi], '-'     ; put a - at the beginning
-    inc edi
+    mov byte [ds:di], '-'     ; put a - at the beginning
+    inc di
 .copy:
-    mov al, byte [esi]  ; copy integer part into final string
-    inc esi
+    mov al, byte [es:si]  ; copy integer part into final string
+    inc si
     test al, al
     jz .done
-    mov byte [edi], al
+    mov byte [ds:di], al
     inc edi
     jmp .copy
 .done:
-    mov byte [edi], '.'   ; add the dot
-    inc edi
-    mov esi, .paddedDecimals
+    mov byte [ds:di], '.'   ; add the dot
+    inc di
+    mov si, .paddedDecimals
 
 .copy2:
-    mov al, byte [esi]  ; and copy decimals into final string
-    inc esi
+    mov al, byte [es:si]  ; and copy decimals into final string
+    inc si
     test al, al
     jz .done2
-    mov byte [edi], al
-    inc edi
+    mov byte [ds:di], al
+    inc di
     jmp .copy2
 .done2:
-    mov byte[edi], 0x00
+    mov byte[ds:di], 0x00
 
+    pop es
     popad
     iret
 
 .x87trunc:
-    fldcw word [.fpuControl+2]
-    fwait
+    fldcw word [es:.fpuControl+2]
     ret
 .x87default:
-    fldcw word [.fpuControl]
-    fwait
+    fldcw word [es:.fpuControl]
     ret
 
 .the_float dd 0x00000000
