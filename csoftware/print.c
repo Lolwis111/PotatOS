@@ -10,15 +10,16 @@ void main(void)
 {
     unsigned char* mem = (unsigned char*)0xB8000;
 
-    for(int y = 0; y < 25; y++)
+    int y, x;
+    for(y = 0; y < 25; y++)
     {
-        for(int x = 0; x < 80; x++)
-	{
-	    *mem = 'A';
-	    mem++;
-	    *mem = 0x03;
-	    mem++;
-	}
+        for(x = 0; x < 80; x++)
+		{
+		    *mem = 'A';
+		    mem++;
+		    *mem = 0x03;
+		    mem++;
+		}
     }
     
     asm("xor %ax,%ax;int $0x16;");

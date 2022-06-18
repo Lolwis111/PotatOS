@@ -23,6 +23,16 @@ buildSoftware()
 {
     cd ./software/
 
+    if [ ! -d bin/ ] ;
+    then
+        mkdir bin
+    fi;
+
+    if [ ! -d list/ ] ;
+    then
+        mkdir list
+    fi;
+
     # assemble the software
     for file in *.asm
     do
@@ -72,6 +82,16 @@ buildDriver()
 buildTests()
 {
     cd ./tests/
+
+    if [ ! -d bin/ ] ;
+    then
+        mkdir bin
+    fi;
+
+    if [ ! -d list/ ] ;
+    then
+        mkdir list
+    fi;
 
     # assemble the tests
     for file in *.asm
@@ -262,10 +282,10 @@ echo "" # newLine
 echo "> building tests"
 buildTests
 
-echo ""
-echo "> building c software"
+# echo ""
+# echo "> building c software"
 
-make -C csoftware/ || exit # compile c programms
+# make -C csoftware/ || exit # compile c programms
 
 echo "" # newLine
 echo "> installing bootloader"

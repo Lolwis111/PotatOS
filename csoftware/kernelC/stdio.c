@@ -52,7 +52,8 @@ void clearScreen(void)
 {
     char* videoMemory = VIDEO_MEMORY_ADDRESS;
 
-    for(int i = 0; i < FRAME_BUFFER_SIZE; i+=2)
+    int i;
+    for(i = 0; i < FRAME_BUFFER_SIZE; i+=2)
     {
         *videoMemory = 0x20;
         videoMemory++;
@@ -65,7 +66,8 @@ void moveBuffer(void)
 {
     char* source = VIDEO_MEMORY_ADDRESS + 160;
     char* dest = VIDEO_MEMORY_ADDRESS;
-    for(int i = 0; i < FRAME_BUFFER_SIZE; i++)
+    int i;
+    for(i = 0; i < FRAME_BUFFER_SIZE; i++)
     {
         *dest = *source;
         dest++;

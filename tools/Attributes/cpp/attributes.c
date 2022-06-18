@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    for(int i = 0; i < strlen(argv[1]); i++)
+    int i;
+    for(i = 0; i < strlen(argv[1]); i++)
     {
         switch(argv[1][i])
         {

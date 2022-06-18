@@ -5,7 +5,8 @@ void main()
 {
     moveCursor(0, 0);
 
-    for(char c = 32; c < 128; c++)
+    char c;
+    for(c = 32; c < 128; c++)
     {
         printChar(c, (uint8_t)c);
     }
