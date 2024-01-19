@@ -7,7 +7,7 @@
 %ifndef _COMMON_INC_
 %define _COMMON_INC_
 
-%define DEV_YEAR_C "2021"
+%define DEV_YEAR_C "2024"
 %define DEV_YEAR_S "2012"
 
 %define MAJOR_VERSION 2
