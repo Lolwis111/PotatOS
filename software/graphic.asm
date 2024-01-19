@@ -1,5 +1,5 @@
-; Testprogramm für Grafikanwendungen
-; Benutzt Modus 0x13 (320x200 Pixel, 256 Farben)
+; little graphics demo
+; use vga mode 0x13 (320x200 pixels, 256 colors)
 
 %include "defines.asm"
 %include "functions.asm"
@@ -7,7 +7,7 @@
 [ORG SOFTWARE_BASE]
 [BITS 16]
 
-; Breite und Höhe
+; screen size in pixels
 %define SCREEN_WIDTH 320
 %define SCREEN_HEIGHT 200
 
@@ -15,16 +15,25 @@ jmp init
 
 ; =================================
 init:
-    mov ah, 0x00 ; Grafikmodus aktivieren
+    mov ah, 0x00 ; switch to graphics mode
     mov al, 0x13
     int 0x10
     
-    mov ax, VIDEO_GRAPHICS_SEGMENT ; Segment auf Grafikspeicher zeigen
+    mov ah, 0x01
+    int 0x16
+    jz .bufferclear
+    mov ah, 0x00
+    int 0x16
+
+.bufferclear:
+
+
+    mov ax, VIDEO_GRAPHICS_SEGMENT ; point segment to video memory
     mov gs, ax
 
 ; =================================
 mainLoop:
-    mov al, 0xFF        ; Bildschirm auf Schwarz setzen
+    mov al, 0xFF        ; clear screen to black
     call clearScreen
     
     mov ecx, 10
@@ -62,12 +71,21 @@ mainLoop:
     
     SLEEP 20
 
+    mov ah, 0x01
+    int 0x16
+    jnz exit
+
     jmp mainLoop
 ; =================================
 
 
 ; =================================
 exit:
+    mov ah, 0x00
+    int 0x16
+    cmp ah, 0x01
+    jne mainLoop
+
     mov ah, 0x00
     mov al, 0x03
     int 0x10
@@ -81,8 +99,8 @@ exit:
     
 
 ; =================================
-; Überschreibt das komplette Bild
-; mit der Farbe in al
+; Override screen with the color
+; stored in AL
 ; =================================
 clearScreen:
     pusha
@@ -98,11 +116,11 @@ clearScreen:
 ; =================================
 
 ; =================================
-; AX <= Breite
-; BX <= Höhe
+; AX <= Width
+; BX <= Height
 ; CX <= X
 ; DX <= Y
-; BP <= Farbe
+; BP <= Color
 ; =================================
 drawRect:   
     pusha
