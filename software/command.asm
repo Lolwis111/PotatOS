@@ -36,6 +36,7 @@ start:
     PRINT NEWLINE
     
 main:
+    cld
     call clearBuffer ; clear all the buffers
     
     PRINT ready ; print CMD>
@@ -45,6 +46,7 @@ main:
     mov si, inputBuffer ; convert it to all upper case letters
     call UpperCase
     
+    cld
     call parseCommands ; parse the command (extract arguments)
 
     STRCMP command, cmdLS

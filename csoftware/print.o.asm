@@ -1,4 +1,5 @@
 	.file	"print.c"
+	.text
 #APP
 	.code16gcc
 
@@ -10,20 +11,15 @@
 main:
 .LFB0:
 	.cfi_startproc
-	pushl	%ebp
-	.cfi_def_cfa_offset 8
-	.cfi_offset 5, -8
 	movl	$753664, %edx
-	movl	%esp, %ebp
-	.cfi_def_cfa_register 5
 .L2:
 	xorl	%eax, %eax
-.L5:
+.L3:
 	movb	$65, (%edx,%eax,2)
 	movb	$3, 1(%edx,%eax,2)
 	incl	%eax
 	cmpl	$80, %eax
-	jne	.L5
+	jne	.L3
 	addl	$160, %edx
 	cmpl	$757664, %edx
 	jne	.L2
@@ -32,12 +28,9 @@ main:
 	xor %ax,%ax;int $0x16;
 # 0 "" 2
 #NO_APP
-	popl	%ebp
-	.cfi_restore 5
-	.cfi_def_cfa 4, 4
 	ret
 	.cfi_endproc
 .LFE0:
 	.size	main, .-main
-	.ident	"GCC: (GNU) 4.8.5 20150623 (Red Hat 4.8.5-44)"
+	.ident	"GCC: (SUSE Linux) 13.3.0"
 	.section	.note.GNU-stack,"",@progbits

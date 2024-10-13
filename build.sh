@@ -282,10 +282,10 @@ echo "" # newLine
 echo "> building tests"
 buildTests
 
-# echo ""
-# echo "> building c software"
+echo ""
+echo "> building c software"
 
-# make -C csoftware/ || exit # compile c programms
+make -C csoftware/ || exit # compile c programms
 
 echo "" # newLine
 echo "> installing bootloader"

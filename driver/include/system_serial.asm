@@ -25,7 +25,6 @@ com1_readChar:
     ret
 
 com1_sendMessage:
-    mov si, dx
     call com1_privateSendMessage
     iret
 
@@ -35,8 +34,9 @@ com1_privateSendMessage:
     lodsb
     cmp al, 0xFF
     je .done
-    call com1_sendByte
+    call com1_privateSendByte
     jmp .byteLoop
+
 .done:
     ret
 

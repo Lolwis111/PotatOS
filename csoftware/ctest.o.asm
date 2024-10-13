@@ -1,10 +1,10 @@
 	.file	"ctest.c"
+	.text
 #APP
 	.code16gcc
 
 	call $0, $main; xor %eax,%eax;xor %ebx,%ebx;int $0x21;
 #NO_APP
-	.text
 	.globl	farWrite_byte
 	.type	farWrite_byte, @function
 farWrite_byte:
@@ -15,11 +15,11 @@ farWrite_byte:
 	.cfi_offset 5, -8
 	movl	%esp, %ebp
 	.cfi_def_cfa_register 5
-	movl	16(%ebp), %edx
 	pushl	%ebx
 	.cfi_offset 3, -12
-	movl	8(%ebp), %eax
-	movl	12(%ebp), %ebx
+	movswl	8(%ebp), %eax
+	movswl	12(%ebp), %ebx
+	movb	16(%ebp), %dl
 #APP
 # 28 "ctest.c" 1
 	mov %ax, %gs;movb %dl, %gs:(%bx);
@@ -56,7 +56,7 @@ degreeToRadians:
 	.globl	radianToDegree
 	.type	radianToDegree, @function
 radianToDegree:
-.LFB2:
+.LFB16:
 	.cfi_startproc
 	pushl	%ebp
 	.cfi_def_cfa_offset 8
@@ -70,7 +70,7 @@ radianToDegree:
 	.cfi_def_cfa 4, 4
 	ret
 	.cfi_endproc
-.LFE2:
+.LFE16:
 	.size	radianToDegree, .-radianToDegree
 	.globl	abs
 	.type	abs, @function
@@ -82,13 +82,13 @@ abs:
 	.cfi_offset 5, -8
 	movl	%esp, %ebp
 	.cfi_def_cfa_register 5
-	movl	8(%ebp), %eax
+	movl	8(%ebp), %edx
 	popl	%ebp
 	.cfi_restore 5
 	.cfi_def_cfa 4, 4
-	cltd
-	xorl	%edx, %eax
-	subl	%edx, %eax
+	movl	%edx, %eax
+	negl	%eax
+	cmovs	%edx, %eax
 	ret
 	.cfi_endproc
 .LFE3:
@@ -130,8 +130,8 @@ fsincos:
 	.cfi_offset 5, -8
 	movl	%esp, %ebp
 	.cfi_def_cfa_register 5
-	movl	16(%ebp), %edx
 	movl	12(%ebp), %eax
+	movl	16(%ebp), %edx
 #APP
 # 64 "ctest.c" 1
 	FLD 8(%ebp);FSINCOS;FSTP (%eax);FSTP (%edx)
@@ -154,32 +154,32 @@ putPixel:
 	.cfi_offset 5, -8
 	movl	%esp, %ebp
 	.cfi_def_cfa_register 5
-	movl	8(%ebp), %eax
+	movl	8(%ebp), %ecx
 	pushl	%ebx
 	.cfi_offset 3, -12
-	movl	16(%ebp), %edx
-	movl	12(%ebp), %ebx
-	testl	%eax, %eax
+	movl	12(%ebp), %eax
+	movb	16(%ebp), %dl
+	testl	%ecx, %ecx
 	js	.L16
-	cmpl	$321, %eax
+	cmpl	$320, %ecx
+	jle	.L14
 	movl	$319, %ecx
-	cmovge	%ecx, %eax
 	jmp	.L14
 .L16:
-	xorl	%eax, %eax
+	xorl	%ecx, %ecx
 .L14:
-	testl	%ebx, %ebx
+	testl	%eax, %eax
 	js	.L18
-	cmpl	$201, %ebx
-	movl	$199, %ecx
-	cmovge	%ecx, %ebx
+	cmpl	$200, %eax
+	jle	.L15
+	movl	$199, %eax
 	jmp	.L15
 .L18:
-	xorl	%ebx, %ebx
+	xorl	%eax, %eax
 .L15:
-	imull	$320, %ebx, %ebx
-	addl	%eax, %ebx
+	imull	$320, %eax, %ebx
 	movl	$-24576, %eax
+	addl	%ecx, %ebx
 #APP
 # 28 "ctest.c" 1
 	mov %ax, %gs;movb %dl, %gs:(%bx);
@@ -205,11 +205,11 @@ cls:
 	movl	$-24576, %eax
 	movl	%esp, %ebp
 	.cfi_def_cfa_register 5
-	movb	8(%ebp), %dl
 	pushl	%ebx
 	.cfi_offset 3, -12
+	movb	8(%ebp), %dl
 	xorl	%ebx, %ebx
-.L24:
+.L23:
 #APP
 # 28 "ctest.c" 1
 	mov %ax, %gs;movb %dl, %gs:(%bx);
@@ -217,7 +217,7 @@ cls:
 #NO_APP
 	incl	%ebx
 	cmpl	$64000, %ebx
-	jne	.L24
+	jne	.L23
 	popl	%ebx
 	.cfi_restore 3
 	popl	%ebp
@@ -240,69 +240,75 @@ drawLine:
 	pushl	%edi
 	pushl	%esi
 	pushl	%ebx
-	subl	$16, %esp
+	subl	$44, %esp
 	.cfi_offset 7, -12
 	.cfi_offset 6, -16
 	.cfi_offset 3, -20
-	movl	16(%ebp), %edx
-	subl	8(%ebp), %edx
-	movl	20(%ebp), %esi
-	movl	%edx, %eax
-	movl	%edx, %ecx
-	sarl	$31, %eax
-	xorl	%eax, %ecx
-	subl	%eax, %ecx
-	movl	16(%ebp), %eax
-	cmpl	%eax, 8(%ebp)
-	setl	%al
-	xorl	%ebx, %ebx
-	subl	12(%ebp), %esi
-	movzbl	%al, %eax
-	leal	-1(%eax,%eax), %eax
-	movl	%esi, %edx
-	sarl	$31, %edx
-	xorl	%edx, %esi
-	subl	%edx, %esi
-	movsbl	24(%ebp), %edx
-	movl	%esi, %edi
-	negl	%edi
-	movl	%edi, -16(%ebp)
+	movl	8(%ebp), %ebx
+	movl	16(%ebp), %edi
+	movl	12(%ebp), %eax
+	movb	24(%ebp), %cl
+	subl	%ebx, %edi
+	movl	%edi, -28(%ebp)
+	jns	.L27
+	movl	%ebx, %esi
+	subl	16(%ebp), %esi
+	movl	%esi, -28(%ebp)
+.L27:
+	xorl	%edx, %edx
+	cmpl	%ebx, 16(%ebp)
+	setg	%dl
+	movl	%edx, %edi
+	leal	-1(%edi,%edi), %esi
 	movl	20(%ebp), %edi
-	cmpl	%edi, 12(%ebp)
-	movl	%edx, -20(%ebp)
-	setl	%bl
-	movl	%ebx, %edi
-	movl	%ecx, %ebx
-	leal	-1(%edi,%edi), %edi
-	subl	%esi, %ebx
+	movl	%esi, -36(%ebp)
+	subl	%eax, %edi
+	movl	%edi, -32(%ebp)
+	jns	.L29
+	movl	%eax, %esi
+	subl	20(%ebp), %esi
+	movl	%esi, -32(%ebp)
 .L29:
-	pushl	-20(%ebp)
-	pushl	12(%ebp)
-	pushl	8(%ebp)
-	movl	%ecx, -28(%ebp)
-	movl	%eax, -24(%ebp)
+	movl	-32(%ebp), %edi
+	movl	-28(%ebp), %esi
+	negl	%edi
+	cmpl	%eax, 20(%ebp)
+	movl	%edi, -40(%ebp)
+	setg	%dl
+	movzbl	%dl, %edi
+	movl	-32(%ebp), %edx
+	leal	-1(%edi,%edi), %edi
+	subl	%edx, %esi
+	movsbl	%cl, %edx
+	movl	%edx, -44(%ebp)
+.L31:
+	pushl	%edx
+	pushl	-44(%ebp)
+	pushl	%eax
+	movl	%eax, 12(%ebp)
+	pushl	%ebx
 	call	putPixel
-	movl	20(%ebp), %eax
-	addl	$12, %esp
-	cmpl	%eax, 12(%ebp)
-	movl	-28(%ebp), %ecx
-	movl	-24(%ebp), %eax
-	jne	.L36
-	movl	16(%ebp), %edx
-	cmpl	%edx, 8(%ebp)
+	addl	$16, %esp
+	movl	12(%ebp), %eax
+	cmpl	16(%ebp), %ebx
+	jne	.L38
+	cmpl	20(%ebp), %eax
 	je	.L26
-.L36:
-	leal	(%ebx,%ebx), %edx
-	cmpl	-16(%ebp), %edx
-	jle	.L32
-	addl	%eax, 8(%ebp)
-	subl	%esi, %ebx
-.L32:
-	cmpl	%ecx, %edx
-	jge	.L29
-	addl	%ecx, %ebx
-	addl	%edi, 12(%ebp)
-	jmp	.L29
+.L38:
+	leal	(%esi,%esi), %ecx
+	cmpl	%ecx, -40(%ebp)
+	jge	.L34
+	movl	-32(%ebp), %edx
+	subl	%edx, %esi
+	movl	-36(%ebp), %edx
+	addl	%edx, %ebx
+.L34:
+	cmpl	%ecx, -28(%ebp)
+	jle	.L31
+	movl	-28(%ebp), %ecx
+	addl	%edi, %eax
+	addl	%ecx, %esi
+	jmp	.L31
 .L26:
 	leal	-12(%ebp), %esp
 	popl	%ebx
@@ -333,43 +339,44 @@ drawCircle:
 	.cfi_offset 6, -12
 	.cfi_offset 3, -16
 	xorl	%ebx, %ebx
-	subl	$24, %esp
+	subl	$32, %esp
 	movsbl	20(%ebp), %esi
-.L43:
-	movl	%ebx, -28(%ebp)
-	fildl	-28(%ebp)
+.L44:
+	movl	%ebx, -32(%ebp)
+	fildl	-32(%ebp)
 	fstps	-12(%ebp)
 #APP
 # 64 "ctest.c" 1
 	FLD -12(%ebp);FSINCOS;FSTP -20(%ebp);FSTP -16(%ebp)
 # 0 "" 2
 #NO_APP
-	fnstcw	-30(%ebp)
-	flds	16(%ebp)
-	incl	%ebx
-	fmuls	-20(%ebp)
-	pushl	%esi
-	movw	-30(%ebp), %ax
-	orb	$12, %ah
-	movw	%ax, -32(%ebp)
-	fldcw	-32(%ebp)
-	fistpl	-28(%ebp)
-	fldcw	-30(%ebp)
-	movl	-28(%ebp), %eax
-	addl	12(%ebp), %eax
-	flds	16(%ebp)
-	fmuls	-16(%ebp)
 	pushl	%eax
-	fldcw	-32(%ebp)
-	fistpl	-28(%ebp)
-	fldcw	-30(%ebp)
-	movl	-28(%ebp), %eax
+	incl	%ebx
+	pushl	%esi
+	flds	16(%ebp)
+	fnstcw	-26(%ebp)
+	fmuls	-20(%ebp)
+	movw	-26(%ebp), %ax
+	orb	$12, %ah
+	movw	%ax, -28(%ebp)
+	fldcw	-28(%ebp)
+	fistpl	-32(%ebp)
+	fldcw	-26(%ebp)
+	flds	16(%ebp)
+	movl	-32(%ebp), %eax
+	fmuls	-16(%ebp)
+	addl	12(%ebp), %eax
+	pushl	%eax
+	fldcw	-28(%ebp)
+	fistpl	-32(%ebp)
+	fldcw	-26(%ebp)
+	movl	-32(%ebp), %eax
 	addl	8(%ebp), %eax
 	pushl	%eax
 	call	putPixel
-	addl	$12, %esp
+	addl	$16, %esp
 	cmpl	$360, %ebx
-	jne	.L43
+	jne	.L44
 	leal	-8(%ebp), %esp
 	popl	%ebx
 	.cfi_restore 3
@@ -387,19 +394,11 @@ drawCircle:
 graphicsMode:
 .LFB10:
 	.cfi_startproc
-	pushl	%ebp
-	.cfi_def_cfa_offset 8
-	.cfi_offset 5, -8
-	movl	%esp, %ebp
-	.cfi_def_cfa_register 5
 #APP
 # 149 "ctest.c" 1
 	mov $0x0013, %ax;int $0x10;
 # 0 "" 2
 #NO_APP
-	popl	%ebp
-	.cfi_restore 5
-	.cfi_def_cfa 4, 4
 	ret
 	.cfi_endproc
 .LFE10:
@@ -409,19 +408,11 @@ graphicsMode:
 textMode:
 .LFB11:
 	.cfi_startproc
-	pushl	%ebp
-	.cfi_def_cfa_offset 8
-	.cfi_offset 5, -8
-	movl	%esp, %ebp
-	.cfi_def_cfa_register 5
 #APP
 # 157 "ctest.c" 1
 	mov $0x0003, %ax;int $0x10;
 # 0 "" 2
 #NO_APP
-	popl	%ebp
-	.cfi_restore 5
-	.cfi_def_cfa 4, 4
 	ret
 	.cfi_endproc
 .LFE11:
@@ -431,27 +422,19 @@ textMode:
 readchar:
 .LFB12:
 	.cfi_startproc
-	pushl	%ebp
-	.cfi_def_cfa_offset 8
-	.cfi_offset 5, -8
-	movl	%esp, %ebp
-	.cfi_def_cfa_register 5
 #APP
 # 166 "ctest.c" 1
 	mov $1, %ah;int $0x16;
 # 0 "" 2
 #NO_APP
 	testb	%al, %al
-	je	.L50
+	je	.L49
 #APP
 # 175 "ctest.c" 1
 	xor %ax, %ax;int $0x16;
 # 0 "" 2
 #NO_APP
-.L50:
-	popl	%ebp
-	.cfi_restore 5
-	.cfi_def_cfa 4, 4
+.L49:
 	ret
 	.cfi_endproc
 .LFE12:
@@ -462,87 +445,87 @@ readchar:
 main:
 .LFB13:
 	.cfi_startproc
+	leal	4(%esp), %ecx
+	.cfi_def_cfa 1, 0
+	andl	$-16, %esp
+	pushl	-4(%ecx)
 	pushl	%ebp
-	.cfi_def_cfa_offset 8
-	.cfi_offset 5, -8
 	movl	%esp, %ebp
-	.cfi_def_cfa_register 5
+	.cfi_escape 0x10,0x5,0x2,0x75,0
 	pushl	%edi
 	pushl	%esi
-	.cfi_offset 7, -12
-	.cfi_offset 6, -16
+	.cfi_escape 0x10,0x7,0x2,0x75,0x7c
+	.cfi_escape 0x10,0x6,0x2,0x75,0x78
 	xorl	%esi, %esi
 	pushl	%ebx
-	subl	$36, %esp
-	.cfi_offset 3, -20
+	pushl	%ecx
+	.cfi_escape 0xf,0x3,0x75,0x70,0x6
+	.cfi_escape 0x10,0x3,0x2,0x75,0x74
+	subl	$40, %esp
 	call	graphicsMode
-.L56:
+.L55:
 	call	readchar
 	testb	%al, %al
-	je	.L65
-	pushl	$0
+	je	.L64
+	subl	$12, %esp
 	movl	%esi, %ebx
+	pushl	$0
 	call	cls
+	addl	$16, %esp
 	xorl	%edx, %edx
-	popl	%eax
-	leal	5(%esi), %eax
-	movl	%eax, -44(%ebp)
-.L57:
-	cmpl	%ebx, -44(%ebp)
-	jl	.L60
-	leal	359(%ebx), %eax
+.L56:
 	movl	%ebx, %edi
-	movl	%eax, -40(%ebp)
-.L61:
-	cmpl	%edi, -40(%ebp)
-	jl	.L66
-	movl	%edi, -36(%ebp)
-	fildl	-36(%ebp)
-	fstps	-16(%ebp)
+.L58:
+	movl	%edi, -48(%ebp)
+	fildl	-48(%ebp)
+	fstps	-28(%ebp)
 #APP
 # 64 "ctest.c" 1
-	FLD -16(%ebp);FSINCOS;FSTP -24(%ebp);FSTP -20(%ebp)
+	FLD -28(%ebp);FSINCOS;FSTP -36(%ebp);FSTP -32(%ebp)
 # 0 "" 2
 #NO_APP
-	xorl	%ecx, %ecx
+	xorl	%eax, %eax
 	cmpl	$5, %edx
-	ja	.L58
-	movsbl	CSWTCH.20(%edx), %ecx
-.L58:
-	fnstcw	-30(%ebp)
+	jg	.L57
+	movsbl	CSWTCH.20(%edx), %eax
+.L57:
+	subl	$12, %esp
 	flds	.LC2
 	addl	$6, %edi
-	pushl	%ecx
-	flds	-24(%ebp)
+	movl	%edx, -52(%ebp)
+	pushl	%eax
+	fnstcw	-42(%ebp)
+	flds	-36(%ebp)
 	fmul	%st(1), %st
-	movw	-30(%ebp), %cx
-	movl	%edx, -48(%ebp)
-	orb	$12, %ch
-	movw	%cx, -32(%ebp)
-	fldcw	-32(%ebp)
-	fistpl	-36(%ebp)
-	fldcw	-30(%ebp)
-	movl	-36(%ebp), %ecx
-	fmuls	-20(%ebp)
-	addl	$100, %ecx
-	pushl	%ecx
-	fldcw	-32(%ebp)
-	fistpl	-36(%ebp)
-	fldcw	-30(%ebp)
-	movl	-36(%ebp), %ecx
-	addl	$160, %ecx
-	pushl	%ecx
+	movw	-42(%ebp), %ax
+	orb	$12, %ah
+	movw	%ax, -44(%ebp)
+	fldcw	-44(%ebp)
+	fistpl	-48(%ebp)
+	fldcw	-42(%ebp)
+	movl	-48(%ebp), %eax
+	addl	$100, %eax
+	pushl	%eax
+	fmuls	-32(%ebp)
+	fldcw	-44(%ebp)
+	fistpl	-48(%ebp)
+	fldcw	-42(%ebp)
+	movl	-48(%ebp), %eax
+	addl	$160, %eax
+	pushl	%eax
 	pushl	$100
 	pushl	$160
 	call	drawLine
-	addl	$20, %esp
-	movl	-48(%ebp), %edx
-	jmp	.L61
-.L66:
-	incl	%edx
+	leal	359(%ebx), %eax
+	addl	$32, %esp
+	cmpl	%eax, %edi
+	movl	-52(%ebp), %edx
+	jle	.L58
 	incl	%ebx
-	jmp	.L57
-.L60:
+	incl	%edx
+	leal	5(%esi), %eax
+	cmpl	%ebx, %eax
+	jge	.L56
 	pushl	$4
 	incl	%esi
 	pushl	$0x41c80000
@@ -560,13 +543,16 @@ main:
 	pushl	$100
 	pushl	$160
 	call	drawCircle
-	pushl	$10
+	movl	$10, (%esp)
 	call	sleep
-	addl	$20, %esp
-	jmp	.L56
-.L65:
+	addl	$16, %esp
+	jmp	.L55
+.L64:
 	call	textMode
-	leal	-12(%ebp), %esp
+	leal	-16(%ebp), %esp
+	popl	%ecx
+	.cfi_restore 1
+	.cfi_def_cfa 1, 0
 	popl	%ebx
 	.cfi_restore 3
 	popl	%esi
@@ -575,6 +561,7 @@ main:
 	.cfi_restore 7
 	popl	%ebp
 	.cfi_restore 5
+	leal	-4(%ecx), %esp
 	.cfi_def_cfa 4, 4
 	ret
 	.cfi_endproc
@@ -598,5 +585,5 @@ CSWTCH.20:
 	.align 4
 .LC2:
 	.long	1128792064
-	.ident	"GCC: (GNU) 4.8.5 20150623 (Red Hat 4.8.5-44)"
+	.ident	"GCC: (SUSE Linux) 13.3.0"
 	.section	.note.GNU-stack,"",@progbits

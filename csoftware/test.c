@@ -5,6 +5,9 @@ asm(".code16gcc\n");
 
 asm("call $0, $main; xor %eax,%eax;xor %ebx,%ebx;int $0x21;");
 
+char buffer[8];
+char decimals[] = "0123456789ABCDEF";
+
 void print(char* string)
 {
     asm volatile (
@@ -17,9 +20,24 @@ void print(char* string)
     );
 }
 
+void charToHex(int low, int high, char* hex)
+{
+    *hex = decimals[high];
+    *(hex+1) = decimals[low];
+    *(hex+2) = 0;
+}
+
 int main(void)
 {
-    
+    for(int y = 0; y < 16; y++)
+    {
+        for(int x = 0; x < 16; x++)
+        {
+            charToHex(y, x, buffer);
+            print(buffer);
+        }
+        print("\r\n");
+    }
 
     return 0;
 }
