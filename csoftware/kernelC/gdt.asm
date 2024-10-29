@@ -1,6 +1,7 @@
 %ifndef _GDT_ASM_
 %define _GDT_ASM_
 
+align 4
 gdt_start:
     dd 0x00000000
     dd 0x00000000

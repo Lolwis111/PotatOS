@@ -1,7 +1,7 @@
 %ifndef _A20_ASM_
 %define _A20_ASM_
 
-[BITS 32]
+[BITS 16]
 
 ; ========================================
 ; enable the a20 gate to increase 

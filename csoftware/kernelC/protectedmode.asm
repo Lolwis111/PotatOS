@@ -11,9 +11,9 @@ kernel db "KERNEL  SYS"
 start:
     LOADFILE kernel, 0, KERNEL_SEGMENT
 
-    call switchToPM
+    call enableA20
 
-    jmp $
+    jmp switchToPM
 
 %include "gdt.asm"
 %include "switchToPM.asm"
@@ -22,12 +22,12 @@ start:
 
 [BITS 32]
 beginPM:
-    call enableA20
-
+    
     mov ebx, msgProtected
     call print32
+
     call KERNEL_OFFSET
     
     jmp $
 
-msgProtected db "We are now in 32 Bit protected mode."
+msgProtected db "We are now in 32 Bit protected mode.", 0x00

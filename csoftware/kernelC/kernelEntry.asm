@@ -3,4 +3,5 @@
 [GLOBAL _start]
 _start:
     call main
-    jmp $
+    cli
+    hlt

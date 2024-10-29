@@ -120,7 +120,7 @@ mount_point="/tmp/tmp-loop"
 
 systemSysLimit=12288
 
-A20=false       # assemble the code to enable the A20 gate, this allows to 
+A20=false        # assemble the code to enable the A20 gate, this allows to 
                 # access the segment just over 1 MB resulting in 1MB+64KB available RAM
                 # This also enables the ALLOC/FREE routines which allow programs
                 # to request pages of 512 Byte in this upper segment
@@ -146,6 +146,7 @@ rm -f include/language.asm
 
 # clean the 32 bit kernel software
 make clean -C csoftware/kernelC/
+make clean -C csoftware/graphics/
 
 # exit here if only clean was asked
 if [ "$1" = "clean" ] ; then
@@ -285,7 +286,10 @@ buildTests
 echo ""
 echo "> building c software"
 
-make -C csoftware/ || exit # compile c programms
+make -C csoftware/
+make all -C csoftware/graphics/
+
+make all -C csoftware/kernelC
 
 echo "" # newLine
 echo "> installing bootloader"
@@ -330,6 +334,8 @@ do
     cp $file $mount_point/system/
 done;
 
+cp exceptions/except.sys $mount_point/system/
+
 # copy the programs
 for file in software/bin/*.bin
 do
@@ -338,8 +344,9 @@ do
 done;
 
 cp csoftware/*.bin $mount_point/c-tests/ # copy the c software
-# cp csoftware/kernelC/kernel.sys $mount_point/c-tests/
-# cp csoftware/kernelC/pmtest.bin $mount_point/c-tests/
+cp csoftware/graphics/*.bin $mount_point/c-tests/ # copy the c software
+cp csoftware/kernelC/kernel.sys $mount_point/c-tests/
+cp csoftware/kernelC/pmtest.bin $mount_point/c-tests/
 
 # viewer + images are in an extra directory
 mv $mount_point/system/viewer.bin /tmp/tmp-loop/images/viewer.bin
