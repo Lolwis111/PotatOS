@@ -1,0 +1,5 @@
+*.o
+*.dis
+*.sys
+*.bin
+libminic.a
