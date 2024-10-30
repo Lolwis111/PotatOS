@@ -3,3 +3,4 @@
 *.sys
 *.bin
 libminic.a
+asm/

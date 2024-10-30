@@ -2,6 +2,7 @@
 #define _STRING_H_
 
 #include "stdint.h"
+#include "stdlib.h"
 
 int strncmp(const char* str1, const char* str2, int n);
 int strcmp(const char* str1, const char* str2);

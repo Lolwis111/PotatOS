@@ -4,8 +4,9 @@
 #include "stdint.h"
 #include "io.h"
 
-uint8_t screenX = 0, screenY = 0;
-char global_color = 0x07;
+static uint8_t screenX = 0;
+static uint8_t screenY = 0;
+static char global_color = 0x07;
 
 void setColor(uint8_t c)
 {
@@ -15,7 +16,7 @@ void setColor(uint8_t c)
     if(l != h) global_color = c;
 }
 
-void _asm_moveBuffer()
+static void moveBuffer()
 {
     char* dest = (char*)0x000B8000;
     char* src = dest + (screenX * 2);
@@ -32,7 +33,7 @@ void _asm_moveBuffer()
     screenY = 23;
 }
 
-void _putchar(char c, uint8_t color)
+static void _putchar(char c, uint8_t color)
 {
     uint32_t offset = (screenY * 160) + (screenX * 2);
     uint32_t addr = 0x000B8000;
@@ -70,11 +71,18 @@ void _putchar(char c, uint8_t color)
     if(screenY >= 23)
     {
         screenY = 23;
-        _asm_moveBuffer();
+        moveBuffer();
     }
 }
 
-void putchar(char c, uint8_t color)
+int putchar(char c)
+{
+    putchar_c(c, global_color);
+
+    return 0;
+}
+
+void putchar_c(char c, uint8_t color)
 {
     _putchar(c, color);
 
@@ -99,16 +107,16 @@ static int printstring(const char* str)
 int puts(const char* str)
 {
     int i = printstring(str);
-    putchar('\r', global_color);
-    putchar('\n', global_color);
+    putchar('\r');
+    putchar('\n');
     return i+2;
 }
 
 
-static void itoa(int num, char* buf, int base)
+static void itoa(long num, char* buf, int base)
 {
-    int neg = 0;
-    int i = 0;
+    long neg = 0;
+    long i = 0;
 
     if (num == 0)
     {
@@ -125,7 +133,7 @@ static void itoa(int num, char* buf, int base)
 
     while(num != 0)
     {
-        int r = num % base;
+        long r = num % base;
         buf[i++] = (r > 9) ? (r - 10) + 'a' : r + '0';
         num = num / base;
     }
@@ -136,8 +144,8 @@ static void itoa(int num, char* buf, int base)
         i++;
     }
 
-    int start = 0;
-    int end = i - 1;
+    long start = 0;
+    long end = i - 1;
     while(start < end)
     {
         char t = buf[start];
@@ -150,10 +158,28 @@ static void itoa(int num, char* buf, int base)
     buf[i] = 0;
 }
 
+static void ftoa(double d, char* dest)
+{
+    int mul = 10000000;
+
+    long intpart = (long)d;
+    long rest = (long)((d - intpart) * mul);
+
+    char buffer[20];
+    itoa(intpart, buffer, 10);
+
+    strcpy(dest, buffer);
+    strcat(dest, ".");
+
+    itoa(rest, buffer, 10);
+
+    strcat(dest, buffer);
+}
+
 int vsprintf(char* dest, const char* format, __builtin_va_list val)
 {
     size_t len = 0;
-    char buffer[20];
+    char buffer[32];
 
     char* ptr = dest;
 
@@ -178,6 +204,17 @@ int vsprintf(char* dest, const char* format, __builtin_va_list val)
                     int i = __builtin_va_arg(val, int);
 
                     itoa(i, buffer, 10);
+
+                    len += strlen(buffer);
+
+                    if(ptr != NULL) strcat(ptr, buffer);
+                    break;
+                }
+                case 'f':
+                {
+                    double d = __builtin_va_arg(val, double);
+
+                    ftoa(d, buffer);
 
                     len += strlen(buffer);
 
@@ -218,7 +255,6 @@ int vsprintf(char* dest, const char* format, __builtin_va_list val)
                 case 'c':
                 {
                     char c = (char)__builtin_va_arg(val, int);
-                    // putchar(c, global_color);
 
                     buffer[0] = c;
                     buffer[1] = '\0';
@@ -231,7 +267,6 @@ int vsprintf(char* dest, const char* format, __builtin_va_list val)
                 }
                 case '%':
                 {
-                    putchar('%', global_color);
                     buffer[0] = '%';
                     buffer[1] = '\0';
 
@@ -372,14 +407,14 @@ static void _readChar(KEY_S* k)
     }
 }
 
-char readChar()
+int getchar(void)
 {
     KEY_S k = { .ascii = 0, .scancode = 0 };
     _readChar(&k);
     return k.ascii;
 }
 
-int readLine(char* buffer, int length)
+char* gets(char* str)
 {
     int counter = 0;
     while(1)
@@ -389,8 +424,8 @@ int readLine(char* buffer, int length)
 
         if(k.scancode == KEY_ENTER)
         {
-            *(buffer+counter) = 0;
-            return counter;
+            *(str + counter) = 0;
+            return str;
         }
 
         if(k.scancode == KEY_BACKSPACE)
@@ -399,12 +434,12 @@ int readLine(char* buffer, int length)
             {
                 counter--;
                 screenX--;
-                putchar(' ', global_color);
+                putchar(' ');
 
                 screenX--;
                 setCursorPosition(screenX, screenY);
 
-                *(buffer+counter) = 0;
+                *(str + counter) = 0;
             }
         }
         else if(k.ascii == 0)
@@ -413,16 +448,13 @@ int readLine(char* buffer, int length)
         }
         else 
         {
-            if(counter < length-1)
-            {
-                *(buffer+counter) = k.ascii;
-                counter++;
-                putchar(k.ascii, global_color);
-            }
+            *(str + counter) = k.ascii;
+            counter++;
+            putchar(k.ascii);
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 void setCursorPosition(int x, int y)
