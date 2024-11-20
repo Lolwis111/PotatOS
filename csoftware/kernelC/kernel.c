@@ -1,112 +1,301 @@
 #include "stdio.h"
 #include "string.h"
-#include "time.h"
+#include "stdlib.h"
+#include "math.h"
+#include "serial.h"
+#include "io.h"
+#include "pic.h"
+#include "idt.h"
+#include "exceptions_isr.h"
+#include "irq_isr.h"
+#include "dma.h"
+#include "floppy.h"
+#include "sleep.h"
+
+void floppy_detect_drives()
+{
+    const char * drive_types[8] = 
+    {
+        "none",
+        "360kB 5.25\"",
+        "1.2MB 5.25\"",
+        "720kB 3.5\"",
+        "1.44MB 3.5\"",
+        "2.88MB 3.5\"",
+        "unknown type",
+        "unknown type"
+    };
+
+   outportb(0x70, 0x10);
+   uint8_t drives = inportb(0x71);
+
+   printf(" - Floppy drive 0: %s\r\n", drive_types[drives >> 4]);
+   printf(" - Floppy drive 1: %s\r\n", drive_types[drives & 0xf]);
+}
 
 void clearscreen()
 {
-    /* sketchy way of doing it */
-    setCursorPosition(0, 0);
-    
-    for(int i = 0; i < 80*25; i++)
+    unsigned char* vmem = (unsigned char*)0xB8000;
+    for(int i = 0; i < 80 * 25; i++)
     {
-        putchar(' ', 0x07);
+        *vmem = ' ';
+        vmem++;
+        *vmem = 0x07;
+        vmem++;
     }
 
     setCursorPosition(0, 0);
 }
 
-int main()
+void sendPS2Command(uint8_t command)
 {
-    initKeyboard();
-    // initSerial();
+    while ((inportb(STATUS_PORT) & 0x02) > 0);
+
+    outportb(COMMAND_PORT, command);
+}
+
+void initKeyboard()
+{
+    sendPS2Command(0xAD);
+
+    inportb(DATA_PORT);
+
+    sendPS2Command(0xAE);
+}
+
+void initIDT()
+{
+    idt_init();
     
-    char* str = "Welcome to TomatOS. The PotatOS fork written in C\r\n\n";
-    puts(str);
+    idt_set_descriptor(0x20, &timer_isr, 0x8E);
+    idt_set_descriptor(0x21, &keyboard_isr, 0x8E);
+    idt_set_descriptor(0x22, &irq2_isr, 0x8E);
+    idt_set_descriptor(0x23, &irq3_isr, 0x8E);
+    idt_set_descriptor(0x24, &irq4_isr, 0x8E);
+    idt_set_descriptor(0x25, &irq5_isr, 0x8E);
+    idt_set_descriptor(0x26, &floppy_irq_handler, 0x8E);
+    idt_set_descriptor(0x26, &irq6_isr, 0x8E);
+    idt_set_descriptor(0x27, &irq7_isr, 0x8E);
 
-    char buffer[40];
-    while(1)
+    idt_set_descriptor(0x70, &irq8_isr, 0x8E);
+    idt_set_descriptor(0x71, &irq9_isr, 0x8E);
+    idt_set_descriptor(0x72, &irq10_isr, 0x8E);
+    idt_set_descriptor(0x73, &irq11_isr, 0x8E);
+    idt_set_descriptor(0x74, &irq12_isr, 0x8E);
+    idt_set_descriptor(0x75, &irq13_isr, 0x8E);
+    idt_set_descriptor(0x76, &irq14_isr, 0x8E);
+    idt_set_descriptor(0x77, &irq15_isr, 0x8E);
+}
+
+void printBuffer(const unsigned char* buffer, size_t size)
+{
+    const size_t blockSize = 32;
+
+    size_t blockCount = size / blockSize;
+    size_t rest = size % blockSize;
+
+    unsigned char buf[blockSize+1];
+    buf[blockSize] = 0;
+
+    size_t i = 0;
+
+    for(; i < blockCount; i++)
     {
-        memset(buffer, 0, 40);
-        printf("\r\nCMD> ");
-        readLine(buffer, 40);
-        printf("\r\n");
-
-        if(0 == strcmp(buffer, "colors"))
+        // printf("%x: ", (i*16));
+        for(size_t j = 0; j < blockSize; j++)
         {
-            unsigned char c = 0;
-            for(int i = 0; i < 16; i++)
+            unsigned char c = buffer[(i * blockSize) + j];
+            // printf("%x ", c);
+            if(c >= 32)
             {
-                for(int j = 0; j < 16; j++)
-                {
-                    setColor(c);
-                    printf("%x ", c);
-                    c++;
-                }
-                printf("\r\n");
+                buf[j] = c;
             }
-
-            setColor(0x07);
+            else
+            {
+                buf[j] = '.';
+            }
         }
-        else if(0 == strcmp(buffer, "printf"))
+
+        printf("%s\r\n", buf);
+    }
+
+    // printf("%x: ", (i*blockSize));
+
+    memset(buf, ' ', blockSize);
+
+    for(size_t j = 0; j < rest; j++)
+    {
+        unsigned char c = buffer[(i * blockSize) + j];
+        // printf("%x ", c);
+        if(c >= 32)
         {
-            int i = 123;
-
-            char* str2 = "test123";
-
-            printf("printf:\r\nbase 8:%o\r\nbase 10:%d\r\nbase 16:%x\r\nAnd some string:%s\r\n", i, i, i, str2);
-        }
-        else if(0 == strcmp(buffer, "clear"))
-        {
-            clearscreen();
-        }
-        // else if(0 == strcmp(buffer, "date"))
-        // {
-        //     time_t t = time(NULL);
-        //     struct tm time;
-        //     time = mktime(&time);
-
-        //     const char* months[12] = {
-        //         "January", "February", "March", 
-        //         "April", "May", "June", 
-        //         "July", "August", "September", 
-        //         "October", "November", "December"
-        //     };
-
-        //     printf("%s %d, %d: %d:%d:%d",
-        //         months[time.tm_mon], time.tm_mday, time.tm_year,
-        //         time.tm_hour, time.tm_min, time.tm_sec);
-        // }
-        else if(0 == strcmp(buffer, "test"))
-        {
-            char* str1 = "test123";
-            char* str2 = "Some Text";
-            char* str3 = "EPIC HARDCORE SHOOBIE DOG MEMES";
-            int l1 = strlen(str1);
-            int l2 = strlen(str2);
-            int l3 = strlen(str3);
-
-            printf("%d: %s\r\n%d: %s\r\n%d: %s\r\n", l1, str1, l2, str2, l3, str3);
-        }
-        else if(0 == strncmp(buffer, "args", 4))
-        {
-            printf("args: %s", buffer + 4);
-        }
-        else if(0 == strncmp(buffer, "cat", 4))
-        {
-            char a[] = "Hallo ";
-            char b[] = "Welt";
-
-            char c[50];
-            strcpy(c, a);
-            strcat(c, b);
-
-            printf("%s\r\n%s\r\n%s\r\n", a, b, c);
+            buf[j] = c;
         }
         else
         {
-            printf("Unrecognized command '%s'! Try help to list all commands.\r\n", buffer);
+            buf[j] = '.';
         }
     }
+
+    // for(size_t j = 0; j < 16 - rest; j++)
+    // {
+    //     printf("   ");
+    // }
+
+    printf("%s\r\n", buf);
+}
+
+int main()
+{
+    clearscreen();
+
+    initKeyboard();
+
+    initSerial();
+
+    PIC_remap(0x20, 0x70);
+
+    setTimer(100);
+
+    initIDT();
+
+    char* str = "Welcome to TomatOS. The PotatOS fork written in C\r\n\n\n";
+    puts(str);
+
+    initalizeFloppyDMA();
+
+    floppy_detect_drives();
+
+    printf("Initiating floppy drive (might take a few seconds)\r\n");
+
+    int res = floppyInit(0);
+
+    printf("Result: %d (%s)\r\n", res, res == 0 ? "success" : "error");
+
+    floppyRead(0, 0);
+
+    printBuffer((const unsigned char*)0x1000, 512);
+
+    asm volatile("cli; hlt;":::);
+
+    // char buffer[64];
+    // while(1)
+    // {
+    //     memset(buffer, 0, 64);
+
+    //     printf("\r\nCMD> ");
+    //     gets(buffer);
+    //     printf("\r\n");      
+
+    //     if(0 == strcmp(buffer, "colors"))
+    //     {
+    //         unsigned char c = 0;
+    //         for(int i = 0; i < 16; i++)
+    //         {
+    //             for(int j = 0; j < 16; j++)
+    //             {
+    //                 setColor(c);
+    //                 printf("%x ", c);
+    //                 c++;
+    //             }
+    //             printf("\r\n");
+    //         }
+
+    //         setColor(0x07);
+    //     }
+    //     else if(0 == strcmp(buffer, "printf"))
+    //     {
+    //         int i = 123;
+
+    //         char* str2 = "test123";
+
+    //         printf("printf:\r\nbase 8:%o\r\nbase 10:%d\r\nbase 16:%x\r\nAnd some string:%s\r\n", i, i, i, str2);
+    //     }
+    //     else if(0 == strcmp(buffer, "floats"))
+    //     {
+    //         double d1 = 10.01;
+    //         double d2 = 100.001;
+    //         double d3 = 123.321;
+    //         double d4 = 10000.00002;
+
+    //         printf("10.01: %f\r\n100.001: %f\r\n123.321: %f\r\n10000.00002: %f\r\n", d1, d2, d3, d4);
+    //     }
+    //     else if(0 == strcmp(buffer, "math"))
+    //     {
+    //         for(double d = 0; d < 360; d += 30)
+    //         {
+    //             // double x = pow(d, 2);
+    //             double x = d * d;
+
+    //             printf("%f | %f\r\n", d, x);
+    //         }
+    //     }
+    //     else if(0 == strcmp(buffer, "clear"))
+    //     {
+    //         clearscreen();
+    //     }
+    //     else if(0 == strcmp(buffer, "test"))
+    //     {
+    //         char* str1 = "test123";
+    //         char* str2 = "Some Text";
+    //         char* str3 = "EPIC HARDCORE SHOOBIE DOG MEMES";
+    //         int l1 = strlen(str1);
+    //         int l2 = strlen(str2);
+    //         int l3 = strlen(str3);
+
+    //         printf("%d: %s\r\n%d: %s\r\n%d: %s\r\n", l1, str1, l2, str2, l3, str3);
+    //     }
+    //     else if(0 == strncmp(buffer, "args", 4))
+    //     {
+    //         printf("args: %s", buffer + 4);
+    //     }
+    //     else if(0 == strncmp(buffer, "cat", 4))
+    //     {
+    //         char a[] = "Hallo ";
+    //         char b[] = "Welt";
+
+    //         char c[50];
+    //         strcpy(c, a);
+    //         strcat(c, b);
+
+    //         printf("%s\r\n%s\r\n%s\r\n", a, b, c);
+    //     }
+    //     else if(0 == strcmp(buffer, "zero"))
+    //     {
+    //         int a = 12;
+    //         int b = 24;
+    //         int c = (b / (a - 3*sizeof(int)));
+
+    //         printf("%d", c);
+    //     }
+    //     else if(0 == strcmp(buffer, "size"))
+    //     {
+
+    //         int sc = sizeof(char);
+    //         int ss = sizeof(short);
+    //         int si = sizeof(int);
+    //         int sl = sizeof(long);
+    //         int sli = sizeof(long int);
+    //         int slli = sizeof(long long int);
+
+    //         printf("char:           %d\r\n", sc);
+    //         printf("short:          %d\r\n", ss);
+    //         printf("int:            %d\r\n", si);
+    //         printf("long:           %d\r\n", sl);
+    //         printf("long int:       %d\r\n", sli);
+    //         printf("long long int:  %d\r\n", slli);
+    //     }
+    //     else if(0 == strcmp(buffer, "sleep"))
+    //     {
+    //         printf("Start\r\n");
+    //         sleep(1000);
+    //         printf("End\r\n");
+    //     }
+    //     else
+    //     {
+    //         printf("Unrecognized command '%s'! Try help to list all commands.\r\n", buffer);
+    //     }
+    // }
 
     return 0;
     
