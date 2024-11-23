@@ -12,7 +12,7 @@ static char* strcpy(char *dest, const char *src)
     {
         dest[i] = src[i];
 
-        if(dest[i] == '\0')
+        if(src[i] == '\0')
         {
             break;
         }
@@ -97,8 +97,12 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
     char* ptr = dest;
     *ptr = '\0';
 
+    char filler = ' ';
+
     while(*format)
     {
+        char* bufferPTR = buffer;
+
         if(*format == '%')
         {
             format++;
@@ -110,12 +114,18 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
                 neg = -1;
                 format++;
             }
+            else if(*format == '0')
+            {
+                filler = '0';
+                format++;
+            }
 
             int align = 0;
             while(*format >= '0' && *format <= '9')
             {
                 align *= 10;
                 align += (*format) - '0';
+                format++;
             }
 
             align *= neg;
@@ -127,91 +137,113 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
                 {
                     int i = __builtin_va_arg(val, int);
 
-                    itoa(i, buffer, 10);
+                    itoa(i, bufferPTR, 10);
 
-                    len += strlen(buffer);
-
-                    if(ptr != NULL) strcat(ptr, buffer);
                     break;
                 }
                 case 'o':
                 {
                     unsigned int i = __builtin_va_arg(val, unsigned int);
 
-                    itoa(i, buffer, 8);
+                    itoa(i, bufferPTR, 8);
 
-                    len += strlen(buffer);
-
-                    if(ptr != NULL) strcat(ptr, buffer);
                     break;
                 }
                 case 'x':
                 {
                     unsigned int i = __builtin_va_arg(val, unsigned int);
 
-                    itoa(i, buffer, 16);
+                    itoa(i, bufferPTR, 16);
 
-                    len += strlen(buffer);
+                    break;
+                }
+                case 'X':
+                {
+                    unsigned int i = __builtin_va_arg(val, unsigned int);
 
-                    if(ptr != NULL) strcat(ptr, buffer);
+                    itoa(i, bufferPTR, 16);
+
+                    char* temp = bufferPTR;
+                    while(*temp)
+                    {
+                        *temp = toupper(*temp);
+                        temp++;
+                    }
+
                     break;
                 }
                 case 's':
                 {
-                    char* str = __builtin_va_arg(val, char*);
+                    bufferPTR = __builtin_va_arg(val, char*);
 
-                    len += strlen(str);
-
-                    if(ptr != NULL) strcat(ptr, str);
                     break;
                 }
                 case 'c':
                 {
                     char c = (char)__builtin_va_arg(val, int);
 
-                    buffer[0] = c;
-                    buffer[1] = '\0';
-
-                    len++;
-
-                    if(ptr != NULL) ptr = strcat(ptr, buffer);
+                    bufferPTR[0] = c;
+                    bufferPTR[1] = '\0';
 
                     break;
                 }
                 case 'p':
                 {
-                    void* ptr = __builtin_va_arg(val, void*);
+                    void* p = __builtin_va_arg(val, void*);
 
-                    unsigned int i = (unsigned int)ptr;
+                    unsigned int i = (unsigned int)p;
 
-                    itoa(i, buffer, 16);
+                    itoa(i, bufferPTR, 16);
 
-                    len += strlen(buffer);
-
-                    if(ptr != NULL) strcat(ptr, buffer);
                     break;
                 }
                 case '%':
                 {
-                    buffer[0] = '%';
-                    buffer[1] = '\0';
-
-                    len++;
-
-                    if(ptr != NULL) strcat(ptr, buffer);
+                    bufferPTR[0] = '%';
+                    bufferPTR[1] = '\0';
 
                     break;
                 }   
             }
+
+            size_t bufferL = strlen(bufferPTR);
+
+            if(bufferL < align)
+            {
+                char temp[align + 1];
+                temp[align] = 0;
+
+                for(int i = 0; i < align; i++)
+                {
+                    temp[i] = filler;
+                }
+
+                if(neg < 0)
+                {
+                    strcpy(temp, bufferPTR);
+                }
+                else
+                {
+                    strcpy(temp + (align - bufferL), bufferPTR);
+                }
+
+                len += align;
+                if(ptr != NULL) strcat(ptr, temp);
+            }
+            else
+            {
+                len += bufferL;
+                if(ptr != NULL) strcat(ptr, bufferPTR);
+            }
         }
         else
         {
-            buffer[0] = *format;
-            buffer[1] = '\0';
+            bufferPTR[0] = *format;
+            bufferPTR[1] = '\0';
 
             len++;
 
-            if(ptr != NULL) strcat(ptr, buffer);
+            if(ptr != NULL) strcat(ptr, bufferPTR);
         }
 
         format++;
