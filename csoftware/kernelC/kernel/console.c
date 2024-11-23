@@ -7,6 +7,30 @@ static uint8_t screenX = 0;
 static uint8_t screenY = 0;
 static char global_color = 0x07;
 
+void clearScreenC(char color)
+{
+    global_color = color;
+    
+    const uint16_t value = (color << 8) | 0x20;
+
+    asm volatile(
+        "movw %0, %%ax;\n"
+        "movl $2000, %%ecx;\n"
+        "movl $0xB8000,%%edi;\n"
+        "rep stosw;\n"
+        : 
+        : "r"(value)
+        : "memory", "eax", "ecx", "edi"
+    );
+
+    setCursorPosition(0, 0);
+}
+
+void clearScreen()
+{
+    clearScreenC(global_color);
+}
+
 static void moveBuffer()
 {
     setCursorPosition(screenX, SCREEN_HEIGHT - 2);
@@ -15,23 +39,46 @@ static void moveBuffer()
     char* dest = vmem;
     char* src = dest + (SCREEN_WIDTH * 2);
 
-    uint32_t size = SCREEN_BUFFER_SIZE - (SCREEN_WIDTH * 2);
+    const uint32_t size = SCREEN_BUFFER_SIZE - (SCREEN_WIDTH * 2);
 
-    for(uint32_t i = 0; i < size; i++)
-    {
-        *dest = *src;
-        src++;
-        dest++;
-    }
+    // for(uint32_t i = 0; i < size; i++)
+    // {
+    //     *dest = *src;
+    //     src++;
+    //     dest++;
+    // }
+
+    asm volatile(
+        "movl %0, %%ecx;\n"
+        "movl %1,%%esi;\n"
+        "movl %2,%%edi;\n"
+        "rep movsw;\n"
+        : 
+        : "ri"(size), "ri"(src), "ri"(dest)
+        : "memory", "ecx", "esi", "edi"
+    );
+    
+    uint16_t value = (global_color << 8) | 0x20;
 
     char* end = vmem + SCREEN_BUFFER_SIZE - (SCREEN_WIDTH * 2);
-    for(uint32_t i = 0; i < (SCREEN_WIDTH); i++)
-    {
-        *end = ' ';
-        end++;
-        *end = global_color;
-        end++;
-    }
+
+    asm volatile(
+        "movw %0, %%ax;\n"
+        "movl %1, %%ecx;\n"
+        "movl %2,%%edi;\n"
+        "rep stosw;\n"
+        : 
+        : "ri"(value), "ri"(SCREEN_WIDTH), "ri"(end)
+        : "memory", "ax", "ecx", "edi"
+    );
+
+    // for(uint32_t i = 0; i < (SCREEN_WIDTH); i++)
+    // {
+    //     *end = ' ';
+    //     end++;
+    //     *end = global_color;
+    //     end++;
+    // }
 }
 
 int printstring(const char* str)
