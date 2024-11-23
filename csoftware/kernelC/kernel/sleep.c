@@ -1,5 +1,5 @@
 #include "sleep.h"
-#include "io.h"
+#include "asm.h"
 #include "pic.h"
 
 static volatile int sleepCounter = 0;
@@ -30,6 +30,6 @@ void sleep(int time)
 
     while (sleepCounter > 0)
     {
-        __asm__ volatile("hlt;":::);
+        hlt();
     }
 }

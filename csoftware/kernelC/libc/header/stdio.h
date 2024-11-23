@@ -14,8 +14,6 @@
 #define KEY_ENTER 0x1C
 #define KEY_BACKSPACE 0x0E
 
-
-
 typedef struct KEY_S {
     char ascii;
     unsigned char scancode;

@@ -4,12 +4,15 @@ jmp start
 
 %define KERNEL_OFFSET 0x10000
 %define KERNEL_SEGMENT 0x1000
-%include "../../include/functions.asm"
 
 kernel db "KERNEL  SYS"
 
 start:
-    LOADFILE kernel, 0, KERNEL_SEGMENT
+    mov dx, kernel
+    mov bx, 0
+    mov bp, KERNEL_SEGMENT
+    mov ah, 0x05
+    int 0x21
 
     call enableA20
 
@@ -18,16 +21,10 @@ start:
 %include "gdt.asm"
 %include "switchToPM.asm"
 %include "a20.asm"
-%include "print32.asm"
 
 [BITS 32]
 beginPM:
-    
-    mov ebx, msgProtected
-    call print32
 
     call KERNEL_OFFSET
     
     jmp $
-
-msgProtected db "We are now in 32 Bit protected mode.", 0x00

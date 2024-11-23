@@ -7,6 +7,11 @@
 #define CYLINDERS 80
 #define HEADS 2
 
+#define FLOPPY_DRIVE_0 0
+#define FLOPPY_DRIVE_1 1
+#define FLOPPY_DRIVE_2 2
+#define FLOPPY_DRIVE_3 3
+
 enum FloppyCommands
 {
    READ_TRACK =                 2,	// generates IRQ6
@@ -50,7 +55,8 @@ void floppy_irq_handler(struct interrupt_frame* frame);
 
 int floppyInit(uint8_t drive);
 int resetController(void);
-void floppySendCommand(uint8_t cmd);
-void floppyRead(uint32_t lba, uint8_t drive);
+int floppyRecalibrate(uint8_t driveNumber);
+int floppyRead(uint32_t lba, uint8_t drive);
+int floppySeek(uint8_t track, uint8_t drive);
 
 #endif

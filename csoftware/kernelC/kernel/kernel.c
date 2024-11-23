@@ -1,16 +1,17 @@
-#include "stdio.h"
-#include "string.h"
-#include "stdlib.h"
-#include "math.h"
 #include "serial.h"
-#include "io.h"
+#include "printk.h"
 #include "pic.h"
+#include "asm.h"
 #include "idt.h"
 #include "exceptions_isr.h"
 #include "irq_isr.h"
 #include "dma.h"
 #include "floppy.h"
 #include "sleep.h"
+#include "keyboard.h"
+#include "console.h"
+#include "panic.h"
+#include "stddef.h"
 
 void floppy_detect_drives()
 {
@@ -29,8 +30,8 @@ void floppy_detect_drives()
    outportb(0x70, 0x10);
    uint8_t drives = inportb(0x71);
 
-   printf(" - Floppy drive 0: %s\r\n", drive_types[drives >> 4]);
-   printf(" - Floppy drive 1: %s\r\n", drive_types[drives & 0xf]);
+   printk(" - Floppy drive 0: %s\r\n", drive_types[drives >> 4]);
+   printk(" - Floppy drive 1: %s\r\n", drive_types[drives & 0xf]);
 }
 
 void clearscreen()
@@ -47,26 +48,10 @@ void clearscreen()
     setCursorPosition(0, 0);
 }
 
-void sendPS2Command(uint8_t command)
-{
-    while ((inportb(STATUS_PORT) & 0x02) > 0);
-
-    outportb(COMMAND_PORT, command);
-}
-
-void initKeyboard()
-{
-    sendPS2Command(0xAD);
-
-    inportb(DATA_PORT);
-
-    sendPS2Command(0xAE);
-}
-
 void initIDT()
 {
     idt_init();
-    
+
     idt_set_descriptor(0x20, &timer_isr, 0x8E);
     idt_set_descriptor(0x21, &keyboard_isr, 0x8E);
     idt_set_descriptor(0x22, &irq2_isr, 0x8E);
@@ -74,7 +59,7 @@ void initIDT()
     idt_set_descriptor(0x24, &irq4_isr, 0x8E);
     idt_set_descriptor(0x25, &irq5_isr, 0x8E);
     idt_set_descriptor(0x26, &floppy_irq_handler, 0x8E);
-    idt_set_descriptor(0x26, &irq6_isr, 0x8E);
+    // idt_set_descriptor(0x26, &irq6_isr, 0x8E);
     idt_set_descriptor(0x27, &irq7_isr, 0x8E);
 
     idt_set_descriptor(0x70, &irq8_isr, 0x8E);
@@ -87,7 +72,7 @@ void initIDT()
     idt_set_descriptor(0x77, &irq15_isr, 0x8E);
 }
 
-void printBuffer(const unsigned char* buffer, size_t size)
+static void printBuffer(const unsigned char* buffer, size_t size)
 {
     const size_t blockSize = 32;
 
@@ -116,12 +101,15 @@ void printBuffer(const unsigned char* buffer, size_t size)
             }
         }
 
-        printf("%s\r\n", buf);
+        printk("%s\r\n", buf);
     }
 
     // printf("%x: ", (i*blockSize));
 
-    memset(buf, ' ', blockSize);
+    for(size_t i = 0; i < blockSize; i++)
+    {
+        buf[i] = ' ';
+    }
 
     for(size_t j = 0; j < rest; j++)
     {
@@ -142,7 +130,7 @@ void printBuffer(const unsigned char* buffer, size_t size)
     //     printf("   ");
     // }
 
-    printf("%s\r\n", buf);
+    printk("%s\r\n", buf);
 }
 
 int main()
@@ -150,33 +138,38 @@ int main()
     clearscreen();
 
     initKeyboard();
-
+    
     initSerial();
-
-    PIC_remap(0x20, 0x70);
-
+    
     setTimer(100);
 
+    PIC_remap(0x20, 0x70);
     initIDT();
 
     char* str = "Welcome to TomatOS. The PotatOS fork written in C\r\n\n\n";
-    puts(str);
+    printk(str);
 
     initalizeFloppyDMA();
 
     floppy_detect_drives();
 
-    printf("Initiating floppy drive (might take a few seconds)\r\n");
+    printk("Initiating floppy drive (might take a few seconds)\r\n");
 
     int res = floppyInit(0);
 
-    printf("Result: %d (%s)\r\n", res, res == 0 ? "success" : "error");
+    printk("Result: %d (%s)\r\n", res, res == 0 ? "success" : "error");
 
     floppyRead(0, 0);
 
     printBuffer((const unsigned char*)0x1000, 512);
 
-    asm volatile("cli; hlt;":::);
+    while(1)
+    {
+        int c = getch();
+        printk("%c", c);
+    }
+
+    // int s = 0;
 
     // char buffer[64];
     // while(1)
@@ -291,6 +284,19 @@ int main()
     //         sleep(1000);
     //         printf("End\r\n");
     //     }
+    //     else if(0 == strcmp(buffer, "floppy"))
+    //     {
+    //         for(int i = 0; i < 100; i++)
+    //         {
+    //             floppyRead(s, 0);
+
+    //             // Floppy DMA writes to physical address 0x1000-0x3FFF
+    //             printBuffer((const unsigned char*)0x1000, 512);
+
+    //             s++;
+    //         }
+            
+    //     }
     //     else
     //     {
     //         printf("Unrecognized command '%s'! Try help to list all commands.\r\n", buffer);
@@ -298,5 +304,4 @@ int main()
     // }
 
     return 0;
-    
 }

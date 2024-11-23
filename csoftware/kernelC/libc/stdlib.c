@@ -2,6 +2,23 @@
 #include "string.h"
 #include "ctype.h"
 
+div_t div(int x, int y)
+{
+    div_t d;
+    d.quot = x / y;
+    d.rem = x % y;
+
+    return d;
+}
+
+ldiv_t ldiv(long x, long y)
+{
+    ldiv_t d;
+    d.quot = x / y;
+    d.rem = x % y;
+
+    return d;
+}
 
 double atof(const char* buf)
 {

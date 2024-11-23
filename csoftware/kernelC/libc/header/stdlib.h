@@ -17,5 +17,6 @@ typedef struct ldiv_t {
 double atof(const char* buf);
 int atoi(const char* buf);
 long atol(const char* buf);
+div_t div(int x, int y);
 
 #endif

@@ -3,6 +3,11 @@
 #include "string.h"
 #include "stdint.h"
 #include "io.h"
+#include "math.h"
+
+#define SCREEN_WIDTH 80
+#define SCREEN_HEIGHT 25
+#define SCREEN_BUFFER_SIZE (SCREEN_HEIGHT * SCREEN_WIDTH * 2)
 
 static uint8_t screenX = 0;
 static uint8_t screenY = 0;
@@ -18,10 +23,13 @@ void setColor(uint8_t c)
 
 static void moveBuffer()
 {
-    char* dest = (char*)0x000B8000;
-    char* src = dest + (screenX * 2);
+    setCursorPosition(screenX, SCREEN_HEIGHT - 2);
 
-    uint32_t size = (screenX * screenY * 2) - (screenX * 2);
+    char* vmem = (char*)0x000B8000;
+    char* dest = vmem;
+    char* src = dest + (SCREEN_WIDTH * 2);
+
+    uint32_t size = SCREEN_BUFFER_SIZE - (SCREEN_WIDTH * 2);
 
     for(uint32_t i = 0; i < size; i++)
     {
@@ -30,7 +38,14 @@ static void moveBuffer()
         dest++;
     }
 
-    screenY = 23;
+    char* end = vmem + SCREEN_BUFFER_SIZE - (SCREEN_WIDTH * 2);
+    for(uint32_t i = 0; i < (SCREEN_WIDTH); i++)
+    {
+        *end = ' ';
+        end++;
+        *end = global_color;
+        end++;
+    }
 }
 
 static void _putchar(char c, uint8_t color)
@@ -62,15 +77,14 @@ static void _putchar(char c, uint8_t color)
         }
     }
 
-    if(screenX == 80)
+    if(screenX == SCREEN_WIDTH)
     {
         screenX = 0;
         screenY++;
     }
 
-    if(screenY >= 23)
+    if(screenY >= (SCREEN_HEIGHT - 1))
     {
-        screenY = 23;
         moveBuffer();
     }
 }
@@ -111,7 +125,6 @@ int puts(const char* str)
     putchar('\n');
     return i+2;
 }
-
 
 static void itoa(long num, char* buf, int base)
 {
@@ -158,22 +171,78 @@ static void itoa(long num, char* buf, int base)
     buf[i] = 0;
 }
 
+static void itoaf(long num, char* buf, int prec)
+{
+    long neg = 0;
+    long i = 0;
+
+    if(num < 0)
+    {
+        num = -num;
+        neg = 1;
+    }
+
+    while(num != 0)
+    {
+        buf[i] = (num % 10) + '0';
+        num = num / 10;
+
+        i++;
+    }
+
+    while(i < prec)
+    {
+        buf[i] = '0';
+        i++;
+    }
+
+    if(neg > 0)
+    {
+        buf[i] = '-';
+        i++;
+    }
+
+    long start = 0;
+    long end = i - 1;
+    while(start < end)
+    {
+        char t = buf[start];
+        buf[start] = buf[end];
+        buf[end] = t;
+        end--;
+        start++;
+    }
+
+    buf[i] = 0;
+}
+
 static void ftoa(double d, char* dest)
 {
-    int mul = 10000000;
-
     long intpart = (long)d;
-    long rest = (long)((d - intpart) * mul);
+    long rest = (long)((d - intpart) * pow(10, 8));
 
     char buffer[20];
-    itoa(intpart, buffer, 10);
+    itoaf(intpart, buffer, 0);
 
     strcpy(dest, buffer);
-    strcat(dest, ".");
 
-    itoa(rest, buffer, 10);
+    if(rest == 0)
+    {
+        strcat(dest, ".");
 
-    strcat(dest, buffer);
+        itoaf(rest, buffer, 8);
+
+        int l = strlen(buffer);
+        char* end = buffer + l - 1;
+
+        while(*end == '0')
+        {
+            *end = '\0';
+            end--;
+        }
+
+        strcat(dest, buffer);
+    }
 }
 
 int vsprintf(char* dest, const char* format, __builtin_va_list val)
@@ -182,6 +251,7 @@ int vsprintf(char* dest, const char* format, __builtin_va_list val)
     char buffer[32];
 
     char* ptr = dest;
+    *ptr = '\0';
 
     while(*format)
     {
@@ -275,8 +345,7 @@ int vsprintf(char* dest, const char* format, __builtin_va_list val)
                     if(ptr != NULL) strcat(ptr, buffer);
 
                     break;
-                }
-                
+                }   
             }
         }
         else
@@ -329,25 +398,9 @@ int printf(const char* format, ...)
 
 uint8_t readkey()
 {
-    while ((inportb(STATUS_PORT) & 0x01) == 0) writeSerial('!');
+    while ((inportb(STATUS_PORT) & 0x01) == 0) { }
 
     return inportb(DATA_PORT);
-}
-
-static void sendPS2Command(uint8_t command)
-{
-    while ((inportb(STATUS_PORT) & 0x02) > 0);
-
-    outportb(COMMAND_PORT, command);
-}
-
-void initKeyboard()
-{
-    sendPS2Command(0xAD);
-
-    inportb(DATA_PORT);
-
-    sendPS2Command(0xAE);
 }
 
 static int shift = 0;
@@ -367,8 +420,6 @@ static char upperCaseMap[256] = {
 static void _readChar(KEY_S* k)
 {
     uint8_t code = readkey();
-
-    writeSerial(code);
 
     k->scancode = code;
     k->ascii = 0;
@@ -470,7 +521,7 @@ void setCursorPosition(int x, int y)
     uint16_t pos = y * 80 + x;
 
     outportb(0x3D4, 0x0F);
-    outportb(0x3D5, (unsigned char)(pos & 0xFF));
+    outportb(0x3D5, (uint8_t)(pos & 0xFF));
     outportb(0x3D4, 0x0E);
-    outportb(0x3D5, (unsigned char)((pos >> 8) & 0xFF));
+    outportb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
 }
