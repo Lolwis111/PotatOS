@@ -6,24 +6,6 @@
 #include "console.h"
 #include "panic.h"
 
-unsigned long pop(void)
-{
-    unsigned long value;
-    asm volatile ("pop %0" : "=r"(value) : : "memory");
-    return value;
-}
-
-void clearScreen()
-{
-    char* v = (char*)0xB8000;
-
-    for(int i = 0; i < 2000; i++)
-    {
-        *v = ' ';
-        v += 2;
-    }
-}
-
 __attribute__((interrupt)) void div_zero_exception(struct interrupt_frame* frame)
 {
     clearScreen();

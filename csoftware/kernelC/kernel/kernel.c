@@ -34,20 +34,6 @@ void floppy_detect_drives()
    printk(" - Floppy drive 1: %s\r\n", drive_types[drives & 0xf]);
 }
 
-void clearscreen()
-{
-    unsigned char* vmem = (unsigned char*)0xB8000;
-    for(int i = 0; i < 80 * 25; i++)
-    {
-        *vmem = ' ';
-        vmem++;
-        *vmem = 0x07;
-        vmem++;
-    }
-
-    setCursorPosition(0, 0);
-}
-
 void initIDT()
 {
     idt_init();
@@ -59,7 +45,6 @@ void initIDT()
     idt_set_descriptor(0x24, &irq4_isr, 0x8E);
     idt_set_descriptor(0x25, &irq5_isr, 0x8E);
     idt_set_descriptor(0x26, &floppy_irq_handler, 0x8E);
-    // idt_set_descriptor(0x26, &irq6_isr, 0x8E);
     idt_set_descriptor(0x27, &irq7_isr, 0x8E);
 
     idt_set_descriptor(0x70, &irq8_isr, 0x8E);
@@ -135,7 +120,7 @@ static void printBuffer(const unsigned char* buffer, size_t size)
 
 int main()
 {
-    clearscreen();
+    clearScreen(0x07);
 
     initKeyboard();
     
