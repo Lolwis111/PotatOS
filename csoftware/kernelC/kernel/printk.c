@@ -41,9 +41,9 @@ static int strlen(const char* str)
     return i;
 }
 
-static void itoa(long num, char* buf, int base)
+static void itoak(long num, char* buf, int base, char padding)
 {
-    long neg = 0;
+        long neg = 0;
     long i = 0;
 
     if (num == 0)
@@ -74,6 +74,11 @@ static void itoa(long num, char* buf, int base)
         buf[i] = '-';
         i++;
     }
+    else if(padding != 0)
+    {
+        buf[i] = padding;
+        i++;
+    }
 
     long start = 0;
     long end = i - 1;
@@ -95,9 +100,10 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
     char buffer[32];
 
     char* ptr = dest;
-    *ptr = '\0';
+    if(dest != NULL) *ptr = '\0';
 
     char filler = ' ';
+    char padding = 0;
 
     while(*format)
     {
@@ -114,21 +120,59 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
                 neg = -1;
                 format++;
             }
-            else if(*format == '0')
+            
+            switch(*format)
             {
-                filler = '0';
-                format++;
+                case '0':
+                {
+                    filler = '0';
+                    format++;
+                    break;
+                }
+                case '+':
+                {
+                    padding = '+';
+                    format++;
+                    break;
+                }
+                case ' ':
+                {
+                    padding = ' ';
+                    format++;
+                    break;
+                }
             }
 
             int align = 0;
+
+            // if(*format == '*')
+            // {
+            //     int i = __builtin_va_arg(val, int);
+
+            //     if(i < 0)
+            //     {
+            //         neg = -1;
+            //         align = -i;
+            //     }
+            //     else
+            //     {
+            //         neg = 1;
+            //         align = i;
+            //     }
+
+            //     format++;
+            // }
+            // else
+            // {
             while(*format >= '0' && *format <= '9')
             {
                 align *= 10;
                 align += (*format) - '0';
                 format++;
             }
+            // }
 
-            align *= neg;
+            // align *= neg;
 
             switch (*format)
             {
@@ -137,7 +181,15 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
                 {
                     int i = __builtin_va_arg(val, int);
 
-                    itoa(i, bufferPTR, 10);
+                    itoak(i, bufferPTR, 10, padding);
+
+                    break;
+                }
+                case 'u':
+                {
+                    unsigned int i = __builtin_va_arg(val, unsigned int);
+
+                    itoak(i, bufferPTR, 10, padding);
 
                     break;
                 }
@@ -145,7 +197,7 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
                 {
                     unsigned int i = __builtin_va_arg(val, unsigned int);
 
-                    itoa(i, bufferPTR, 8);
+                    itoak(i, bufferPTR, 8, padding);
 
                     break;
                 }
@@ -153,7 +205,7 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
                 {
                     unsigned int i = __builtin_va_arg(val, unsigned int);
 
-                    itoa(i, bufferPTR, 16);
+                    itoak(i, bufferPTR, 16, padding);
 
                     break;
                 }
@@ -161,7 +213,7 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
                 {
                     unsigned int i = __builtin_va_arg(val, unsigned int);
 
-                    itoa(i, bufferPTR, 16);
+                    itoak(i, bufferPTR, 16, padding);
 
                     char* temp = bufferPTR;
                     while(*temp)
@@ -193,7 +245,7 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
 
                     unsigned int i = (unsigned int)p;
 
-                    itoa(i, bufferPTR, 16);
+                    itoak(i, bufferPTR, 16, padding);
 
                     break;
                 }
@@ -211,11 +263,11 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
             if(bufferL < align)
             {
                 char temp[align + 1];
-                temp[align] = 0;
+                temp[align] = '\0';
 
-                for(int i = 0; i < align; i++)
+                for(size_t t = 0; t < align; t++)
                 {
-                    temp[i] = filler;
+                    temp[t] = filler;
                 }
 
                 if(neg < 0)
@@ -260,7 +312,11 @@ int printk(const char* format, ...)
 
     int l = vsprintk(NULL, format, val);
 
+     __builtin_va_end(val);
+
     char buffer[l + 1];
+
+    __builtin_va_start(val, format);
 
     l = vsprintk(buffer, format, val);
 
