@@ -17,22 +17,34 @@ void io_wait(void)
     outportb(0x80, 0);
 }
 
-void cli()
+uint32_t pop(void)
+{
+    unsigned long value;
+    asm volatile ("pop %0" : "=r"(value) : : "memory");
+    return value;
+}
+
+void cli(void)
 {
     asm volatile("cli;":::);
 }
 
-void sti()
+void sti(void)
 {
     asm volatile("sti;":::);
 }
 
-void hlt()
+void hlt(void)
 {
     asm volatile("hlt;":::);
 }
 
-void int3()
+void breakpoint(void)
 {
     asm volatile("int3;":::);
+}
+
+void int80(void)
+{
+    asm volatile("int $0x80;":::);
 }
