@@ -76,31 +76,6 @@ floppy_detect_drives:
 	ret
 	.size	floppy_detect_drives, .-floppy_detect_drives
 	.align 16
-	.globl	clearscreen
-	.type	clearscreen, @function
-clearscreen:
-	pushl	%ebp
-	movl	$753664, %eax
-	movl	%esp, %ebp
-	subl	$8, %esp
-	.align 16
-.L5:
-	movl	%eax, %edx
-	movw	$1824, (%eax)
-	addl	$2, %eax
-	cmpl	$757662, %edx
-	jne	.L5
-	pushl	%eax
-	pushl	%eax
-	pushl	$0
-	pushl	$0
-	call	setCursorPosition
-	addl	$16, %esp
-	movl	%ebp, %esp
-	popl	%ebp
-	ret
-	.size	clearscreen, .-clearscreen
-	.align 16
 	.globl	initIDT
 	.type	initIDT, @function
 initIDT:
@@ -170,7 +145,7 @@ initIDT:
 	call	idt_set_descriptor
 	addl	$12, %esp
 	pushl	$142
-	pushl	$irq12_isr
+	pushl	$mouse_irq
 	pushl	$116
 	call	idt_set_descriptor
 	addl	$12, %esp
@@ -188,30 +163,42 @@ initIDT:
 	pushl	$irq15_isr
 	pushl	$119
 	call	idt_set_descriptor
+	addl	$12, %esp
+	pushl	$238
+	pushl	$syscall
+	pushl	$128
+	call	idt_set_descriptor
 	addl	$16, %esp
 	movl	%ebp, %esp
 	popl	%ebp
 	ret
 	.size	initIDT, .-initIDT
-	.section	.rodata.str1.1
-.LC11:
-	.string	"success"
-.LC12:
-	.string	"error"
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align 4
-.LC13:
+.LC11:
 	.string	"Welcome to TomatOS. The PotatOS fork written in C\r\n\n\n"
 	.align 4
-.LC14:
+.LC12:
 	.string	"Initiating floppy drive (might take a few seconds)\r\n"
 	.section	.rodata.str1.1
+.LC13:
+	.string	"Bytes Per Sector:    %6d\r\n"
+.LC14:
+	.string	"Sectors Per Cluster: %6d\r\n"
 .LC15:
-	.string	"Result: %d (%s)\r\n"
+	.string	"Number Of FATS:      %6d\r\n"
 .LC16:
-	.string	"%s\r\n"
+	.string	"Root Entries:        %6d\r\n"
 .LC17:
-	.string	"%c"
+	.string	"Sectors Per FAT:     %6d\r\n"
+.LC18:
+	.string	"Sectors Per Track:   %6d\r\n"
+.LC19:
+	.string	"Heads Per Cylinder:  %6d\r\n"
+.LC20:
+	.string	"Root sector:         %6d\r\n"
+.LC21:
+	.string	"%d "
 	.section	.text.startup,"ax",@progbits
 	.align 16
 	.globl	main
@@ -222,104 +209,108 @@ main:
 	pushl	-4(%ecx)
 	pushl	%ebp
 	movl	%esp, %ebp
-	pushl	%edi
-	pushl	%esi
 	pushl	%ebx
 	pushl	%ecx
-	subl	$24, %esp
-	call	clearscreen
+	subl	$60, %esp
+	pushl	$7
+	call	clearScreen
+	call	initGDT
 	call	initKeyboard
+	call	initMouse
 	call	initSerial
-	subl	$12, %esp
-	pushl	$100
+	movl	$100, (%esp)
 	call	setTimer
-	popl	%edi
-	popl	%eax
+	popl	%ecx
+	popl	%ebx
+	leal	-44(%ebp), %ebx
 	pushl	$112
 	pushl	$32
 	call	PIC_remap
 	call	initIDT
-	movl	$.LC13, (%esp)
+	movl	$.LC11, (%esp)
 	call	printk
 	call	initalizeFloppyDMA
-	call	floppy_detect_drives
-	movl	$.LC14, (%esp)
+	movl	$.LC12, (%esp)
 	call	printk
 	movl	$0, (%esp)
 	call	floppyInit
-	addl	$16, %esp
-	movl	$.LC12, %edx
-	testl	%eax, %eax
-	jne	.L11
-	movl	$.LC11, %edx
-.L11:
-	pushl	%ecx
-	pushl	%edx
+	movl	%ebx, (%esp)
+	call	readFileSystem
+	popl	%eax
+	xorl	%eax, %eax
+	popl	%edx
+	movw	-33(%ebp), %ax
+	pushl	%eax
+	pushl	$.LC13
+	call	printk
+	popl	%ecx
+	popl	%eax
+	xorl	%eax, %eax
+	movb	-31(%ebp), %al
+	pushl	%eax
+	pushl	$.LC14
+	call	printk
+	popl	%eax
+	xorl	%eax, %eax
+	popl	%edx
+	movb	-28(%ebp), %al
 	pushl	%eax
 	pushl	$.LC15
 	call	printk
-	popl	%ebx
-	popl	%esi
-	pushl	$0
-	pushl	$0
-	call	floppyRead
-	addl	$16, %esp
-	movl	$4128, %ecx
-	movl	%esp, -28(%ebp)
-	subl	$48, %esp
-	movl	%esp, %edi
-	movl	%esp, %esi
-	movb	$0, 32(%esp)
-	movl	%edi, -32(%ebp)
-	.align 16
-.L12:
-	leal	-32(%ecx), %ebx
-	.align 16
-.L14:
-	movb	(%ebx), %al
-	cmpb	$31, %al
-	ja	.L13
-	movb	$46, %al
-.L13:
-	movb	%al, -4096(%edi,%ebx)
-	incl	%ebx
-	cmpl	%ecx, %ebx
-	jne	.L14
+	popl	%ecx
+	popl	%eax
+	xorl	%eax, %eax
+	movw	-27(%ebp), %ax
 	pushl	%eax
-	subl	$32, %edi
-	pushl	%eax
-	pushl	%esi
 	pushl	$.LC16
 	call	printk
-	addl	$16, %esp
-	leal	32(%ebx), %ecx
-	cmpl	$4608, %ebx
-	jne	.L12
-	movl	%esi, %edx
-	movl	-32(%ebp), %edi
-	leal	32(%esi), %eax
-	.align 16
-.L16:
-	movb	$32, (%edi)
-	incl	%edi
-	cmpl	%edi, %eax
-	jne	.L16
-	pushl	%ecx
-	pushl	%ecx
-	pushl	%edx
-	pushl	$.LC16
+	popl	%eax
+	xorl	%eax, %eax
+	popl	%edx
+	movw	-22(%ebp), %ax
+	pushl	%eax
+	pushl	$.LC17
 	call	printk
-	movl	-28(%ebp), %esp
+	popl	%ecx
+	popl	%eax
+	xorl	%eax, %eax
+	movw	-20(%ebp), %ax
+	pushl	%eax
+	pushl	$.LC18
+	call	printk
+	popl	%eax
+	xorl	%eax, %eax
+	popl	%edx
+	movw	-18(%ebp), %ax
+	pushl	%eax
+	pushl	$.LC19
+	call	printk
+	popl	%ecx
+	xorl	%edx, %edx
+	popl	%eax
+	xorl	%eax, %eax
+	movw	-22(%ebp), %dx
+	movb	-28(%ebp), %al
+	imull	%edx, %eax
+	xorl	%edx, %edx
+	movw	-30(%ebp), %dx
+	addl	%edx, %eax
+	pushl	%eax
+	pushl	$.LC20
+	call	printk
+	movl	%ebx, (%esp)
+	call	readRoot
+	addl	$16, %esp
 	.align 16
-.L17:
+.L7:
 	call	getch
 	pushl	%edx
 	pushl	%edx
 	movsbl	%al, %eax
 	pushl	%eax
-	pushl	$.LC17
+	pushl	$.LC21
 	call	printk
 	addl	$16, %esp
-	jmp	.L17
+	jmp	.L7
 	.size	main, .-main
 	.ident	"GCC: (GNU) 11.5.0"

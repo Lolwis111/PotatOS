@@ -4,46 +4,11 @@
 #include "console.h"
 #include "stdint.h"
 #include "stddef.h"
-
-static char* strcpy(char *dest, const char *src)
-{
-    int i = 0;
-    while(1)
-    {
-        dest[i] = src[i];
-
-        if(src[i] == '\0')
-        {
-            break;
-        }
-
-        i++;
-    }
-
-    return dest;
-}
-
-static char* strcat(char* dest, const char* src)
-{
-    char* ptr = dest;
-
-    while(*ptr != '\0') ptr++;
-
-    strcpy(ptr, src);
-
-    return dest;
-}
-
-static int strlen(const char* str)
-{    
-    int i;
-    for(i = 0; *str; i++, str++) ;
-    return i;
-}
+#include "string.h"
 
 static void itoak(long num, char* buf, int base, char padding)
 {
-        long neg = 0;
+    long neg = 0;
     long i = 0;
 
     if (num == 0)
@@ -243,9 +208,12 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
                 {
                     void* p = __builtin_va_arg(val, void*);
 
+                    align = 8;
+                    filler = '0';
+
                     unsigned int i = (unsigned int)p;
 
-                    itoak(i, bufferPTR, 16, padding);
+                    itoak(i, bufferPTR, 16, '0');
 
                     break;
                 }
@@ -263,12 +231,14 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
             if(bufferL < align)
             {
                 char temp[align + 1];
+
+                memset(temp, filler, sizeof(char) * align);
                 temp[align] = '\0';
 
-                for(size_t t = 0; t < align; t++)
-                {
-                    temp[t] = filler;
-                }
+                // for(size_t t = 0; t < align; t++)
+                // {
+                //     temp[t] = filler;
+                // }
 
                 if(neg < 0)
                 {

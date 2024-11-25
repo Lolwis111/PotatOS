@@ -248,34 +248,6 @@ irq11_isr:
 	iret
 	.size	irq11_isr, .-irq11_isr
 	.align 16
-	.globl	irq12_isr
-	.type	irq12_isr, @function
-irq12_isr:
-	pushl	%ebp
-	movl	%esp, %ebp
-	pushl	%ecx
-	pushl	%edx
-	pushl	%eax
-	andl	$-16, %esp
-	subl	$28, %esp
-	cmpb	$77, 753688
-	sete	%al
-	decl	%eax
-	andl	$-32, %eax
-	addl	$109, %eax
-	movb	%al, 753688
-	pushl	$12
-	cld
-	call	PIC_sendEOI
-	addl	$16, %esp
-	leal	-12(%ebp), %esp
-	popl	%eax
-	popl	%edx
-	popl	%ecx
-	popl	%ebp
-	iret
-	.size	irq12_isr, .-irq12_isr
-	.align 16
 	.globl	irq13_isr
 	.type	irq13_isr, @function
 irq13_isr:

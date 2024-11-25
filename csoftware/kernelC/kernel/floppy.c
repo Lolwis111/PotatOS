@@ -5,11 +5,15 @@
 #include "pic.h"
 #include "stdbool.h"
 #include "sleep.h"
+#include "printk.h"
+#include "panic.h"
 
 static void motorOn(uint8_t drive);
 static void motorOff(uint8_t drive);
 
 static volatile bool recievedIRQ = false;
+
+static const char * statusMessages[] = { 0, "error", "invalid", "drive" };
 
 static void lba_2_chs(uint32_t lba, uint16_t* cyl, uint16_t* head, uint16_t* sector)
 {
@@ -23,16 +27,17 @@ static int readResultByte()
     volatile uint8_t msr;
     for(int i = 0; i < 256; i++)
     {
+        sleep(5);
+
         msr = inportb(MAIN_STATUS_REGISTER);
-        if((msr & 0xD0) == 0xD0)
+        if(msr & 0x80)
         {
             return inportb(DATA_FIFO);
         }
-
-        io_wait();
     }
 
-    return -1;
+    panic("Floppy result byte: timeout");
+    return 1;
 }
 
 static void floppySendCommand(uint8_t cmd)
@@ -51,15 +56,13 @@ static void floppySendCommand(uint8_t cmd)
     }
 }
 
-static int sense()
+static void sense(int* st0, int* cyl)
 {
     floppySendCommand(SENSE_INTERRUPT);
 
-    int res = readResultByte();
+    *st0 = readResultByte();
 
-    readResultByte();
-
-    return res;
+    *cyl = readResultByte();
 }
 
 static int waitIRQ(int timeout)
@@ -68,7 +71,6 @@ static int waitIRQ(int timeout)
 
     while(!recievedIRQ) 	// Wait for the IRQ handler to run
     {
-        // io_wait();
         hlt();
         waiter += 1;
         if(waiter >= timeout) return 1;
@@ -83,24 +85,19 @@ int resetController(void)
 
     // Enter, then exit reset mode.
     outportb(DIGITAL_OUTPUT_REGISTER, 0x00);
-
-    outportb(CONFIGURATION_CONTROL_REGISTER, 0x00);	// 500Kbps -- for 1.44M floppy
-
     outportb(DIGITAL_OUTPUT_REGISTER, 0x0C);
 
     if(waitIRQ(1000) != 0) return 1;
 
-    sense();
-    sense();
-    sense();
-    sense();
+    int st0, cyl;
+    sense(&st0, &cyl);
+
+    outportb(CONFIGURATION_CONTROL_REGISTER, 0x00);	// 500Kbps -- for 1.44M floppy
 
     // configure the drive
     floppySendCommand(SPECIFY);
-    floppySendCommand(0x80);
-    floppySendCommand(0x0A);
-
-    floppySeek(1, 0);
+    floppySendCommand(0xDF);
+    floppySendCommand(0x02);
 
     floppyRecalibrate(0);
 
@@ -111,10 +108,11 @@ int floppyRecalibrate(uint8_t drive)
 {
     motorOn(drive);
 
-    int tries = 0;
-    int lastError = 0;
+    sleep(300);
 
-    for(tries = 0; tries < 3; tries++)
+    int tries = 0;
+
+    for(tries = 0; tries < 10; tries++)
     {
         recievedIRQ = false;
 
@@ -124,23 +122,29 @@ int floppyRecalibrate(uint8_t drive)
 
         if(waitIRQ(5000) != 0)
         {
-            lastError = 1;
             continue;
         }
 
-        if(sense() != (0x20 | drive))
+        int st0, cyl;
+        sense(&st0, &cyl);
+
+        if(st0 & 0xC0)
         {
-            lastError = 2;
+            printk("floppyRecalibrate: status = %s\n", statusMessages[st0 >> 6]);
             continue;
+        }
+
+        if(!cyl)
+        {
+            motorOff(drive);
+            return 0;
         }
     }
 
     motorOff(drive);
 
-    if(tries == 3)
-        return lastError;
-    
-    return 0;
+    panic("Floppy calibrate: timeout");
+    return 1;
 }
 
 static void motorOn(uint8_t drive)
@@ -202,23 +206,17 @@ int floppyInit(uint8_t drive)
     floppySendCommand(LOCK);
     readResultByte();
 
-    int res2 = resetController();
-
-    if(res2 != 0)
+    if(resetController() != 0)
     {
-        return 10 + res2;
+        printk("floppyReset fail");
+        return 1;
     }
 
     motorOn(drive);
 
     sleep(300);
     
-    res2 = floppyRecalibrate(drive);
-
-    if(res2 != 0)
-    {
-        return 20 + res2;
-    }
+    floppyRecalibrate(drive);
 
     sleep(100);
 
@@ -229,48 +227,71 @@ int floppyInit(uint8_t drive)
 
 int floppySeek(uint8_t track, uint8_t drive)
 {
-    recievedIRQ = false;
+    // printk("Seeking to track %d on drive %d\r\n", track, drive);
 
-    floppySendCommand(SEEK);
-    floppySendCommand(drive);
-    floppySendCommand(track);
+    motorOn(drive);
 
-    if(waitIRQ(1000) != 0)
+    for(int i = 0; i < 10; i++)
     {
-        return 1;
+        recievedIRQ = false;
+
+        floppySendCommand(SEEK);
+        floppySendCommand(drive);
+        floppySendCommand(track);
+
+        if(waitIRQ(1000) != 0)
+        {
+            return 1;
+        }
+
+        int st0, cyl;
+        sense(&st0, &cyl);
+
+        if(st0 & 0xC0)
+        {
+            printk("floppy_seek: status = %s\n", statusMessages[st0 >> 6]);
+            continue;
+        }
+
+        if(cyl == track)
+        {
+            motorOff(drive);
+            return 0;
+        }
     }
 
-    if(sense() != (0x20 | drive))
-    {
-        return 2;
-    }
-
-    return 0;
+    panic("Floppy seek: timeout");
+    return 1;
 }
 
 int floppyRead(uint32_t lba, uint8_t drive)
 {
-    uint16_t cyl, head, sector;
+    uint16_t track, head, sector;
 
-    lba_2_chs(lba, &cyl, &head, &sector);
+    lba_2_chs(lba, &track, &head, &sector);
 
-    // uint8_t msr = inportb(MAIN_STATUS_REGISTER);
+    outportb(CONFIGURATION_CONTROL_REGISTER, 0x00);	// 500Kbps -- for 1.44M floppy
 
     motorOn(drive);
+
+    sleep(500);
+
+    floppySeek(track, drive);
 
     int tries = 0;
 
     uint8_t status[7];
-
-    for(tries = 0; tries < 3; tries++)
+    for(tries = 0; tries < 10; tries++)
     {
+        motorOn(drive);
+
         recievedIRQ = false;
 
-        floppySendCommand(READ_DATA);
+        floppySendCommand(READ_DATA | 0xC0);
 
         floppySendCommand((head << 2) | drive);
 
-        floppySendCommand(cyl);
+        floppySendCommand(track);
 
         floppySendCommand(head);
 
@@ -278,26 +299,126 @@ int floppyRead(uint32_t lba, uint8_t drive)
 
         floppySendCommand(2);
 
-        floppySendCommand(0x12);
+        floppySendCommand(18);
 
         floppySendCommand(0x1B);
 
         floppySendCommand(0xFF);
 
         waitIRQ(1000);
+        
+        // first read status information
+        status[0] = readResultByte();
+        status[1] = readResultByte();
+        status[2] = readResultByte();
+        status[3] = readResultByte();
+        status[4] = readResultByte();
+        status[5] = readResultByte();
+        status[6] = readResultByte();
 
-        for(int i = 0; i < 7; i++)
+        int error = 0;
+
+        if(status[0] & 0xC0)
         {
-            status[i] = (uint8_t)readResultByte();
-            io_wait();
+            printk("floppyRead: status = %s\n", statusMessages[status[0] >> 6]);
+            error = 1;
         }
 
-        if((status[0] & 0xC0) == 0) break;
+        if(status[1] & 0x80)
+        {
+            printk("floppyRead: end of cylinder\n");
+            error = 1;
+        }
 
-        floppyRecalibrate(drive);
+        if(status[0] & 0x08)
+        {
+            printk("floppyRead: drive not ready\n");
+            error = 1;
+        }
+
+        if(status[1] & 0x20)
+        {
+            printk("floppyRead: CRC error\n");
+            error = 1;
+        }
+
+        if(status[1] & 0x10)
+        {
+            printk("floppyRead: controller timeout\n");
+            error = 1;
+        }
+
+        if(status[1] & 0x04)
+        {
+            printk("floppyRead: no data found\n");
+            error = 1;
+        }
+
+        if((status[1]|status[2]) & 0x01)
+        {
+            printk("floppyRead: no address mark found\n");
+            error = 1;
+        }
+        
+        if(status[2] & 0x40)
+        {
+            printk("floppyRead: deleted address mark\n");
+            error = 1;
+        }
+
+        if(status[2] & 0x20)
+        {
+            printk("floppyRead: CRC error in data\n");
+            error = 1;
+        }
+
+        if(status[2] & 0x10)
+        {
+            printk("floppyRead: wrong cylinder\n");
+            error = 1;
+        }
+
+        if(status[2] & 0x04)
+        {
+            printk("floppyRead: uPD765 sector not found\n");
+            error = 1;
+        }
+
+        if(status[2] & 0x02)
+        {
+            printk("floppyRead: bad cylinder\n");
+            error = 1;
+        }
+
+        if(status[6] != 0x2)
+        {
+            printk("floppyRead: wanted 512B/sector, got %d", (1<<(status[6]+7)));
+            error = 1;
+        }
+
+        // if(status[1] & 0x02)
+        // {
+        //     printk("floppy_do_sector: not writable\n");
+        //     error = 2;
+        // }
+
+        if(!error)
+        {
+            motorOff(drive);
+            return 0;
+        }
+
+        if(error > 1)
+        {
+            printk("floppy_do_sector: not retrying..\n");
+            motorOff(drive);
+            return -2;
+        }
     }
 
     motorOff(drive);
+
+    sleep(300);
 
     return 0;
 }

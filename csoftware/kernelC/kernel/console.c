@@ -2,10 +2,16 @@
 #include "stddef.h"
 #include "stdint.h"
 #include "asm.h"
+#include "string.h"
 
 static uint8_t screenX = 0;
 static uint8_t screenY = 0;
 static char global_color = 0x07;
+
+void setColor(char color)
+{
+    global_color = color;
+}
 
 void clearScreenC(char color)
 {
@@ -14,12 +20,13 @@ void clearScreenC(char color)
     const uint16_t value = (color << 8) | 0x20;
 
     asm volatile(
+        "cld;"
         "movw %0, %%ax;\n"
         "movl $2000, %%ecx;\n"
         "movl $0xB8000,%%edi;\n"
         "rep stosw;\n"
         : 
-        : "r"(value)
+        : "rim"(value)
         : "memory", "eax", "ecx", "edi"
     );
 
@@ -39,7 +46,7 @@ static void moveBuffer()
     char* dest = vmem;
     char* src = dest + (SCREEN_WIDTH * 2);
 
-    const uint32_t size = SCREEN_BUFFER_SIZE - (SCREEN_WIDTH * 2);
+    const uint32_t size = (SCREEN_BUFFER_SIZE - (SCREEN_WIDTH * 2)) / 2;
 
     // for(uint32_t i = 0; i < size; i++)
     // {
@@ -48,11 +55,14 @@ static void moveBuffer()
     //     dest++;
     // }
 
+    // memmove(dest, src, size);
+
     asm volatile(
+        "cld;"
         "movl %0, %%ecx;\n"
         "movl %1,%%esi;\n"
         "movl %2,%%edi;\n"
-        "rep movsw;\n"
+        "rep movsd;\n"
         : 
         : "ri"(size), "ri"(src), "ri"(dest)
         : "memory", "ecx", "esi", "edi"
@@ -63,6 +73,7 @@ static void moveBuffer()
     char* end = vmem + SCREEN_BUFFER_SIZE - (SCREEN_WIDTH * 2);
 
     asm volatile(
+        "cld;"
         "movw %0, %%ax;\n"
         "movl %1, %%ecx;\n"
         "movl %2,%%edi;\n"

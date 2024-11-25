@@ -18,7 +18,7 @@ int tolower(int ch)
 
     if(c >= 'A' && c <= 'Z')
     {
-        return (c | 0x80);
+        return (c + 32);
     }
 
     return c;
@@ -30,7 +30,7 @@ int toupper(int ch)
 
     if(c >= 'a' && c <= 'z')
     {
-        return (c ^ 0x80);
+        return (c - 32);
     }
 
     return c;

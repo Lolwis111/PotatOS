@@ -8,7 +8,6 @@ switchToPM:
     or eax, 0x00000001
     mov cr0, eax
 
-
     jmp CODE_SEGMENT:initPM
 
 [BITS 32]

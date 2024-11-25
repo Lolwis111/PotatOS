@@ -16,7 +16,7 @@ __attribute__((interrupt)) void timer_isr(struct interrupt_frame* frame)
 
 void setTimer(int hz)
 {
-    int divisor = 1193180 / hz;       /* Calculate our divisor */
+    uint16_t divisor = 1193180 / hz;       /* Calculate our divisor */
     outportb(0x43, 0x34);             /* Set our command byte 0x34 */
     io_wait();
     outportb(0x40, divisor & 0xFF);   /* Set low byte of divisor */

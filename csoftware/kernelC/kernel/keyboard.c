@@ -1,6 +1,7 @@
 #include "keyboard.h"
 #include "pic.h"
 #include "asm.h"
+#include "ps2.h"
 
 static volatile char kbBuffer[KB_BUFFER_SIZE];
 static volatile int start = 0;
@@ -83,13 +84,6 @@ char getch(void)
     end = (end + 1) % KB_BUFFER_SIZE;
 
     return c;
-}
-
-static void sendPS2Command(uint8_t command)
-{
-    while ((inportb(STATUS_PORT) & 0x02) > 0);
-
-    outportb(COMMAND_PORT, command);
 }
 
 void initKeyboard()

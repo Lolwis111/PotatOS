@@ -44,11 +44,22 @@ io_wait:
 	ret
 	.size	io_wait, .-io_wait
 	.align 16
+	.globl	pop
+	.type	pop, @function
+pop:
+/APP
+/  23 "asm.c" 1
+	pop %eax
+/  0 "" 2
+/NO_APP
+	ret
+	.size	pop, .-pop
+	.align 16
 	.globl	cli
 	.type	cli, @function
 cli:
 /APP
-/  22 "asm.c" 1
+/  29 "asm.c" 1
 	cli;
 /  0 "" 2
 /NO_APP
@@ -59,7 +70,7 @@ cli:
 	.type	sti, @function
 sti:
 /APP
-/  27 "asm.c" 1
+/  34 "asm.c" 1
 	sti;
 /  0 "" 2
 /NO_APP
@@ -70,21 +81,32 @@ sti:
 	.type	hlt, @function
 hlt:
 /APP
-/  32 "asm.c" 1
+/  39 "asm.c" 1
 	hlt;
 /  0 "" 2
 /NO_APP
 	ret
 	.size	hlt, .-hlt
 	.align 16
-	.globl	int3
-	.type	int3, @function
-int3:
+	.globl	breakpoint
+	.type	breakpoint, @function
+breakpoint:
 /APP
-/  37 "asm.c" 1
+/  44 "asm.c" 1
 	int3;
 /  0 "" 2
 /NO_APP
 	ret
-	.size	int3, .-int3
+	.size	breakpoint, .-breakpoint
+	.align 16
+	.globl	int80
+	.type	int80, @function
+int80:
+/APP
+/  49 "asm.c" 1
+	int $0x80;
+/  0 "" 2
+/NO_APP
+	ret
+	.size	int80, .-int80
 	.ident	"GCC: (GNU) 11.5.0"

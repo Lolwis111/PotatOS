@@ -1,27 +1,29 @@
 	.file	"printk.c"
 	.text
 	.align 16
-	.type	itoa.part.0, @function
-itoa.part.0:
+	.type	itoak.part.0, @function
+itoak.part.0:
 	pushl	%ebp
-	testl	%eax, %eax
 	movl	%esp, %ebp
 	pushl	%edi
 	pushl	%esi
 	movl	%ecx, %edi
 	pushl	%ebx
-	pushl	%ebx
 	movl	%edx, %ebx
-	jns	.L11
+	subl	$12, %esp
+	testl	%eax, %eax
+	movl	8(%ebp), %esi
+	movl	%esi, -24(%ebp)
+	jns	.L13
 	cmpl	$10, %ecx
-	jne	.L11
+	jne	.L13
 	negl	%eax
-	movl	$1, -16(%ebp)
+	movl	$1, -20(%ebp)
 .L2:
 	xorl	%ecx, %ecx
 	jmp	.L5
 	.align 16
-.L12:
+.L14:
 	movl	%edx, %ecx
 .L5:
 	movl	%eax, %edx
@@ -36,51 +38,60 @@ itoa.part.0:
 	testl	%eax, %eax
 	movb	%dl, (%ebx,%ecx)
 	leal	1(%ecx), %edx
-	jne	.L12
+	jne	.L14
 	movl	%edx, %edi
-	movl	%esi, %edx
-	cmpl	$1, -16(%ebp)
-	movl	%edi, %esi
+	movl	%edx, -16(%ebp)
+	addl	%ebx, %edi
+	cmpl	$1, -20(%ebp)
 	je	.L24
+	movl	-24(%ebp), %edx
+	testb	%dl, %dl
+	jne	.L25
+	movl	-16(%ebp), %edi
 	testl	%ecx, %ecx
-	je	.L9
-	movl	%edx, %edi
-	jmp	.L10
+	je	.L10
+	movl	%ecx, %edx
+	jmp	.L11
 	.align 16
-.L25:
-	movzbl	(%ebx,%ecx), %edi
-.L10:
-	movb	(%ebx,%eax), %dl
-	movb	%dl, -16(%ebp)
-	movl	%edi, %edx
-	movb	%dl, (%ebx,%eax)
-	movb	-16(%ebp), %dl
-	movb	%dl, (%ebx,%ecx)
+.L26:
+	movzbl	(%ebx,%edx), %esi
+.L11:
+	movb	(%ebx,%eax), %cl
+	movb	%cl, -16(%ebp)
+	movl	%esi, %ecx
+	movb	%cl, (%ebx,%eax)
+	movb	-16(%ebp), %cl
+	movb	%cl, (%ebx,%edx)
 	incl	%eax
-	decl	%ecx
-	cmpl	%eax, %ecx
-	jg	.L25
-.L9:
-	movb	$0, (%ebx,%esi)
-	popl	%eax
+	decl	%edx
+	cmpl	%eax, %edx
+	jg	.L26
+.L10:
+	movb	$0, (%ebx,%edi)
+	addl	$12, %esp
 	popl	%ebx
 	popl	%esi
 	popl	%edi
 	popl	%ebp
 	ret
 	.align 16
-.L11:
-	movl	$0, -16(%ebp)
+.L13:
+	movl	$0, -20(%ebp)
 	jmp	.L2
 	.align 16
-.L24:
-	leal	2(%ecx), %edx
-	movb	$45, (%ebx,%edi)
-	movl	%edi, %ecx
+.L25:
+	movb	%dl, (%edi)
 	movl	%edx, %esi
-	movl	$45, %edi
-	jmp	.L10
-	.size	itoa.part.0, .-itoa.part.0
+	leal	2(%ecx), %edi
+	movl	-16(%ebp), %edx
+	jmp	.L11
+	.align 16
+.L24:
+	movb	$45, (%edi)
+	movl	$45, %esi
+	leal	2(%ecx), %edi
+	jmp	.L11
+	.size	itoak.part.0, .-itoak.part.0
 	.align 16
 	.globl	vsprintk
 	.type	vsprintk, @function
@@ -90,457 +101,528 @@ vsprintk:
 	pushl	%edi
 	pushl	%esi
 	pushl	%ebx
-	subl	$48, %esp
+	subl	$76, %esp
 	movl	8(%ebp), %esi
-	movl	12(%ebp), %ecx
-	movl	16(%ebp), %edx
-	movb	$0, (%esi)
-	movb	(%ecx), %al
+	movl	12(%ebp), %ebx
+	testl	%esi, %esi
+	je	.L28
+	movl	8(%ebp), %eax
+	movb	$0, (%eax)
+.L28:
+	movb	(%ebx), %al
 	testb	%al, %al
-	je	.L93
-	xorl	%edi, %edi
+	je	.L75
+	movb	$0, -69(%ebp)
+	movb	$32, -70(%ebp)
+	movl	$0, -60(%ebp)
+	jmp	.L71
 	.align 16
-.L76:
+.L109:
+	pushl	%eax
+	movl	%ebx, %esi
+	pushl	%eax
+	leal	-56(%ebp), %eax
+	pushl	%eax
+	leal	1(%ebx), %ebx
+	movl	8(%ebp), %edx
+	pushl	%edx
+	call	strcat
+	addl	$16, %esp
+.L70:
+	movb	1(%esi), %al
+	testb	%al, %al
+	je	.L107
+.L71:
 	cmpb	$37, %al
-	je	.L147
-	incl	%edi
-	movb	%al, -44(%ebp)
-	cmpb	$0, (%esi)
-	movb	$0, -43(%ebp)
-	movl	%esi, %ebx
-	je	.L74
-	.align 16
-.L75:
-	incl	%ebx
-	cmpb	$0, (%ebx)
-	jne	.L75
-.L74:
-	movb	%al, (%ebx)
-	movb	$0, 1(%ebx)
-	movl	%ecx, %ebx
-.L33:
-	movb	1(%ebx), %al
-	leal	1(%ebx), %ecx
+	je	.L108
+	movl	-60(%ebp), %ecx
+	movl	8(%ebp), %esi
+	incl	%ecx
+	movb	%al, -56(%ebp)
+	movb	$0, -55(%ebp)
+	movl	%ecx, -60(%ebp)
+	testl	%esi, %esi
+	jne	.L109
+	movl	%ebx, %esi
+	leal	1(%ebx), %ebx
+	movb	1(%esi), %al
 	testb	%al, %al
-	jne	.L76
-	addl	$48, %esp
-	movl	%edi, %eax
+	jne	.L71
+.L107:
+	movl	-60(%ebp), %eax
+	leal	-12(%ebp), %esp
 	popl	%ebx
 	popl	%esi
 	popl	%edi
 	popl	%ebp
 	ret
 	.align 16
-.L147:
-	movb	1(%ecx), %al
+.L108:
+	movb	1(%ebx), %al
 	cmpb	$45, %al
-	je	.L29
-	leal	1(%ecx), %ebx
-.L30:
-	leal	-48(%eax), %ecx
+	je	.L31
+	leal	1(%ebx), %esi
+	movl	$1, -76(%ebp)
+	cmpb	$43, %al
+	leal	1(%esi), %ebx
+	je	.L33
+.L112:
+	cmpb	$48, %al
+	je	.L34
+	cmpb	$32, %al
+	je	.L110
+.L36:
+	leal	-48(%eax), %edx
+	cmpb	$9, %dl
+	ja	.L37
+.L113:
+	xorl	%edi, %edi
+	jmp	.L38
 	.align 16
-.L31:
-	cmpb	$9, %cl
-	jbe	.L31
+.L111:
+	incl	%ebx
+.L38:
+	subl	$48, %eax
+	leal	(%edi,%edi,4), %edx
+	movsbl	%al, %eax
+	movl	%ebx, %esi
+	leal	(%eax,%edx,2), %edi
+	movb	(%ebx), %al
+	leal	-48(%eax), %edx
+	cmpb	$9, %dl
+	jbe	.L111
 	cmpb	$37, %al
-	je	.L32
-	subl	$99, %eax
-	cmpb	$21, %al
-	ja	.L33
+	je	.L39
+	subl	$88, %eax
+	cmpb	$32, %al
+	ja	.L40
 	andl	$255, %eax
-	jmp	*.L35(,%eax,4)
+	jmp	*.L42(,%eax,4)
 	.section	.rodata
 	.align 4
 	.align 4
-.L35:
+.L42:
+	.long	.L49
 	.long	.L40
-	.long	.L39
-	.long	.L33
-	.long	.L33
-	.long	.L33
-	.long	.L33
-	.long	.L39
-	.long	.L33
-	.long	.L33
-	.long	.L33
-	.long	.L33
-	.long	.L33
-	.long	.L38
-	.long	.L37
-	.long	.L33
-	.long	.L33
-	.long	.L36
-	.long	.L33
-	.long	.L33
-	.long	.L33
-	.long	.L33
-	.long	.L34
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L48
+	.long	.L43
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L43
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L40
+	.long	.L46
+	.long	.L90
+	.long	.L40
+	.long	.L40
+	.long	.L44
+	.long	.L40
+	.long	.L43
+	.long	.L40
+	.long	.L40
+	.long	.L41
 	.text
 	.align 16
-.L29:
-	leal	2(%ecx), %ebx
-	movb	2(%ecx), %al
-	jmp	.L30
-.L39:
-	leal	4(%edx), %eax
-	movl	%eax, -48(%ebp)
-	movl	(%edx), %eax
+.L43:
+	movl	%edi, -64(%ebp)
+	incl	%ebx
+.L53:
+	movl	16(%ebp), %eax
+	addl	$4, %eax
+	movl	%eax, -68(%ebp)
+	movl	16(%ebp), %eax
+	movl	(%eax), %eax
 	testl	%eax, %eax
-	je	.L148
-	leal	-44(%ebp), %edx
+	je	.L103
+	movsbl	-69(%ebp), %edx
 	movl	$10, %ecx
-	call	itoa.part.0
-	movb	-44(%ebp), %dl
-	testb	%dl, %dl
-	je	.L43
-	movb	-43(%ebp), %cl
-	xorl	%eax, %eax
-	jmp	.L44
-	.align 16
-.L149:
-	movb	-43(%ebp,%eax), %cl
-.L44:
-	incl	%eax
-	testb	%cl, %cl
-	jne	.L149
-.L42:
-	addl	%eax, %edi
-	cmpb	$0, (%esi)
-	je	.L150
-.L77:
-	movl	%esi, %eax
-	.align 16
-.L45:
-	incl	%eax
-	cmpb	$0, (%eax)
-	jne	.L45
-	movb	%dl, (%eax)
-	testb	%dl, %dl
-	je	.L146
-.L78:
-	xorl	%ecx, %ecx
-	leal	-44(%ebp), %edx
-	movl	%ebx, -52(%ebp)
-	.align 16
-.L46:
-	incl	%ecx
-	movb	(%edx,%ecx), %bl
-	movb	%bl, (%eax,%ecx)
-	testb	%bl, %bl
-	jne	.L46
-.L143:
-	movl	-52(%ebp), %ebx
-	movl	-48(%ebp), %edx
-	jmp	.L33
-.L38:
-	leal	4(%edx), %eax
-	movl	%eax, -48(%ebp)
-	movl	(%edx), %eax
-	testl	%eax, %eax
-	je	.L151
-	leal	-44(%ebp), %edx
-	movl	$8, %ecx
-	call	itoa.part.0
-	movb	-44(%ebp), %dl
-	testb	%dl, %dl
-	je	.L49
-	movb	-43(%ebp), %cl
-	xorl	%eax, %eax
+	pushl	%edx
+.L104:
+	leal	-56(%ebp), %edx
+	call	itoak.part.0
+	movl	-68(%ebp), %eax
+	popl	%ecx
+	movl	%eax, 16(%ebp)
+	leal	-56(%ebp), %eax
+	movl	%eax, -68(%ebp)
 	jmp	.L50
 	.align 16
-.L152:
-	movb	-43(%ebp,%eax), %cl
-.L50:
-	incl	%eax
-	testb	%cl, %cl
-	jne	.L152
-.L48:
-	addl	%eax, %edi
-	cmpb	$0, (%esi)
-	je	.L153
-.L80:
-	movl	%esi, %eax
-	.align 16
-.L51:
-	incl	%eax
-	cmpb	$0, (%eax)
-	jne	.L51
-	movb	%dl, (%eax)
-	testb	%dl, %dl
-	je	.L146
-.L81:
-	xorl	%ecx, %ecx
-	leal	-44(%ebp), %edx
-	movl	%ebx, -52(%ebp)
-	.align 16
-.L52:
-	incl	%ecx
-	movb	(%edx,%ecx), %bl
-	movb	%bl, (%eax,%ecx)
-	testb	%bl, %bl
-	jne	.L52
-	jmp	.L143
+.L31:
+	leal	2(%ebx), %esi
+	movb	2(%ebx), %al
+	movl	$-1, -76(%ebp)
+	cmpb	$43, %al
+	leal	1(%esi), %ebx
+	jne	.L112
+.L33:
+	movb	1(%esi), %al
+	movb	$43, -69(%ebp)
+	movl	%ebx, %esi
+	leal	1(%ebx), %ebx
+	leal	-48(%eax), %edx
+	cmpb	$9, %dl
+	jbe	.L113
 .L37:
-	leal	4(%edx), %eax
-	movl	%eax, -52(%ebp)
-	movl	(%edx), %eax
-	movl	%eax, -48(%ebp)
-	testl	%eax, %eax
-	je	.L154
-	leal	-44(%ebp), %edx
-	movl	-48(%ebp), %eax
-	movl	$16, %ecx
-	movl	%edx, -60(%ebp)
-	call	itoa.part.0
-	movb	-44(%ebp), %al
-	movb	%al, -56(%ebp)
-	testb	%al, %al
+	cmpb	$37, %al
+	je	.L78
+	subl	$88, %eax
+	cmpb	$32, %al
+	ja	.L72
+	andl	$255, %eax
+	jmp	*.L74(,%eax,4)
+	.section	.rodata
+	.align 4
+	.align 4
+.L74:
+	.long	.L79
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L80
+	.long	.L84
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L84
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L72
+	.long	.L82
+	.long	.L45
+	.long	.L72
+	.long	.L72
+	.long	.L83
+	.long	.L72
+	.long	.L84
+	.long	.L72
+	.long	.L72
+	.long	.L85
+	.text
+	.align 16
+.L110:
+	movb	1(%esi), %al
+	movb	$32, -69(%ebp)
+	movl	%ebx, %esi
+	leal	1(%ebx), %ebx
+	jmp	.L36
+	.align 16
+.L34:
+	movb	1(%esi), %al
+	movb	$48, -70(%ebp)
+	movl	%ebx, %esi
+	leal	1(%ebx), %ebx
+	jmp	.L36
+	.align 16
+.L40:
+	leal	-56(%ebp), %eax
+	movl	%edi, -64(%ebp)
+	movl	%eax, -68(%ebp)
+	incl	%ebx
+	.align 16
+.L50:
+	subl	$12, %esp
+	movl	-68(%ebp), %eax
+	pushl	%eax
+	call	strlen
+	addl	$16, %esp
+	cmpl	-64(%ebp), %eax
+	jb	.L114
+.L66:
 	movl	-60(%ebp), %edx
-	je	.L67
-	movb	-43(%ebp), %cl
-	xorl	%eax, %eax
-	jmp	.L69
+	movl	8(%ebp), %ecx
+	addl	%eax, %edx
+	testl	%ecx, %ecx
+	movl	%edx, -60(%ebp)
+	je	.L70
+	pushl	%edi
+	pushl	%edi
+	movl	-68(%ebp), %eax
+	pushl	%eax
+	movl	8(%ebp), %eax
+	pushl	%eax
+	call	strcat
+	addl	$16, %esp
+	jmp	.L70
 	.align 16
-.L155:
-	movb	-43(%ebp,%eax), %cl
-.L69:
-	incl	%eax
-	testb	%cl, %cl
-	jne	.L155
-	addl	%eax, %edi
-	movl	-48(%ebp), %eax
-	cmpb	$0, (%eax)
-	je	.L156
-.L139:
-	movl	-48(%ebp), %eax
-	.align 16
-.L70:
-	incl	%eax
-	cmpb	$0, (%eax)
-	jne	.L70
-	movl	%eax, %ecx
-	movl	%eax, -48(%ebp)
-	movb	-56(%ebp), %al
-	movb	%al, (%ecx)
+.L103:
+	movl	-68(%ebp), %eax
+	movw	$48, -56(%ebp)
+	movl	%eax, 16(%ebp)
+	leal	-56(%ebp), %eax
+	movl	%eax, -68(%ebp)
+	jmp	.L50
+.L46:
+	movl	%edi, -64(%ebp)
+	incl	%ebx
+.L55:
+	movl	16(%ebp), %eax
+	addl	$4, %eax
+	movl	%eax, -68(%ebp)
+	movl	16(%ebp), %eax
+	movl	(%eax), %eax
+	testl	%eax, %eax
+	je	.L103
+	movsbl	-69(%ebp), %edx
+	movl	$8, %ecx
+	pushl	%edx
+	jmp	.L104
+.L44:
+	movl	%edi, -64(%ebp)
+	incl	%ebx
+.L63:
+	movl	16(%ebp), %eax
+	movl	(%eax), %eax
+	movl	%eax, -68(%ebp)
+	movl	16(%ebp), %eax
+	addl	$4, %eax
+	movl	%eax, 16(%ebp)
+	jmp	.L50
+.L49:
+	movl	%edi, -64(%ebp)
+	incl	%ebx
+.L59:
+	movl	16(%ebp), %eax
+	addl	$4, %eax
+	movl	%eax, -68(%ebp)
+	movl	16(%ebp), %eax
+	movl	(%eax), %eax
+	testl	%eax, %eax
+	je	.L115
+	movsbl	-69(%ebp), %edx
+	movl	$16, %ecx
+	pushl	%edx
+	leal	-56(%ebp), %edx
+	call	itoak.part.0
+	popl	%edx
+	movsbl	-56(%ebp), %eax
 	testb	%al, %al
-	je	.L144
-.L91:
-	xorl	%eax, %eax
-	movl	%ebx, -56(%ebp)
-	movl	-48(%ebp), %ecx
-	.align 16
-.L71:
-	incl	%eax
-	movb	(%edx,%eax), %bl
-	movb	%bl, (%ecx,%eax)
-	testb	%bl, %bl
-	jne	.L71
-.L141:
-	movl	-56(%ebp), %ebx
-.L144:
-	movl	-52(%ebp), %edx
-	jmp	.L33
-.L36:
-	leal	4(%edx), %eax
-	movb	(%esi), %cl
-	movl	%eax, -52(%ebp)
-	movl	(%edx), %eax
-	movl	%eax, -48(%ebp)
-	movb	(%eax), %dl
-	testb	%dl, %dl
-	je	.L59
-	movl	%ebx, -56(%ebp)
-	xorl	%eax, %eax
-	movl	-48(%ebp), %ebx
-	.align 16
-.L60:
-	incl	%eax
-	cmpb	$0, (%ebx,%eax)
-	jne	.L60
-	addl	%eax, %edi
-	movl	-56(%ebp), %ebx
-	testb	%cl, %cl
-	je	.L157
-.L83:
-	movl	%esi, %eax
+	je	.L76
+.L61:
+	leal	-56(%ebp), %edx
+	movl	%ebx, -80(%ebp)
+	movl	%edx, %ebx
 	.align 16
 .L62:
-	incl	%eax
-	cmpb	$0, (%eax)
+	subl	$12, %esp
+	incl	%ebx
+	pushl	%eax
+	call	toupper
+	movb	%al, -1(%ebx)
+	addl	$16, %esp
+	movsbl	(%ebx), %eax
+	testb	%al, %al
 	jne	.L62
-	movb	%dl, (%eax)
-	testb	%dl, %dl
-	je	.L144
-.L84:
-	movl	%ebx, -56(%ebp)
-	xorl	%edx, %edx
-	movl	-48(%ebp), %ebx
-	.align 16
-.L63:
-	incl	%edx
-	movb	(%ebx,%edx), %cl
-	movb	%cl, (%eax,%edx)
-	testb	%cl, %cl
-	jne	.L63
-	jmp	.L141
-.L34:
-	leal	4(%edx), %eax
-	movl	%eax, -48(%ebp)
-	movl	(%edx), %eax
-	testl	%eax, %eax
-	je	.L158
-	leal	-44(%ebp), %edx
-	movl	$16, %ecx
-	call	itoa.part.0
-	movb	-44(%ebp), %dl
-	testb	%dl, %dl
-	je	.L55
-	movb	-43(%ebp), %cl
-	xorl	%eax, %eax
-	jmp	.L56
-	.align 16
-.L159:
-	movb	-43(%ebp,%eax), %cl
-.L56:
-	incl	%eax
-	testb	%cl, %cl
-	jne	.L159
-.L54:
-	addl	%eax, %edi
-	cmpb	$0, (%esi)
-	je	.L160
-.L87:
-	movl	%esi, %eax
-	.align 16
-.L57:
-	incl	%eax
-	cmpb	$0, (%eax)
-	jne	.L57
-	movb	%dl, (%eax)
-	testb	%dl, %dl
-	je	.L146
-.L86:
-	xorl	%ecx, %ecx
-	leal	-44(%ebp), %edx
-	movl	%ebx, -52(%ebp)
-	.align 16
-.L58:
-	incl	%ecx
-	movb	(%edx,%ecx), %bl
-	movb	%bl, (%eax,%ecx)
-	testb	%bl, %bl
-	jne	.L58
-	jmp	.L143
-.L40:
-	leal	4(%edx), %ecx
-	movl	(%edx), %edx
-	incl	%edi
-	movb	%dl, -44(%ebp)
-	cmpb	$0, (%esi)
-	movb	$0, -43(%ebp)
-	movl	%esi, %eax
-	je	.L64
-	.align 16
-.L65:
-	incl	%eax
-	cmpb	$0, (%eax)
-	jne	.L65
+	movl	-68(%ebp), %eax
+	movl	-80(%ebp), %ebx
+	movl	%eax, 16(%ebp)
+	leal	-56(%ebp), %eax
+	movl	%eax, -68(%ebp)
+	jmp	.L50
+.L48:
+	movl	%edi, -64(%ebp)
+	incl	%ebx
 .L64:
-	movb	%dl, (%eax)
-	testb	%dl, %dl
+	movl	16(%ebp), %eax
+	movb	$0, -55(%ebp)
+	movl	(%eax), %eax
+	movb	%al, -56(%ebp)
+	movl	16(%ebp), %eax
+	addl	$4, %eax
+	movl	%eax, 16(%ebp)
+	leal	-56(%ebp), %eax
+	movl	%eax, -68(%ebp)
+	jmp	.L50
+.L41:
+	movl	%edi, -64(%ebp)
+	incl	%ebx
+.L57:
+	movl	16(%ebp), %eax
+	addl	$4, %eax
+	movl	%eax, -68(%ebp)
+	movl	16(%ebp), %eax
+	movl	(%eax), %eax
+	testl	%eax, %eax
 	je	.L103
-	movb	$0, 1(%eax)
-	movl	%ecx, %edx
-	jmp	.L33
-.L32:
-	cmpb	$0, (%esi)
-	movw	$37, -44(%ebp)
-	movl	%esi, %eax
-	je	.L72
+	movsbl	-69(%ebp), %edx
+	movl	$16, %ecx
+	pushl	%edx
+	jmp	.L104
+.L90:
+	incl	%ebx
+.L45:
+	movl	16(%ebp), %eax
+	leal	4(%eax), %edi
+	movl	(%eax), %eax
+	testl	%eax, %eax
+	je	.L116
+	subl	$12, %esp
+	movl	$16, %ecx
+	leal	-56(%ebp), %edx
+	pushl	$48
+	call	itoak.part.0
+	addl	$16, %esp
+.L105:
+	leal	-56(%ebp), %eax
+	movl	%edi, 16(%ebp)
+	movl	$8, -64(%ebp)
+	movl	$8, %edi
+	movl	%eax, -68(%ebp)
+	movb	$48, -70(%ebp)
+	jmp	.L50
 	.align 16
+.L114:
+	movl	%eax, -88(%ebp)
+	leal	16(%edi), %eax
+	andl	$-16, %eax
+	movl	%esp, -80(%ebp)
+	subl	%eax, %esp
+	movl	%esp, %ecx
+	pushl	%eax
+	movl	-64(%ebp), %eax
+	pushl	%eax
+	movsbl	-70(%ebp), %eax
+	pushl	%eax
+	pushl	%ecx
+	movl	%ecx, -84(%ebp)
+	call	memset
+	movl	-84(%ebp), %ecx
+	addl	$16, %esp
+	movb	$0, (%ecx,%edi)
+	cmpl	$-1, -76(%ebp)
+	movl	-88(%ebp), %edx
+	je	.L117
+	pushl	%eax
+	pushl	%eax
+	movl	-68(%ebp), %eax
+	pushl	%eax
+	movl	-64(%ebp), %eax
+	subl	%edx, %eax
+	movl	%ecx, -68(%ebp)
+	addl	%ecx, %eax
+	pushl	%eax
+	call	strcpy
+	addl	$16, %esp
+	movl	-68(%ebp), %ecx
+.L68:
+	movl	-60(%ebp), %eax
+	movl	-64(%ebp), %edi
+	addl	%edi, %eax
+	movl	%eax, -60(%ebp)
+	movl	8(%ebp), %eax
+	testl	%eax, %eax
+	je	.L69
+	pushl	%edi
+	pushl	%edi
+	pushl	%ecx
+	movl	8(%ebp), %eax
+	pushl	%eax
+	call	strcat
+	addl	$16, %esp
+.L69:
+	movl	-80(%ebp), %esp
+	jmp	.L70
+	.align 16
+.L117:
+	pushl	%edx
+	pushl	%edx
+	movl	-68(%ebp), %edi
+	pushl	%edi
+	pushl	%ecx
+	movl	%ecx, -68(%ebp)
+	call	strcpy
+	addl	$16, %esp
+	movl	-68(%ebp), %ecx
+	jmp	.L68
+.L39:
+	movl	%edi, -64(%ebp)
+	incl	%ebx
 .L73:
-	incl	%eax
-	cmpb	$0, (%eax)
-	jne	.L73
-.L72:
-	incl	%edi
-	movw	$37, (%eax)
-	jmp	.L33
-.L93:
-	addl	$48, %esp
+	leal	-56(%ebp), %eax
+	movw	$37, -56(%ebp)
+	movl	%eax, -68(%ebp)
+	jmp	.L50
+.L75:
+	leal	-12(%ebp), %esp
 	xorl	%eax, %eax
 	popl	%ebx
 	popl	%esi
 	popl	%edi
 	popl	%ebp
 	ret
-.L151:
-	movw	$48, -44(%ebp)
-	movb	$48, %dl
-	movl	$1, %eax
-	jmp	.L48
-.L148:
-	movw	$48, -44(%ebp)
-	movb	$48, %dl
-	movl	$1, %eax
-	jmp	.L42
-.L158:
-	movw	$48, -44(%ebp)
-	movb	$48, %dl
-	movl	$1, %eax
-	jmp	.L54
-.L154:
-	movw	$48, -44(%ebp)
-	incl	%edi
-	movl	-52(%ebp), %edx
-	jmp	.L33
-.L160:
-	movb	%dl, (%esi)
-	movl	%esi, %eax
-	jmp	.L86
-.L157:
-	movb	%dl, (%esi)
-	movl	%esi, %eax
-	jmp	.L84
-.L153:
-	movb	%dl, (%esi)
-	movl	%esi, %eax
-	jmp	.L81
-.L150:
-	movb	%dl, (%esi)
-	movl	%esi, %eax
-	jmp	.L78
-.L55:
-	cmpb	$0, (%esi)
-	jne	.L87
-.L146:
-	movl	-48(%ebp), %edx
-	jmp	.L33
-.L49:
-	cmpb	$0, (%esi)
-	jne	.L80
-	jmp	.L146
-.L43:
-	cmpb	$0, (%esi)
-	jne	.L77
-	jmp	.L146
-.L59:
-	testb	%cl, %cl
-	jne	.L83
-	jmp	.L144
-.L67:
-	movl	-48(%ebp), %eax
-	cmpb	$0, (%eax)
-	jne	.L139
-	jmp	.L144
-.L103:
-	movl	%ecx, %edx
-	jmp	.L33
-.L156:
-	movl	-48(%ebp), %ecx
-	movb	-56(%ebp), %al
-	movb	%al, (%ecx)
-	jmp	.L91
+.L72:
+	subl	$12, %esp
+	leal	-56(%ebp), %eax
+	pushl	%eax
+	call	strlen
+	leal	-56(%ebp), %ecx
+	addl	$16, %esp
+	movl	%ecx, -68(%ebp)
+	jmp	.L66
+.L84:
+	movl	$0, -64(%ebp)
+	xorl	%edi, %edi
+	jmp	.L53
+.L83:
+	movl	$0, -64(%ebp)
+	xorl	%edi, %edi
+	jmp	.L63
+.L82:
+	movl	$0, -64(%ebp)
+	xorl	%edi, %edi
+	jmp	.L55
+.L85:
+	movl	$0, -64(%ebp)
+	xorl	%edi, %edi
+	jmp	.L57
+.L80:
+	movl	$0, -64(%ebp)
+	xorl	%edi, %edi
+	jmp	.L64
+.L79:
+	movl	$0, -64(%ebp)
+	xorl	%edi, %edi
+	jmp	.L59
+.L116:
+	movw	$48, -56(%ebp)
+	jmp	.L105
+.L115:
+	movw	$48, -56(%ebp)
+	movl	$48, %eax
+	jmp	.L61
+.L78:
+	movl	$0, -64(%ebp)
+	xorl	%edi, %edi
+	jmp	.L73
+.L76:
+	movl	-68(%ebp), %eax
+	movl	%eax, 16(%ebp)
+	leal	-56(%ebp), %eax
+	movl	%eax, -68(%ebp)
+	jmp	.L50
 	.size	vsprintk, .-vsprintk
 	.align 16
 	.globl	printk
@@ -552,14 +634,14 @@ printk:
 	pushl	%esi
 	pushl	%ebx
 	leal	12(%ebp), %esi
-	subl	$12, %esp
+	subl	$16, %esp
 	movl	8(%ebp), %ebx
 	pushl	%esi
 	pushl	%ebx
 	pushl	$0
 	call	vsprintk
 	addl	$16, %eax
-	addl	$12, %esp
+	addl	$16, %esp
 	andl	$-16, %eax
 	subl	%eax, %esp
 	movl	%esp, %edi

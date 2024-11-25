@@ -116,36 +116,13 @@ getch:
 initKeyboard:
 	pushl	%ebp
 	movl	%esp, %ebp
-	subl	$8, %esp
-	.align 16
-.L23:
-	subl	$12, %esp
-	pushl	$100
-	call	inportb
-	addl	$16, %esp
-	testb	$2, %al
-	jne	.L23
-	pushl	%edx
-	pushl	%edx
+	subl	$20, %esp
 	pushl	$173
-	pushl	$100
-	call	outportb
+	call	sendPS2Command
 	movl	$96, (%esp)
 	call	inportb
-	addl	$16, %esp
-	.align 16
-.L24:
-	subl	$12, %esp
-	pushl	$100
-	call	inportb
-	addl	$16, %esp
-	testb	$2, %al
-	jne	.L24
-	pushl	%eax
-	pushl	%eax
-	pushl	$174
-	pushl	$100
-	call	outportb
+	movl	$174, (%esp)
+	call	sendPS2Command
 	addl	$16, %esp
 	movl	%ebp, %esp
 	popl	%ebp

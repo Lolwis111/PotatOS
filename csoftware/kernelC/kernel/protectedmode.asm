@@ -16,6 +16,8 @@ start:
 
     call enableA20
 
+    
+
     jmp switchToPM
 
 %include "gdt.asm"

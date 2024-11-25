@@ -41,16 +41,6 @@ __attribute__((interrupt)) void irq5_isr(struct interrupt_frame* frame)
     PIC_sendEOI(5);
 }
 
-// __attribute__((interrupt)) void irq6_isr(struct interrupt_frame* frame)
-// {
-//     char* v = (char*)0xB800A;
-
-//     if(*v == 'G') *v = 'g';
-//     else *v = 'G';
-
-//     PIC_sendEOI(6);
-// }
-
 __attribute__((interrupt)) void irq7_isr(struct interrupt_frame* frame)
 {
     char* v = (char*)0xB800E;
@@ -99,16 +89,6 @@ __attribute__((interrupt)) void irq11_isr(struct interrupt_frame* frame)
     else *v = 'L';
 
     PIC_sendEOI(11);
-}
-
-__attribute__((interrupt)) void irq12_isr(struct interrupt_frame* frame)
-{
-    char* v = (char*)0xB8018;
-
-    if(*v == 'M') *v = 'm';
-    else *v = 'M';
-
-    PIC_sendEOI(12);
 }
 
 __attribute__((interrupt)) void irq13_isr(struct interrupt_frame* frame)

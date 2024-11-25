@@ -13,5 +13,6 @@ void setCursorPosition(int x, int y);
 void getCursorPosition(int* x, int* y);
 void clearScreen();
 void clearScreenC(char color);
+void setColor(char);
 
 #endif
