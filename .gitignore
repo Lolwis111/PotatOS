@@ -30,3 +30,6 @@ Misc/strings.sys
 
 # do not include .builds file (only for local use)
 .builds
+bx_enh_dbg.ini
+bochsout.txt
+potatos.img
