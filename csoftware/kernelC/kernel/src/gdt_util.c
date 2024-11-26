@@ -1,8 +1,6 @@
-
-#include "userland.h"
-#include "asm.h"
-#include "string.h"
+#include "gdt_util.h"
 #include "printk.h"
+#include "string.h"
 
 // Note: some of the GDT entry struct field names may not match perfectly to the TSS entries.
 tss_entry_t tss_entry;
@@ -123,12 +121,4 @@ void initGDT()
 	load_tss();
 
 	printk("0x%p\r\n", &the_gdt[0]);
-}
-
-void userland_function(void)
-{
-    while(1)
-	{
-		int80();
-	}
 }

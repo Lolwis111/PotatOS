@@ -62,7 +62,7 @@ static void moveBuffer()
         "movl %0, %%ecx;\n"
         "movl %1,%%esi;\n"
         "movl %2,%%edi;\n"
-        "rep movsd;\n"
+        "rep movsl;\n"
         : 
         : "ri"(size), "ri"(src), "ri"(dest)
         : "memory", "ecx", "esi", "edi"

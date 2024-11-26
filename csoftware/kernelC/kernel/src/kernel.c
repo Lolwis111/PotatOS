@@ -17,6 +17,7 @@
 #include "userland.h"
 #include "string.h"
 #include "fs.h"
+#include "gdt_util.h"
 
 void floppy_detect_drives()
 {
