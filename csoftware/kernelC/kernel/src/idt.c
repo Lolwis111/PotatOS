@@ -50,7 +50,7 @@ void idt_init()
     idt_set_descriptor(11, &exception11_isr, 0x8E);
     idt_set_descriptor(12, &exception12_isr, 0x8E);
     idt_set_descriptor(13, &exception_gpf_isr, 0x8E);
-    idt_set_descriptor(14, &exception14_isr, 0x8E);
+    idt_set_descriptor(14, &pagefault_isr, 0x8E);
     idt_set_descriptor(15, &exception15_isr, 0x8E);
     idt_set_descriptor(16, &exception16_isr, 0x8E);
     idt_set_descriptor(17, &exception17_isr, 0x8E);

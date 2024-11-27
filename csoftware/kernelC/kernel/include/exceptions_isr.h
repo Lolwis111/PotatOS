@@ -1,6 +1,8 @@
 #ifndef _IRQ_ROUTINES_H_
 #define _IRQ_ROUTINES_H_
 
+typedef unsigned int uword_t;
+
 struct interrupt_frame;
 
 __attribute__((interrupt)) void div_zero_exception(struct interrupt_frame* frame);
@@ -17,8 +19,8 @@ __attribute__((interrupt)) void exception9_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception10_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception11_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception12_isr(struct interrupt_frame* frame);
-__attribute__((interrupt)) void exception_gpf_isr(struct interrupt_frame* frame);
-__attribute__((interrupt)) void exception14_isr(struct interrupt_frame* frame);
+__attribute__((interrupt)) void exception_gpf_isr(struct interrupt_frame* frame, uword_t error_code);
+__attribute__((interrupt)) void pagefault_isr(struct interrupt_frame* frame, uword_t error_code);
 __attribute__((interrupt)) void exception15_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception16_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception17_isr(struct interrupt_frame* frame);

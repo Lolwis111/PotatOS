@@ -194,13 +194,11 @@ __attribute__((interrupt)) void exception12_isr(struct interrupt_frame* frame)
     asm volatile("cli; hlt;":::);
 }
 
-__attribute__((interrupt)) void exception_gpf_isr(struct interrupt_frame* frame)
+__attribute__((interrupt)) void exception_gpf_isr(struct interrupt_frame* frame, uword_t error_code)
 {
-    unsigned long errCode = pop();
-    
     clearScreen();
 
-    char tableC = ((errCode | 0x0060) >> 13) + '0';
+    char tableC = ((error_code | 0x0060) >> 13) + '0';
 
     char* v = (char*)0xB8000;
 
@@ -210,8 +208,8 @@ __attribute__((interrupt)) void exception_gpf_isr(struct interrupt_frame* frame)
     v += 2;
     *v = tableC;
 
-    char code1 = ((errCode | 0x0010) >> 4) + '0';
-    char code2 = (errCode | 0x000F) + '0';
+    char code1 = ((error_code | 0x0010) >> 4) + '0';
+    char code2 = (error_code | 0x000F) + '0';
 
     v += 2;
     *v = ' ';
@@ -225,15 +223,11 @@ __attribute__((interrupt)) void exception_gpf_isr(struct interrupt_frame* frame)
     asm volatile("cli; hlt;":::);
 }
 
-__attribute__((interrupt)) void exception14_isr(struct interrupt_frame* frame)
+__attribute__((interrupt)) void pagefault_isr(struct interrupt_frame* frame, uword_t error_code)
 {
     clearScreen();
 
-    char* v = (char*)0xB8000;
-
-    *v = 'E';
-    v += 2;
-    *v = 'e';
+    printk("Page Fault with code %08x\r\n", error_code);
 
     asm volatile("cli; hlt;":::);
 }

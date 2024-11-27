@@ -109,6 +109,12 @@ buildTests()
     cd ..
 }
 
+makeError()
+{
+    echo -e "\e[91mError while compiling\e[39m"
+    exit
+}
+
 build_home=$(pwd)  # copy working directory
 include_system="${build_home}/include/" # globaly available include files
 include_software="${build_home}/software/include/" # program internal include files
@@ -145,8 +151,9 @@ rm -f "misc/strings.sys"
 rm -f include/language.asm 
 
 # clean the 32 bit kernel software
-make clean -C csoftware/kernelC/
-make clean -C csoftware/graphics/
+make clean -C csoftware/kernelC/kernel/
+# make clean -C csoftware/kernelC/libc/
+# make clean -C csoftware/graphics/
 
 # exit here if only clean was asked
 if [ "$1" = "clean" ] ; then
@@ -286,10 +293,10 @@ buildTests
 echo ""
 echo "> building c software"
 
-make -C csoftware/
-make all -C csoftware/graphics/
+# make -C csoftware/ || makeError
+# make all -C csoftware/graphics/ || makeError
 
-make all -C csoftware/kernelC
+make -j 4 -C csoftware/kernelC/kernel || makeError
 
 echo "" # newLine
 echo "> installing bootloader"
@@ -343,10 +350,10 @@ do
     cp $file $mount_point/system/
 done;
 
-cp csoftware/*.bin $mount_point/c-tests/ # copy the c software
-cp csoftware/graphics/*.bin $mount_point/c-tests/ # copy the c software
-cp csoftware/kernelC/kernel.sys $mount_point/c-tests/
-cp csoftware/kernelC/pmtest.bin $mount_point/c-tests/
+# cp csoftware/*.bin $mount_point/c-tests/ # copy the c software
+# cp csoftware/graphics/*.bin $mount_point/c-tests/ # copy the c software
+cp csoftware/kernelC/kernel/kernel.sys $mount_point/c-tests/
+cp csoftware/kernelC/loader/pmtest.bin $mount_point/c-tests/
 
 # viewer + images are in an extra directory
 mv $mount_point/system/viewer.bin /tmp/tmp-loop/images/viewer.bin

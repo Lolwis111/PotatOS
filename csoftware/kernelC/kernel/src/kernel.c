@@ -18,6 +18,7 @@
 #include "string.h"
 #include "fs.h"
 #include "gdt_util.h"
+#include "paging.h"
 
 void floppy_detect_drives()
 {
@@ -65,74 +66,16 @@ void initIDT()
     idt_set_descriptor(0x80, &syscall, 0b11101110);
 }
 
-// static void printBuffer(const unsigned char* buffer, size_t size)
-// {
-//     const size_t blockSize = 32;
-
-//     size_t blockCount = size / blockSize;
-//     size_t rest = size % blockSize;
-
-//     unsigned char buf[blockSize+1];
-//     buf[blockSize] = 0;
-
-//     size_t i = 0;
-
-//     for(; i < blockCount; i++)
-//     {
-//         // printf("%x: ", (i*16));
-//         for(size_t j = 0; j < blockSize; j++)
-//         {
-//             unsigned char c = buffer[(i * blockSize) + j];
-//             // printf("%x ", c);
-//             if(c >= 32)
-//             {
-//                 buf[j] = c;
-//             }
-//             else
-//             {
-//                 buf[j] = '.';
-//             }
-//         }
-
-//         printk("%s\r\n", buf);
-//     }
-
-//     // printf("%x: ", (i*blockSize));
-
-//     for(size_t i = 0; i < blockSize; i++)
-//     {
-//         buf[i] = ' ';
-//     }
-
-//     for(size_t j = 0; j < rest; j++)
-//     {
-//         unsigned char c = buffer[(i * blockSize) + j];
-//         // printf("%x ", c);
-//         if(c >= 32)
-//         {
-//             buf[j] = c;
-//         }
-//         else
-//         {
-//             buf[j] = '.';
-//         }
-//     }
-
-//     // for(size_t j = 0; j < 16 - rest; j++)
-//     // {
-//     //     printf("   ");
-//     // }
-
-//     printk("%s\r\n", buf);
-// }
-
 int main()
 {
     clearScreen(0x07);
 
     initGDT();
 
+    initPaging();
+
     initKeyboard();
+
     initMouse();
 
     initSerial();
@@ -142,43 +85,19 @@ int main()
     PIC_remap(0x20, 0x70);
     initIDT();
 
-    char* str = "Welcome to TomatOS. The PotatOS fork written in C\r\n\n\n";
-    printk(str);
-
-    // uint8_t a[] = { 0xFF, 0xFF, 0x00, 0x00, 0b00000000, 0b10011010, 0b11001111, 0b00000000 };
-    // struct gdt_entry_bits agdt;
-
-    // memcpy(&agdt, a, sizeof(struct gdt_entry_bits));
-
-    // printk("0x%02X\r\n0x%06X\r\n", agdt.limit_low, agdt.base_low);
-    // printk("%d\r\n%d\r\n%d\r\n%d\r\n%d\r\n%d\r\n%d\r\n", agdt.accessed, agdt.read_write, agdt.conforming_expand_down, agdt.code, agdt.code_data_segment, agdt.DPL, agdt.present);
-    // printk("0x%01X\r\n", agdt.limit_high);
-    // printk("%d\r\n%d\r\n%d\r\n%d\r\n", agdt.available, agdt.long_mode, agdt.big, agdt.gran);
-    // printk("0x%02X\r\n", agdt.base_high);
-
-    // printk("Attempting to go to userland (ring 3)...\r\n");
-
-    // jump_usermode();
-
-    // breakpoint();
-
-    // printk("Returned from usermode");
-
-    // printk("%8X\r\n", 234);
-    // printk("%8d\r\n", -234);
-    // printk("%+8d\r\n", 234);
-    // printk("% 8d\r\n", 234);
-    // printk("%08X\r\n", 234);
-    
-    // printk("%s\r\n", "test");
-    // printk("%8s\r\n", "test");
-    // printk("%-8s\r\n", "test");
-
-    // printk("%d\r\n", i);
+    floppy_detect_drives();
 
     initalizeFloppyDMA();
 
-    // floppy_detect_drives();
+    char* str = "Welcome to TomatOS. The PotatOS fork written in C\r\n\n\n";
+    printk(str);
+
+    // jump_usermode();
+    // printk("Returned from usermode");
+
+    // force page fault
+    char* ptr = (char*)0x500000;
+    *ptr = 'a';
 
     printk("Initiating floppy drive (might take a few seconds)\r\n");
 
