@@ -352,7 +352,7 @@ done;
 
 # cp csoftware/*.bin $mount_point/c-tests/ # copy the c software
 # cp csoftware/graphics/*.bin $mount_point/c-tests/ # copy the c software
-cp csoftware/kernelC/kernel/kernel.sys $mount_point/c-tests/
+cp csoftware/kernelC/kernel/bin/kernel.sys $mount_point/c-tests/
 cp csoftware/kernelC/loader/pmtest.bin $mount_point/c-tests/
 
 # viewer + images are in an extra directory

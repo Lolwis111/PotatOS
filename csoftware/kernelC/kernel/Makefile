@@ -17,7 +17,7 @@ OBJ_EXT = .o
 OUT_NAME = kernel.sys
 
 CFLAGS := -m32 -march=i586 -O2 -Iinclude/ -ffreestanding -fno-stack-protector -Wall -Werror -mgeneral-regs-only -mno-red-zone
-LFLAGS := -Ttext 0x10000 --oformat binary
+LFLAGS := -Tlinker.ld --oformat binary
 AFLAGS := -f elf
 
 # Source files and object files
@@ -42,7 +42,7 @@ all: $(OUT_EXEC)
 
 # Rule to link object files into the final executable
 $(OUT_EXEC): $(OBJS)
-	$(LD) $(OBJS) $(LFLAGS) -o $(OUT_EXEC)
+	$(LD) $(OBJS) $(LFLAGS) -o bin/$(OUT_EXEC)
 
 # Rule to compile C files into object files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
@@ -54,7 +54,7 @@ $(LST_DIR)/%.asm: $(SRC_DIR)/%.c
 
 # Rule to assemble assembly files into object files
 $(OBJ_DIR)/%.o: $(ASM_DIR)/%.asm
-	$(ASM) $< $(AFLAGS) -o $@ 
+	$(ASM) $< $(AFLAGS) -o $@  
 
 # Clean up generated files
 clean:

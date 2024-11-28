@@ -1,22 +1,34 @@
-ENTRY(main);
+STARTUP(obj/kernelEntry.o);
+OUTPUT(bin/kernel.sys);
 SECTIONS
 {
-    . = 0x9000;
-    .text : AT(0x9000)
+    . = 0x10000;
+    .text ALIGN (0x1000):
     {
         _text = .;
         *(.text);
         _text_end = .;
     }
-    .data :
+
+    .rodata ALIGN (0x1000):
+    {
+        *(.rodata)
+    }
+
+    .data ALIGN (0x1000):
     {
         _data = .;
-        *(.bss);
-        *(.bss*);
-        *(.data);
-        *(.rodata*);
-        *(COMMON)
+        
+        *(.data)
+        
         _data_end = .;
+    }
+    .bss : {
+        _bss = .;
+        *(COMMON)
+        *(.bss);
+        _bss_end = .;
+        _end_kernel = .;
     }
     /DISCARD/ :
     {
