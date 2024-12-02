@@ -32,7 +32,7 @@ int strlen(const char* str)
     return i;
 }
 
-char* strcpy( char *dest, const char *src)
+char* strcpy(char* __restrict dest, const char* __restrict src)
 {
     int i = 0;
     while(1)

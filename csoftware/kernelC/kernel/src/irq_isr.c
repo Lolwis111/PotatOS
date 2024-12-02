@@ -91,6 +91,16 @@ __attribute__((interrupt)) void irq11_isr(struct interrupt_frame* frame)
     PIC_sendEOI(11);
 }
 
+__attribute__((interrupt)) void irq12_isr(struct interrupt_frame* frame)
+{
+    char* v = (char*)0xB8016;
+
+    if(*v == 'M') *v = 'm';
+    else *v = 'M';
+
+    PIC_sendEOI(12);
+}
+
 __attribute__((interrupt)) void irq13_isr(struct interrupt_frame* frame)
 {
     char* v = (char*)0xB801A;

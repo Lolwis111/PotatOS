@@ -119,6 +119,4 @@ void initGDT()
 	load_gdt(6*8, &the_gdt[0]);
 
 	load_tss();
-
-	printk("0x%p\r\n", &the_gdt[0]);
 }

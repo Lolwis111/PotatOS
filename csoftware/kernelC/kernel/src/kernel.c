@@ -12,13 +12,15 @@
 #include "console.h"
 #include "panic.h"
 #include "stddef.h"
-#include "mouse.h"
+// #include "mouse.h"
+
 #include "syscall.h"
 #include "userland.h"
 #include "string.h"
 #include "fs.h"
 #include "gdt_util.h"
 #include "paging.h"
+#include "malloc.h"
 
 void floppy_detect_drives()
 {
@@ -41,6 +43,31 @@ void floppy_detect_drives()
    printk(" - Floppy drive 1: %s\r\n", drive_types[drives & 0xf]);
 }
 
+void malloc_test()
+{
+    printBlocks();
+
+    void* p1 = malloc(200);
+    void* p2 = malloc(300);
+    void* p3 = malloc(150);
+
+    printBlocks();
+
+    free(p2);
+
+    printBlocks();
+
+    p2 = malloc(250);
+
+    printBlocks();
+
+    free(p1);
+    free(p2);
+    free(p3);
+    
+    printBlocks();
+}
+
 void initIDT()
 {
     idt_init();
@@ -58,7 +85,8 @@ void initIDT()
     idt_set_descriptor(0x71, &irq9_isr, 0x8E);
     idt_set_descriptor(0x72, &irq10_isr, 0x8E);
     idt_set_descriptor(0x73, &irq11_isr, 0x8E);
-    idt_set_descriptor(0x74, &mouse_irq, 0x8E);
+    idt_set_descriptor(0x74, &irq12_isr, 0x8E);
+    // idt_set_descriptor(0x74, &mouse_irq, 0x8E);
     idt_set_descriptor(0x75, &irq13_isr, 0x8E);
     idt_set_descriptor(0x76, &irq14_isr, 0x8E);
     idt_set_descriptor(0x77, &irq15_isr, 0x8E);
@@ -76,7 +104,7 @@ int main()
 
     initKeyboard();
 
-    initMouse();
+    // initMouse();
 
     initSerial();
     
@@ -89,36 +117,41 @@ int main()
 
     initalizeFloppyDMA();
 
+    init_c_malloc(8192 * 4);
+
     char* str = "Welcome to TomatOS. The PotatOS fork written in C\r\n\n\n";
     printk(str);
+
+    malloc_test();
+    
 
     // jump_usermode();
     // printk("Returned from usermode");
 
     // force page fault
-    char* ptr = (char*)0x500000;
-    *ptr = 'a';
+    // char* ptr = (char*)0x500000;
+    // *ptr = 'a';
 
-    printk("Initiating floppy drive (might take a few seconds)\r\n");
+    // printk("Initiating floppy drive (might take a few seconds)\r\n");
 
-    floppyInit(0);
+    // floppyInit(0);
 
-    FLOPPY_DISK_STRUCTURE fds;
+    // FLOPPY_DISK_STRUCTURE fds;
 
-    readFileSystem(&fds);
+    // readFileSystem(&fds);
 
-    printk("Bytes Per Sector:    %6d\r\n", fds.BytesPerSector);
-    printk("Sectors Per Cluster: %6d\r\n", fds.SectorsPerCluster);
-    printk("Number Of FATS:      %6d\r\n", fds.NumberOfFATS);
-    printk("Root Entries:        %6d\r\n", fds.RootEntries);
+    // printk("Bytes Per Sector:    %6d\r\n", fds.BytesPerSector);
+    // printk("Sectors Per Cluster: %6d\r\n", fds.SectorsPerCluster);
+    // printk("Number Of FATS:      %6d\r\n", fds.NumberOfFATS);
+    // printk("Root Entries:        %6d\r\n", fds.RootEntries);
 
-    printk("Sectors Per FAT:     %6d\r\n", fds.SectorsPerFAT);
-    printk("Sectors Per Track:   %6d\r\n", fds.SectorsPerTrack);
-    printk("Heads Per Cylinder:  %6d\r\n", fds.HeadsPerCylinder);
+    // printk("Sectors Per FAT:     %6d\r\n", fds.SectorsPerFAT);
+    // printk("Sectors Per Track:   %6d\r\n", fds.SectorsPerTrack);
+    // printk("Heads Per Cylinder:  %6d\r\n", fds.HeadsPerCylinder);
 
-    printk("Root sector:         %6d\r\n", ((fds.NumberOfFATS * fds.SectorsPerFAT) + fds.ReservedSectors));
+    // printk("Root sector:         %6d\r\n", ((fds.NumberOfFATS * fds.SectorsPerFAT) + fds.ReservedSectors));
 
-    readRoot(&fds);
+    // readRoot(&fds);
 
     // unsigned char c = 0;
     // for(int i = 0; i < 16; i++)
@@ -142,148 +175,6 @@ int main()
         int c = getch();
         printk("%d ", c);
     }
-
-    /*char c = 0;
-    while(1)
-    {
-        printk("%c", c);
-        c++;
-        sleep(1);
-    }
-
-    int s = 0;
-
-    char buffer[64];
-    while(1)
-    {
-        memset(buffer, 0, 64);
-
-        printf("\r\nCMD> ");
-        gets(buffer);
-        printf("\r\n");      
-
-        if(0 == strcmp(buffer, "colors"))
-        {
-            unsigned char c = 0;
-            for(int i = 0; i < 16; i++)
-            {
-                for(int j = 0; j < 16; j++)
-                {
-                    setColor(c);
-                    printf("%x ", c);
-                    c++;
-                }m
-                printf("\r\n");
-            }
-
-            setColor(0x07);
-        }
-        else if(0 == strcmp(buffer, "printf"))
-        {
-            int i = 123;
-
-            char* str2 = "test123";
-
-            printf("printf:\r\nbase 8:%o\r\nbase 10:%d\r\nbase 16:%x\r\nAnd some string:%s\r\n", i, i, i, str2);
-        }
-        else if(0 == strcmp(buffer, "floats"))
-        {
-            double d1 = 10.01;
-            double d2 = 100.001;
-            double d3 = 123.321;
-            double d4 = 10000.00002;
-
-            printf("10.01: %f\r\n100.001: %f\r\n123.321: %f\r\n10000.00002: %f\r\n", d1, d2, d3, d4);
-        }
-        else if(0 == strcmp(buffer, "math"))
-        {
-            for(double d = 0; d < 360; d += 30)
-            {
-                // double x = pow(d, 2);
-                double x = d * d;
-
-                printf("%f | %f\r\n", d, x);
-            }
-        }
-        else if(0 == strcmp(buffer, "clear"))
-        {
-            clearscreen();
-        }
-        else if(0 == strcmp(buffer, "test"))
-        {
-            char* str1 = "test123";
-            char* str2 = "Some Text";
-            char* str3 = "EPIC HARDCORE SHOOBIE DOG MEMES";
-            int l1 = strlen(str1);
-            int l2 = strlen(str2);
-            int l3 = strlen(str3);
-
-            printf("%d: %s\r\n%d: %s\r\n%d: %s\r\n", l1, str1, l2, str2, l3, str3);
-        }
-        else if(0 == strncmp(buffer, "args", 4))
-        {
-            printf("args: %s", buffer + 4);
-        }
-        else if(0 == strncmp(buffer, "cat", 4))
-        {
-            char a[] = "Hallo ";
-            char b[] = "Welt";
-
-            char c[50];
-            strcpy(c, a);
-            strcat(c, b);
-
-            printf("%s\r\n%s\r\n%s\r\n", a, b, c);
-        }
-        else if(0 == strcmp(buffer, "zero"))
-        {
-            int a = 12;
-            int b = 24;
-            int c = (b / (a - 3*sizeof(int)));
-
-            printf("%d", c);
-        }
-        else if(0 == strcmp(buffer, "size"))
-        {
-
-            int sc = sizeof(char);
-            int ss = sizeof(short);
-            int si = sizeof(int);
-            int sl = sizeof(long);
-            int sli = sizeof(long int);
-            int slli = sizeof(long long int);
-
-            printf("char:           %d\r\n", sc);
-            printf("short:          %d\r\n", ss);
-            printf("int:            %d\r\n", si);
-            printf("long:           %d\r\n", sl);
-            printf("long int:       %d\r\n", sli);
-            printf("long long int:  %d\r\n", slli);
-        }
-        else if(0 == strcmp(buffer, "sleep"))
-        {
-            printf("Start\r\n");
-            sleep(1000);
-            printf("End\r\n");
-        }
-        else if(0 == strcmp(buffer, "floppy"))
-        {
-            for(int i = 0; i < 100; i++)
-            {
-                floppyRead(s, 0);
-
-                // Floppy DMA writes to physical address 0x1000-0x3FFF
-                printBuffer((const unsigned char*)0x1000, 512);
-
-                s++;
-            }
-            
-        }
-        else
-        {
-            printf("Unrecognized command '%s'! Try help to list all commands.\r\n", buffer);
-        }
-    }*/
 
     return 0;
 }
