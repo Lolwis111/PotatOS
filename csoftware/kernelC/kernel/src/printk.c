@@ -72,6 +72,8 @@ int vsprintk(char* dest, const char* format, __builtin_va_list val)
 
     while(*format)
     {
+        filler = ' ';
+        
         char* bufferPTR = buffer;
 
         if(*format == '%')
