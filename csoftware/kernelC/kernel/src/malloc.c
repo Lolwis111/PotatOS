@@ -3,7 +3,9 @@
 #include "string.h"
 #include "stdbool.h"
 
-extern char _end_kernel;
+// _end_kernel is defined in the linker script and is the first byte
+// after the bss section aka the last byte of the executable
+extern MEMORY_BLOCK_T _end_kernel;
 
 static void* theHeap = &_end_kernel;
 static MEMORY_BLOCK_T* headptr;
@@ -11,7 +13,7 @@ static MEMORY_BLOCK_T* headptr;
 static void printBlock(const MEMORY_BLOCK_T* ptr)
 {
     printk(
-        "%p: size: %d, free: %d, next: %8p, prev: %8p, ptr: %p\r\n", 
+        "%p: size: %5d, free: %d, next: %8p, prev: %8p, ptr: %p\r\n", 
         (void*)ptr,
         ptr->size,
         ptr->free,
@@ -244,10 +246,6 @@ void* malloc(size_t size)
 // DEMO function for testing it in userspace
 void init_c_malloc(size_t heapSize)
 {
-    // assert(heapSize > BLOCK_SIZE);
-
-    // theHeap = malloc((sizeof(char) * (heapSize + BLOCK_SIZE)));
-
     MEMORY_BLOCK_T head = { 
         .next = NULL, 
         .prev = NULL,
@@ -258,9 +256,4 @@ void init_c_malloc(size_t heapSize)
     memcpy(theHeap, &head, BLOCK_SIZE);
     headptr = (MEMORY_BLOCK_T*)theHeap;
     headptr->ptr = &headptr->data;
-}
-
-void free_c_malloc(void)
-{
-    // free(theHeap);
 }

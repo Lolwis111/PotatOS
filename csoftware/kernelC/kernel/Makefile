@@ -16,7 +16,7 @@ ASM_SRC_EXT = .asm
 OBJ_EXT = .o
 OUT_NAME = kernel.sys
 
-CFLAGS := -m32 -march=i586 -O2 -Iinclude/ -ffreestanding -fno-stack-protector -Wall -Werror -Wno-array-bounds -mgeneral-regs-only -mno-red-zone
+CFLAGS := -m32 -march=i386 -O2 -Iinclude/ -ffreestanding -fno-stack-protector -Wall -Werror -mgeneral-regs-only -mno-red-zone
 LFLAGS := -Tlinker.ld --oformat binary
 AFLAGS := -f elf
 
