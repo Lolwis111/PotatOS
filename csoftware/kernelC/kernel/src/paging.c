@@ -1,8 +1,19 @@
 #include "paging.h"
 #include "stdint.h"
+#include "asm.h"
 
 uint32_t page_directory[1024] __attribute__((aligned(4096)));
 uint32_t first_page_table[1024] __attribute__((aligned(4096)));
+
+__attribute__((interrupt)) void pagefault_isr(struct interrupt_frame* frame, uword_t error_code)
+{
+    // clearScreen();
+
+    // printk("Page Fault with code %08x\r\n", error_code);
+
+    cli();
+    hlt();
+}
 
 void initPaging()
 {

@@ -2,6 +2,7 @@
 #include "stdbool.h"
 #include "idt.h"
 #include "exceptions_isr.h"
+#include "paging.h"
 
 __attribute__((aligned(0x10))) 
 static idt_entry_t idt[256]; // Create an array of IDT entries; aligned for performance

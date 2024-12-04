@@ -223,14 +223,14 @@ __attribute__((interrupt)) void exception_gpf_isr(struct interrupt_frame* frame,
     asm volatile("cli; hlt;":::);
 }
 
-__attribute__((interrupt)) void pagefault_isr(struct interrupt_frame* frame, uword_t error_code)
-{
-    clearScreen();
+// __attribute__((interrupt)) void pagefault_isr(struct interrupt_frame* frame, uword_t error_code)
+// {
+//     clearScreen();
 
-    printk("Page Fault with code %08x\r\n", error_code);
+//     printk("Page Fault with code %08x\r\n", error_code);
 
-    asm volatile("cli; hlt;":::);
-}
+//     asm volatile("cli; hlt;":::);
+// }
 
 __attribute__((interrupt)) void exception15_isr(struct interrupt_frame* frame)
 {

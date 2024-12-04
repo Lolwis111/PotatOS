@@ -20,7 +20,7 @@ __attribute__((interrupt)) void exception10_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception11_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception12_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception_gpf_isr(struct interrupt_frame* frame, uword_t error_code);
-__attribute__((interrupt)) void pagefault_isr(struct interrupt_frame* frame, uword_t error_code);
+// __attribute__((interrupt)) void pagefault_isr(struct interrupt_frame* frame, uword_t error_code);
 __attribute__((interrupt)) void exception15_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception16_isr(struct interrupt_frame* frame);
 __attribute__((interrupt)) void exception17_isr(struct interrupt_frame* frame);
