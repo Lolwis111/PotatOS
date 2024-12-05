@@ -134,12 +134,6 @@ DEBUG=false     # assemble the debug code
 LIST_FILE=true  # Generate list files 
 NASM_FLAGS=" -Ox -f bin " # just flags for assembler, make sure you keep '-f bin'
 
-if [ ! "$1" == "clean"  ] && [ "`whoami`" != "root" ] ; then # check if script has root rights
-    echo "  You have to lunch this as root!"
-    echo "  (loopback mounting is a root-only service!)"
-    exit
-fi
-
 cleanListFiles
 cleanBinaries
 
@@ -310,8 +304,12 @@ rm -rf $mount_point/ # delete old mount point
 
 mkdir $mount_point/ || exit # create new mount point
 
+echo ""
+echo "Requesting root rights to mount floppy disk image"
+echo ""
+
 # mount the floopy image
-sudo mount -o loop -t msdos $output_image_name $mount_point || exit
+sudo mount -o loop -o uid=$(id -u),gid=$(id -g) -t msdos $output_image_name $mount_point || exit
 
 # build the folder structure
 mkdir $mount_point/system/
@@ -382,7 +380,7 @@ done;
 echo "> release image"
 
 # unmount the image
-umount $mount_point/ || exit # release floppy
+sudo umount $mount_point/ || exit # release floppy
 rm -rf $mount_point/
 
 # adjust rights
