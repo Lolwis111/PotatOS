@@ -8,12 +8,14 @@ static volatile int start = 0;
 static volatile int end = 0;
 
 static volatile int shift = 0;
+
 static char lowerCaseMap[256] = {
     0x00, 0x00, '1','2','3','4','5','6','7','8','9','0','-','=', 
     0x08, 0x09, 'q','w','e','r','t','y','u','i','o','p','[',']', 
     0x0A, 0x00, 'a','s','d','f','g','h','j','k','l', 0x3B, 0x27, 
     '`', 0x00, '\\','z','x','c','v','b','n','m',',','.','/'
 };
+
 static char upperCaseMap[256] = {
     0x00, 0x00, '!', '@', '#', '$', '\%', '^', '&', '*', '(', ')', '_', '+', 0x08, 0x09,
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0x0A, 0x00, 'A','S',
@@ -25,6 +27,7 @@ __attribute__((interrupt)) void keyboard_isr(struct interrupt_frame* frame)
 {
     unsigned char c = (char)inportb(0x60);
 
+    //
     if((c & 0b10000000) == 0)
     {
         char ascii = 0;
@@ -76,7 +79,23 @@ char getch(void)
 {
     while(start == end)
     {
+        // halt CPU here, the keyboard interrupt will wake the system up again
+        // and then we check again, if start == end!
         hlt();
+    }
+
+    char c = kbBuffer[end];
+
+    end = (end + 1) % KB_BUFFER_SIZE;
+
+    return c;
+}
+
+char getch2(void)
+{
+    while(start == end)
+    {
+        return 0;
     }
 
     char c = kbBuffer[end];
